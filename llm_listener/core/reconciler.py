@@ -40,8 +40,15 @@ Provide your analysis in this format:
 - What tone or framing would be most effective?
 - What counter-messaging could address identified hesitancies?
 
-## Sample Improved Message
-[Draft a brief, evidence-based public health message that addresses the concerns and leverages effective angles identified above]
+## Recommended Public Health Message
+
+**READY TO USE:** Draft a clear, compelling public health message (2-3 sentences) that:
+- Directly addresses the top concern identified above
+- Uses the most effective messaging angle
+- Is written in plain, accessible language
+- Could be used in social media, flyers, or talking points
+
+Start with the message itself (no preamble), then briefly explain why this framing works.
 """
 
 

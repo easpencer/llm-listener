@@ -9,6 +9,7 @@ from ..providers import (
     OpenAIProvider,
     AnthropicProvider,
     GeminiProvider,
+    GrokProvider,
     OllamaProvider,
 )
 from .config import Settings
@@ -45,6 +46,14 @@ class LLMOrchestrator:
                 GeminiProvider(
                     api_key=self.settings.gemini_api_key,
                     model=self.settings.gemini_model,
+                )
+            )
+
+        if self.settings.grok_api_key:
+            self.providers.append(
+                GrokProvider(
+                    api_key=self.settings.grok_api_key,
+                    model=self.settings.grok_model,
                 )
             )
 

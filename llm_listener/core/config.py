@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     openai_api_key: Optional[str] = None
     anthropic_api_key: Optional[str] = None
     gemini_api_key: Optional[str] = None
+    grok_api_key: Optional[str] = None
 
     # Ollama settings (no API key needed, just enable/disable)
     ollama_enabled: bool = False
@@ -27,6 +28,7 @@ class Settings(BaseSettings):
     openai_model: Optional[str] = None
     anthropic_model: Optional[str] = None
     gemini_model: Optional[str] = None
+    grok_model: Optional[str] = None
     ollama_model: Optional[str] = None
 
     # Reconciliation settings
@@ -45,6 +47,8 @@ class Settings(BaseSettings):
             providers.append("anthropic")
         if self.gemini_api_key:
             providers.append("gemini")
+        if self.grok_api_key:
+            providers.append("grok")
         if self.ollama_enabled:
             providers.append("ollama")
         return providers
@@ -56,11 +60,13 @@ class Settings(BaseSettings):
             openai_api_key=os.getenv("OPENAI_API_KEY"),
             anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
             gemini_api_key=os.getenv("GEMINI_API_KEY"),
+            grok_api_key=os.getenv("GROK_API_KEY"),
             ollama_enabled=os.getenv("OLLAMA_ENABLED", "").lower() in ("true", "1", "yes"),
             ollama_base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
             openai_model=os.getenv("OPENAI_MODEL"),
             anthropic_model=os.getenv("ANTHROPIC_MODEL"),
             gemini_model=os.getenv("GEMINI_MODEL"),
+            grok_model=os.getenv("GROK_MODEL"),
             ollama_model=os.getenv("OLLAMA_MODEL"),
             reconciler_provider=os.getenv("RECONCILER_PROVIDER", "anthropic"),
         )

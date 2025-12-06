@@ -5,6 +5,7 @@ const PROVIDER_COLORS = {
   'OpenAI': '#10a37f',
   'Anthropic': '#d4a574',
   'Google Gemini': '#4285f4',
+  'Grok': '#1da1f2',
   'Ollama': '#ffffff',
   'Synthesis': '#a855f7',
 }

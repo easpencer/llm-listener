@@ -118,6 +118,7 @@ def providers():
         ("openai", "OPENAI_API_KEY"),
         ("anthropic", "ANTHROPIC_API_KEY"),
         ("gemini", "GEMINI_API_KEY"),
+        ("grok", "GROK_API_KEY"),
         ("ollama", "OLLAMA_ENABLED=true"),
     ]
 
