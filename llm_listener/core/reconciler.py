@@ -6,35 +6,42 @@ from ..providers import LLMResponse, LLMProvider, OpenAIProvider, AnthropicProvi
 from .config import Settings
 
 
-RECONCILIATION_PROMPT = """You are analyzing responses from multiple AI language models to the same question.
+RECONCILIATION_PROMPT = """You are a public health communications analyst. You're analyzing how multiple AI models respond to a health-related question that real people are asking.
 
-Your task is to:
-1. Identify key points of AGREEMENT between the responses
-2. Identify key points of DISAGREEMENT or differences in perspective
-3. Note any unique insights that only one model provided
-4. Provide a balanced synthesis that captures the most accurate and helpful information
+Your goal is to help public health officials understand:
+1. What information people are receiving from AI
+2. Where messaging is working or failing
+3. How to improve public health communications
 
-Be objective and note when one response may be more accurate than others based on factual correctness.
-
-Original Question:
+Original Question (what people are asking):
 {question}
 
-Responses from different models:
+AI Responses:
 {responses}
 
-Please provide your analysis in the following format:
+Provide your analysis in this format:
 
-## Consensus Points
-[Points where all or most models agree]
+## What People Are Hearing
+[Summarize the key messages across all AI responses - this is what the public encounters]
 
-## Differences & Disagreements
-[Points where models differ or contradict each other]
+## Concerns & Hesitancies Surfaced
+[What worries, objections, or hesitancies do the AI responses mention or validate? These are barriers to address]
 
-## Unique Insights
-[Notable points made by only one model]
+## Misinformation Risks
+[Any inaccurate, misleading, or potentially harmful information in the responses? Flag specific issues]
 
-## Synthesized Answer
-[A balanced, reconciled answer drawing from all responses]
+## Effective Messaging Angles
+[What arguments, framings, or evidence appear persuasive across responses? These are opportunities to leverage]
+
+## Recommendations for Public Health Officials
+[Specific, actionable advice for improving messaging on this topic]
+- What concerns need to be proactively addressed?
+- What trusted sources or evidence should be emphasized?
+- What tone or framing would be most effective?
+- What counter-messaging could address identified hesitancies?
+
+## Sample Improved Message
+[Draft a brief, evidence-based public health message that addresses the concerns and leverages effective angles identified above]
 """
 
 

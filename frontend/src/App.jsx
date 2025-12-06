@@ -115,7 +115,7 @@ function App() {
 
         {synthesis && (
           <div style={styles.synthesis}>
-            <h2 style={styles.sectionTitle}>Harmony & Discord</h2>
+            <h2 style={styles.sectionTitle}>Public Health Analysis</h2>
             <ResponseCard response={synthesis} isSynthesis />
           </div>
         )}
