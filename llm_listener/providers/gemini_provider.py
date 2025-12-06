@@ -20,7 +20,7 @@ class GeminiProvider(LLMProvider):
 
     @property
     def default_model(self) -> str:
-        return "gemini-1.5-pro"
+        return "gemini-1.5-flash"
 
     async def query(self, prompt: str, system_prompt: Optional[str] = None) -> LLMResponse:
         """Query Google Gemini API."""
