@@ -7,7 +7,6 @@ const PROVIDER_COLORS = {
   'Google Gemini': '#4285f4',
   'Grok': '#1da1f2',
   'Ollama': '#94a3b8',
-  'Synthesis': '#a855f7',
 }
 
 function App() {
@@ -17,7 +16,6 @@ function App() {
   const [synthesis, setSynthesis] = useState(null)
   const [providers, setProviders] = useState([])
   const [error, setError] = useState(null)
-  const [showIndividual, setShowIndividual] = useState(false)
 
   useEffect(() => {
     fetch('/api/providers')
@@ -57,12 +55,62 @@ function App() {
     }
   }
 
+  // Parse synthesis content into sections
+  const parseSynthesis = (content) => {
+    if (!content) return []
+
+    const sections = []
+    const lines = content.split('\n')
+    let currentSection = null
+    let currentContent = []
+
+    for (const line of lines) {
+      if (line.startsWith('## ')) {
+        if (currentSection) {
+          sections.push({ title: currentSection, content: currentContent.join('\n').trim() })
+        }
+        currentSection = line.replace('## ', '').trim()
+        currentContent = []
+      } else if (currentSection) {
+        currentContent.push(line)
+      }
+    }
+
+    if (currentSection) {
+      sections.push({ title: currentSection, content: currentContent.join('\n').trim() })
+    }
+
+    return sections
+  }
+
+  const getSectionIcon = (title) => {
+    if (title.includes('Hearing')) return '👂'
+    if (title.includes('Concerns') || title.includes('Hesitanc')) return '⚠️'
+    if (title.includes('Misinformation')) return '🚨'
+    if (title.includes('Effective') || title.includes('Messaging Angles')) return '✅'
+    if (title.includes('Recommendations')) return '📋'
+    if (title.includes('Recommended Public Health Message')) return '💬'
+    return '📝'
+  }
+
+  const getSectionColor = (title) => {
+    if (title.includes('Hearing')) return '#3b82f6'
+    if (title.includes('Concerns') || title.includes('Hesitanc')) return '#f59e0b'
+    if (title.includes('Misinformation')) return '#ef4444'
+    if (title.includes('Effective') || title.includes('Messaging Angles')) return '#10b981'
+    if (title.includes('Recommendations')) return '#8b5cf6'
+    if (title.includes('Recommended Public Health Message')) return '#ec4899'
+    return '#6b7280'
+  }
+
   const exampleQuestions = [
     "Should I get a flu vaccine this year?",
     "Are COVID boosters still recommended?",
     "Is it safe to eat eggs during a bird flu outbreak?",
     "What are the side effects of the MMR vaccine?",
   ]
+
+  const analysisSection = synthesis ? parseSynthesis(synthesis.content) : []
 
   return (
     <div style={styles.container}>
@@ -72,6 +120,7 @@ function App() {
       </header>
 
       <main style={styles.main}>
+        {/* Input Section */}
         <div style={styles.inputSection}>
           <form onSubmit={handleSubmit} style={styles.form}>
             <label style={styles.label}>What question are people asking AI?</label>
@@ -129,37 +178,46 @@ function App() {
           </div>
         )}
 
-        {synthesis && (
-          <div style={styles.analysisSection}>
-            <div style={styles.analysisCard}>
-              <div style={styles.analysisHeader}>
-                <h2 style={styles.analysisTitle}>Public Health Analysis</h2>
-                <span style={styles.badge}>AI-Generated Insights</span>
-              </div>
-              <div style={styles.analysisContent}>
-                <ReactMarkdown>{synthesis.content}</ReactMarkdown>
-              </div>
+        {/* Individual AI Responses */}
+        {responses.length > 0 && (
+          <section style={styles.section}>
+            <h2 style={styles.sectionTitle}>
+              <span style={styles.sectionIcon}>🤖</span>
+              What Each AI Says
+            </h2>
+            <p style={styles.sectionSubtitle}>
+              Individual responses from {responses.filter(r => r.success).length} AI models
+            </p>
+            <div style={styles.responsesGrid}>
+              {responses.map((r, i) => (
+                <ResponseCard key={i} response={r} />
+              ))}
             </div>
-          </div>
+          </section>
         )}
 
-        {responses.length > 0 && (
-          <div style={styles.responsesSection}>
-            <button
-              onClick={() => setShowIndividual(!showIndividual)}
-              style={styles.toggleBtn}
-            >
-              {showIndividual ? 'Hide' : 'Show'} Individual AI Responses ({responses.filter(r => r.success).length})
-            </button>
-
-            {showIndividual && (
-              <div style={styles.grid}>
-                {responses.map((r, i) => (
-                  <ResponseCard key={i} response={r} />
-                ))}
-              </div>
-            )}
-          </div>
+        {/* Analysis Section */}
+        {synthesis && analysisSection.length > 0 && (
+          <section style={styles.section}>
+            <h2 style={styles.sectionTitle}>
+              <span style={styles.sectionIcon}>📊</span>
+              Public Health Analysis
+            </h2>
+            <p style={styles.sectionSubtitle}>
+              Synthesized insights for public health messaging
+            </p>
+            <div style={styles.analysisGrid}>
+              {analysisSection.map((section, i) => (
+                <AnalysisCard
+                  key={i}
+                  title={section.title}
+                  content={section.content}
+                  icon={getSectionIcon(section.title)}
+                  color={getSectionColor(section.title)}
+                />
+              ))}
+            </div>
+          </section>
         )}
       </main>
 
@@ -176,7 +234,7 @@ function ResponseCard({ response }) {
   if (!response.success) {
     return (
       <div style={{ ...styles.card, borderColor: '#ef4444' }}>
-        <div style={styles.cardHeader}>
+        <div style={{ ...styles.cardHeader, background: 'rgba(239, 68, 68, 0.1)' }}>
           <span style={{ ...styles.providerName, color: '#ef4444' }}>
             {response.provider_name}
           </span>
@@ -189,10 +247,13 @@ function ResponseCard({ response }) {
 
   return (
     <div style={{ ...styles.card, borderColor: color }}>
-      <div style={styles.cardHeader}>
-        <span style={{ ...styles.providerName, color }}>
-          {response.provider_name}
-        </span>
+      <div style={{ ...styles.cardHeader, borderBottomColor: color }}>
+        <div style={styles.providerInfo}>
+          <div style={{ ...styles.providerDot, background: color }}></div>
+          <span style={{ ...styles.providerName, color }}>
+            {response.provider_name}
+          </span>
+        </div>
         <span style={styles.model}>{response.model}</span>
       </div>
       <div style={styles.cardContent}>
@@ -202,9 +263,33 @@ function ResponseCard({ response }) {
   )
 }
 
+function AnalysisCard({ title, content, icon, color }) {
+  const isHighlight = title.includes('Recommended Public Health Message')
+
+  return (
+    <div style={{
+      ...styles.analysisCard,
+      borderColor: color,
+      ...(isHighlight ? styles.highlightCard : {})
+    }}>
+      <div style={{
+        ...styles.analysisCardHeader,
+        background: `${color}15`,
+        borderBottomColor: `${color}30`
+      }}>
+        <span style={styles.analysisIcon}>{icon}</span>
+        <h3 style={{ ...styles.analysisCardTitle, color }}>{title}</h3>
+      </div>
+      <div style={styles.analysisCardContent}>
+        <ReactMarkdown>{content}</ReactMarkdown>
+      </div>
+    </div>
+  )
+}
+
 const styles = {
   container: {
-    maxWidth: '900px',
+    maxWidth: '1200px',
     margin: '0 auto',
     padding: '1.5rem',
     minHeight: '100vh',
@@ -235,7 +320,7 @@ const styles = {
     background: 'rgba(255,255,255,0.03)',
     borderRadius: '1rem',
     padding: '1.5rem',
-    marginBottom: '1.5rem',
+    marginBottom: '2rem',
     border: '1px solid rgba(255,255,255,0.08)',
   },
   form: {
@@ -337,59 +422,29 @@ const styles = {
     margin: '0 auto 1rem',
     animation: 'spin 1s linear infinite',
   },
-  analysisSection: {
-    marginBottom: '1.5rem',
+  section: {
+    marginBottom: '2.5rem',
   },
-  analysisCard: {
-    background: 'rgba(168, 85, 247, 0.08)',
-    borderRadius: '1rem',
-    border: '1px solid rgba(168, 85, 247, 0.3)',
-    overflow: 'hidden',
-  },
-  analysisHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '1rem 1.25rem',
-    borderBottom: '1px solid rgba(168, 85, 247, 0.2)',
-    background: 'rgba(168, 85, 247, 0.05)',
-  },
-  analysisTitle: {
-    fontSize: '1rem',
+  sectionTitle: {
+    fontSize: '1.25rem',
     fontWeight: 600,
-    color: '#c4b5fd',
-    margin: 0,
-  },
-  badge: {
-    fontSize: '0.7rem',
-    padding: '0.25rem 0.5rem',
-    borderRadius: '0.25rem',
-    background: 'rgba(168, 85, 247, 0.2)',
-    color: '#c4b5fd',
-  },
-  analysisContent: {
-    padding: '1.25rem',
-    fontSize: '0.9rem',
-    lineHeight: 1.7,
     color: '#e4e4e7',
+    marginBottom: '0.25rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
   },
-  responsesSection: {
-    marginBottom: '1.5rem',
+  sectionIcon: {
+    fontSize: '1.25rem',
   },
-  toggleBtn: {
-    padding: '0.625rem 1rem',
-    fontSize: '0.85rem',
-    borderRadius: '0.5rem',
-    border: '1px solid rgba(255,255,255,0.15)',
-    background: 'transparent',
-    color: '#a1a1aa',
-    cursor: 'pointer',
+  sectionSubtitle: {
+    fontSize: '0.875rem',
+    color: '#71717a',
     marginBottom: '1rem',
-    transition: 'all 0.2s',
   },
-  grid: {
+  responsesGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
     gap: '1rem',
   },
   card: {
@@ -397,18 +452,30 @@ const styles = {
     borderRadius: '0.75rem',
     border: '1px solid',
     overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
   },
   cardHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '0.625rem 1rem',
+    padding: '0.75rem 1rem',
     borderBottom: '1px solid rgba(255,255,255,0.08)',
     background: 'rgba(0,0,0,0.2)',
   },
+  providerInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  providerDot: {
+    width: '8px',
+    height: '8px',
+    borderRadius: '50%',
+  },
   providerName: {
     fontWeight: 600,
-    fontSize: '0.85rem',
+    fontSize: '0.9rem',
   },
   model: {
     fontSize: '0.7rem',
@@ -418,14 +485,51 @@ const styles = {
     padding: '1rem',
     fontSize: '0.85rem',
     lineHeight: 1.6,
-    maxHeight: '300px',
+    maxHeight: '350px',
     overflowY: 'auto',
     color: '#d4d4d8',
+    flex: 1,
   },
   cardError: {
     padding: '1rem',
     color: '#fca5a5',
     fontSize: '0.85rem',
+  },
+  analysisGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+    gap: '1rem',
+  },
+  analysisCard: {
+    background: 'rgba(255,255,255,0.02)',
+    borderRadius: '0.75rem',
+    border: '1px solid',
+    overflow: 'hidden',
+  },
+  highlightCard: {
+    gridColumn: '1 / -1',
+    background: 'rgba(236, 72, 153, 0.05)',
+  },
+  analysisCardHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.75rem 1rem',
+    borderBottom: '1px solid',
+  },
+  analysisIcon: {
+    fontSize: '1.1rem',
+  },
+  analysisCardTitle: {
+    fontSize: '0.9rem',
+    fontWeight: 600,
+    margin: 0,
+  },
+  analysisCardContent: {
+    padding: '1rem',
+    fontSize: '0.85rem',
+    lineHeight: 1.7,
+    color: '#d4d4d8',
   },
   footer: {
     textAlign: 'center',
@@ -452,13 +556,14 @@ styleSheet.textContent = `
     border-color: rgba(255,255,255,0.2) !important;
   }
 
-  /* Markdown styling in analysis */
-  h2 { font-size: 1rem; font-weight: 600; margin: 1.25rem 0 0.5rem; color: #c4b5fd; }
+  /* Markdown styling */
+  h2 { font-size: 1rem; font-weight: 600; margin: 1rem 0 0.5rem; color: #e4e4e7; }
   h2:first-child { margin-top: 0; }
-  h3 { font-size: 0.9rem; font-weight: 500; margin: 1rem 0 0.4rem; color: #a1a1aa; }
-  p { margin-bottom: 0.75rem; }
-  ul, ol { margin-left: 1.25rem; margin-bottom: 0.75rem; }
-  li { margin-bottom: 0.25rem; }
+  h3 { font-size: 0.9rem; font-weight: 500; margin: 0.75rem 0 0.4rem; color: #a1a1aa; }
+  p { margin-bottom: 0.6rem; }
+  p:last-child { margin-bottom: 0; }
+  ul, ol { margin-left: 1.25rem; margin-bottom: 0.6rem; }
+  li { margin-bottom: 0.2rem; }
   strong { color: #f4f4f5; }
 
   /* Scrollbar */
