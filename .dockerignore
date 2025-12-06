@@ -1,0 +1,11 @@
+.git
+.env
+.env.local
+__pycache__
+*.pyc
+*.egg-info
+node_modules
+.venv
+venv
+*.log
+.DS_Store
