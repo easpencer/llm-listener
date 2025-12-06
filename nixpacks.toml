@@ -12,6 +12,3 @@ cmds = [
 [phases.build]
 dependsOn = ["install"]
 cmds = ["npm run build --prefix frontend"]
-
-[start]
-cmd = "uvicorn llm_listener.api:app --host 0.0.0.0 --port ${PORT:-8000}"

@@ -21,5 +21,5 @@ COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 # Expose port
 EXPOSE 8000
 
-# Start server
-CMD ["uvicorn", "llm_listener.api:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start server - use shell form for PORT env variable expansion
+CMD ["sh", "-c", "uvicorn llm_listener.api:app --host 0.0.0.0 --port ${PORT:-8000}"]
