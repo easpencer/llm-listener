@@ -1,0 +1,29 @@
+[project]
+name = "llm-listener"
+version = "0.1.0"
+description = "Query multiple LLMs and reconcile their responses"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "openai>=1.0.0",
+    "anthropic>=0.18.0",
+    "google-generativeai>=0.8.0",
+    "click>=8.0.0",
+    "rich>=13.0.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "asyncio>=3.4.3",
+    "aiohttp>=3.9.0",
+    "fastapi>=0.109.0",
+    "uvicorn>=0.27.0",
+]
+
+[project.scripts]
+llm-listener = "llm_listener.cli:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
