@@ -58,8 +58,9 @@ function App() {
   return (
     <div style={styles.container}>
       <header style={styles.header}>
-        <h1 style={styles.title}>LLM Listener</h1>
-        <p style={styles.subtitle}>Query multiple AI models and compare their responses</p>
+        <h1 style={styles.title}>Chorus</h1>
+        <p style={styles.subtitle}>Hear what AI is telling the public</p>
+        <p style={styles.tagline}>Understand AI narratives to craft better health messaging</p>
         {providers.length > 0 && (
           <div style={styles.providers}>
             {providers.map(p => (
@@ -74,7 +75,7 @@ function App() {
           <textarea
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Ask a question to compare responses across AI models..."
+            placeholder="What are people asking AI? e.g., 'Should I get a flu vaccine this year?'"
             style={styles.textarea}
             rows={3}
           />
@@ -86,7 +87,7 @@ function App() {
               opacity: loading || !question.trim() ? 0.5 : 1,
             }}
           >
-            {loading ? 'Querying...' : 'Ask All Models'}
+            {loading ? 'Listening...' : 'Hear the Chorus'}
           </button>
         </form>
 
@@ -97,13 +98,13 @@ function App() {
         {loading && (
           <div style={styles.loading}>
             <div style={styles.spinner}></div>
-            <p>Querying {providers.length} AI models...</p>
+            <p>Listening to {providers.length} AI voices...</p>
           </div>
         )}
 
         {responses.length > 0 && (
           <div style={styles.responses}>
-            <h2 style={styles.sectionTitle}>Individual Responses</h2>
+            <h2 style={styles.sectionTitle}>Individual Voices</h2>
             <div style={styles.grid}>
               {responses.map((r, i) => (
                 <ResponseCard key={i} response={r} />
@@ -114,14 +115,14 @@ function App() {
 
         {synthesis && (
           <div style={styles.synthesis}>
-            <h2 style={styles.sectionTitle}>Synthesized Analysis</h2>
+            <h2 style={styles.sectionTitle}>Harmony & Discord</h2>
             <ResponseCard response={synthesis} isSynthesis />
           </div>
         )}
       </main>
 
       <footer style={styles.footer}>
-        <p>Powered by OpenAI, Anthropic, Google & Ollama</p>
+        <p>Chorus analyzes responses from OpenAI, Anthropic, Google & Ollama</p>
       </footer>
     </div>
   )
@@ -185,8 +186,14 @@ const styles = {
     marginBottom: '0.5rem',
   },
   subtitle: {
-    color: '#a1a1aa',
-    fontSize: '1.1rem',
+    color: '#e4e4e7',
+    fontSize: '1.2rem',
+    fontWeight: 500,
+  },
+  tagline: {
+    color: '#71717a',
+    fontSize: '0.95rem',
+    marginTop: '0.25rem',
   },
   providers: {
     display: 'flex',
