@@ -11,6 +11,59 @@ const PROVIDER_COLORS = {
   'Ollama': '#94a3b8',
 }
 
+// Prism logo - triangular prism refracting light
+function PrismLogo({ size = 48 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="prism-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#a855f7" />
+          <stop offset="100%" stopColor="#6366f1" />
+        </linearGradient>
+        <linearGradient id="rainbow" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#ef4444" />
+          <stop offset="25%" stopColor="#f59e0b" />
+          <stop offset="50%" stopColor="#10b981" />
+          <stop offset="75%" stopColor="#3b82f6" />
+          <stop offset="100%" stopColor="#8b5cf6" />
+        </linearGradient>
+      </defs>
+      {/* Prism triangle */}
+      <path d="M24 6L42 38H6L24 6Z" fill="url(#prism-gradient)" opacity="0.9" />
+      {/* Light beam entering */}
+      <line x1="2" y1="20" x2="18" y2="20" stroke="white" strokeWidth="2" opacity="0.6" />
+      {/* Rainbow beams exiting */}
+      <line x1="30" y1="22" x2="46" y2="14" stroke="#ef4444" strokeWidth="1.5" opacity="0.8" />
+      <line x1="30" y1="24" x2="46" y2="20" stroke="#f59e0b" strokeWidth="1.5" opacity="0.8" />
+      <line x1="30" y1="26" x2="46" y2="26" stroke="#10b981" strokeWidth="1.5" opacity="0.8" />
+      <line x1="30" y1="28" x2="46" y2="32" stroke="#3b82f6" strokeWidth="1.5" opacity="0.8" />
+      <line x1="30" y1="30" x2="46" y2="38" stroke="#8b5cf6" strokeWidth="1.5" opacity="0.8" />
+    </svg>
+  )
+}
+
+// Chorus logo - multiple waveforms in harmony
+function ChorusLogo({ size = 48 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="chorus-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#0ea5e9" />
+          <stop offset="100%" stopColor="#14b8a6" />
+        </linearGradient>
+      </defs>
+      {/* Multiple voice waveforms */}
+      <path d="M4 24 Q10 16, 16 24 T28 24 T40 24 T52 24" stroke="#0ea5e9" strokeWidth="2.5" fill="none" opacity="0.9" />
+      <path d="M4 20 Q10 12, 16 20 T28 20 T40 20 T52 20" stroke="#14b8a6" strokeWidth="2" fill="none" opacity="0.7" />
+      <path d="M4 28 Q10 20, 16 28 T28 28 T40 28 T52 28" stroke="#06b6d4" strokeWidth="2" fill="none" opacity="0.7" />
+      <path d="M4 16 Q10 10, 16 16 T28 16 T40 16 T52 16" stroke="#0284c7" strokeWidth="1.5" fill="none" opacity="0.5" />
+      <path d="M4 32 Q10 24, 16 32 T28 32 T40 32 T52 32" stroke="#0d9488" strokeWidth="1.5" fill="none" opacity="0.5" />
+      {/* Central convergence circle */}
+      <circle cx="24" cy="24" r="4" fill="url(#chorus-gradient)" opacity="0.9" />
+    </svg>
+  )
+}
+
 function App() {
   const [question, setQuestion] = useState('')
   const [loading, setLoading] = useState(false)
@@ -182,6 +235,19 @@ function App() {
   return (
     <div className="app-container" data-mode={mode}>
       <header className="header">
+        {/* Logo and Title */}
+        <div className="brand">
+          <div className="logo-container">
+            {appConfig.app_mode === 'chorus' ? <ChorusLogo size={56} /> : <PrismLogo size={56} />}
+          </div>
+          <div className="brand-text">
+            <h1 className="title" style={{ background: modeColors.gradient, WebkitBackgroundClip: 'text', backgroundClip: 'text' }}>
+              {appConfig.app_name}
+            </h1>
+            <p className="subtitle">{appConfig.tagline}</p>
+          </div>
+        </div>
+
         {/* View Mode Toggle (Brief/Detailed) */}
         <div className="view-toggle">
           <button
@@ -197,11 +263,6 @@ function App() {
             Detailed
           </button>
         </div>
-
-        <h1 className="title" style={{ background: modeColors.gradient, WebkitBackgroundClip: 'text', backgroundClip: 'text' }}>
-          {appConfig.app_name}
-        </h1>
-        <p className="subtitle">{appConfig.tagline}</p>
       </header>
 
       <main className="main">
@@ -434,6 +495,31 @@ styleSheet.textContent = `
     text-align: center;
     margin-bottom: 1.5rem;
     padding-top: 1rem;
+  }
+
+  /* Brand (Logo + Title) */
+  .brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .logo-container {
+    flex-shrink: 0;
+  }
+
+  .brand-text {
+    text-align: left;
+  }
+
+  .brand-text .title {
+    margin-bottom: 0.125rem;
+  }
+
+  .brand-text .subtitle {
+    margin: 0;
   }
 
   /* Mode Toggle - at the very top */
