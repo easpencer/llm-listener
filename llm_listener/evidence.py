@@ -43,7 +43,7 @@ class EvidenceSearcher:
             "api_key": self.api_key,
             "engine": "google",
             "q": full_query,
-            "num": 10,
+            "num": 20,
         }
 
         try:
@@ -102,7 +102,7 @@ class EvidenceSearcher:
             "api_key": self.api_key,
             "engine": "google_scholar",
             "q": query,
-            "num": 10,
+            "num": 20,
         }
 
         try:

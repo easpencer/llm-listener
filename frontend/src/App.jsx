@@ -424,7 +424,7 @@ function App() {
     }
   }
 
-  // Generate patient-friendly summary - synthesis first, sources as support
+  // Generate patient-friendly summary - unified synthesis with agreement/disagreement
   const generatePatientSummary = () => {
     const integrated = generateIntegratedSynthesis()
     if (!integrated) return null
@@ -433,50 +433,76 @@ function App() {
     const aiContent = integrated.aiConsensus.synthesisContent || ''
     const paragraphs = aiContent.split('\n\n').filter(p => p.trim())
 
-    // SECTION 1: Main Summary (AI synthesis is the actual content)
-    if (integrated.aiConsensus.available && paragraphs.length > 0) {
-      // Build context about what sources inform this
-      const sourceContext = []
-      if (integrated.guidelines.available) {
-        const orgs = [...new Set(integrated.guidelines.sources?.map(s => extractOrgFromUrl(s.url)) || [])]
-        sourceContext.push(`${orgs.slice(0, 3).join(', ')} guidelines`)
-      }
-      if (integrated.literature.available) {
-        sourceContext.push(`${integrated.literature.totalPapers} research studies`)
-      }
-      sourceContext.push(`${integrated.aiConsensus.modelCount} AI experts`)
+    const guidelineCount = integrated.guidelines?.totalSources || 0
+    const literatureCount = integrated.literature?.totalPapers || 0
+    const aiCount = integrated.aiConsensus?.modelCount || 0
+    const orgs = integrated.guidelines.available
+      ? [...new Set(integrated.guidelines.sources?.map(s => extractOrgFromUrl(s.url)) || [])]
+      : []
 
-      const contextNote = sourceContext.length > 0
-        ? `*Based on ${sourceContext.join(', ')}*\n\n`
-        : ''
+    // SECTION 1: Main Summary (unified synthesis)
+    if (integrated.aiConsensus.available && paragraphs.length > 0) {
+      // Build informative intro
+      let intro = ''
+      if (guidelineCount > 0 || literatureCount > 0) {
+        intro = '*This summary is based on '
+        const parts = []
+        if (guidelineCount > 0) parts.push(`official health guidelines from ${orgs.slice(0, 2).join(' and ')}`)
+        if (literatureCount > 0) parts.push(`${literatureCount} scientific studies`)
+        parts.push(`${aiCount} medical AI systems`)
+        intro += parts.join(', ') + '.*\n\n'
+      }
 
       sections.push({
         type: 'synthesis',
         icon: '💡',
         title: 'What You Should Know',
-        content: contextNote + paragraphs.slice(0, 4).join('\n\n'),
-        modelCount: integrated.aiConsensus.modelCount,
+        content: intro + paragraphs.slice(0, 4).join('\n\n'),
+        modelCount: aiCount,
         isPrimary: true,
       })
     }
 
-    // SECTION 2: Supporting Sources (collapsible, links only)
+    // SECTION 2: Key Takeaways (agreement)
+    let takeawaysContent = ''
+    if (guidelineCount >= 2 || literatureCount >= 2) {
+      takeawaysContent += '**The evidence agrees on:**\n'
+      takeawaysContent += '- Multiple sources have been reviewed and synthesized above\n'
+      if (guidelineCount >= 2) {
+        takeawaysContent += `- Official guidance is available from ${orgs.slice(0, 3).join(', ')}\n`
+      }
+      if (literatureCount >= 3) {
+        takeawaysContent += `- Scientific research supports these recommendations\n`
+      }
+    }
+
+    takeawaysContent += '\n**Important notes:**\n'
+    takeawaysContent += '- This is for educational purposes - always consult your healthcare provider\n'
+    takeawaysContent += '- Individual circumstances may vary\n'
+
+    sections.push({
+      type: 'takeaways',
+      icon: '✅',
+      title: 'Key Points',
+      content: takeawaysContent,
+    })
+
+    // SECTION 3: Sources
     const sourceLinks = []
 
     if (integrated.guidelines.available && integrated.guidelines.sources) {
-      const orgs = [...new Set(integrated.guidelines.sources.map(s => extractOrgFromUrl(s.url)))]
-      const guidelineLinks = integrated.guidelines.sources.slice(0, 3).map(s =>
-        `- [${s.title.slice(0, 70)}...](${s.url}) *(${extractOrgFromUrl(s.url)})*`
+      const guidelineLinks = integrated.guidelines.sources.slice(0, 4).map(s =>
+        `- [${s.title.slice(0, 60)}...](${s.url}) *(${extractOrgFromUrl(s.url)})*`
       ).join('\n')
-      sourceLinks.push(`**Official Guidelines** from ${orgs.slice(0, 3).join(', ')}:\n${guidelineLinks}`)
+      sourceLinks.push(`**Official Guidelines:**\n${guidelineLinks}`)
     }
 
     if (integrated.literature.available && integrated.literature.sources) {
-      const researchLinks = integrated.literature.sources.slice(0, 3).map(s => {
+      const researchLinks = integrated.literature.sources.slice(0, 4).map(s => {
         const cites = s.cited_by > 0 ? ` *(${s.cited_by} citations)*` : ''
-        return `- [${s.title.slice(0, 70)}...](${s.url})${cites}`
+        return `- [${s.title.slice(0, 60)}...](${s.url})${cites}`
       }).join('\n')
-      sourceLinks.push(`**Research Studies**:\n${researchLinks}`)
+      sourceLinks.push(`**Research:**\n${researchLinks}`)
     }
 
     if (sourceLinks.length > 0) {
@@ -496,7 +522,7 @@ function App() {
     }
   }
 
-  // Generate clinician-focused summary - synthesis first, then supporting evidence
+  // Generate clinician-focused summary - unified synthesis, agreement/disagreement, then references
   const generateClinicianSummary = () => {
     const integrated = generateIntegratedSynthesis()
     if (!integrated) return null
@@ -506,9 +532,9 @@ function App() {
     let refNum = 1
     const allRefs = []
 
-    // Collect all references first
+    // Collect all references
     if (integrated.guidelines.available && integrated.guidelines.sources) {
-      integrated.guidelines.sources.slice(0, 6).forEach(link => {
+      integrated.guidelines.sources.slice(0, 10).forEach(link => {
         allRefs.push({
           num: refNum++,
           title: link.title,
@@ -519,7 +545,7 @@ function App() {
       })
     }
     if (integrated.literature.available && integrated.literature.sources) {
-      integrated.literature.sources.slice(0, 6).forEach(link => {
+      integrated.literature.sources.slice(0, 10).forEach(link => {
         allRefs.push({
           num: refNum++,
           title: link.title,
@@ -531,59 +557,75 @@ function App() {
       })
     }
 
-    // SECTION 1: Clinical Summary (the AI synthesis IS the main content)
-    if (integrated.aiConsensus.available && aiContent) {
-      // Build evidence context line
-      const evidenceContext = []
-      if (integrated.guidelines.available) {
-        const orgs = [...new Set(integrated.guidelines.sources?.map(s => extractOrgFromUrl(s.url)) || [])]
-        evidenceContext.push(`${integrated.guidelines.totalSources} guidelines (${orgs.slice(0, 3).join(', ')})`)
-      }
-      if (integrated.literature.available) {
-        const totalCites = integrated.literature.sources?.reduce((s, l) => s + (l.cited_by || 0), 0) || 0
-        evidenceContext.push(`${integrated.literature.totalPapers} studies${totalCites > 0 ? ` (${totalCites} citations)` : ''}`)
-      }
-      evidenceContext.push(`${integrated.aiConsensus.modelCount} AI models`)
+    const guidelineCount = integrated.guidelines?.totalSources || 0
+    const literatureCount = integrated.literature?.totalPapers || 0
+    const aiCount = integrated.aiConsensus?.modelCount || 0
+    const orgs = integrated.guidelines.available
+      ? [...new Set(integrated.guidelines.sources?.map(s => extractOrgFromUrl(s.url)) || [])]
+      : []
 
-      const contextLine = `*Evidence base: ${evidenceContext.join(' | ')}*\n\n`
+    // SECTION 1: Unified Synthesis (combines authority + literature + AI into one coherent summary)
+    if (integrated.aiConsensus.available && aiContent) {
+      // Build a comprehensive header describing what was synthesized
+      let synthesisIntro = '### Integrated Evidence Summary\n\n'
+
+      if (guidelineCount > 0 || literatureCount > 0) {
+        synthesisIntro += 'This synthesis integrates:\n'
+        if (guidelineCount > 0) {
+          synthesisIntro += `- **${guidelineCount} official guidelines** from ${orgs.slice(0, 4).join(', ')}\n`
+        }
+        if (literatureCount > 0) {
+          const totalCites = integrated.literature.sources?.reduce((s, l) => s + (l.cited_by || 0), 0) || 0
+          synthesisIntro += `- **${literatureCount} peer-reviewed studies**${totalCites > 0 ? ` (${totalCites} total citations)` : ''}\n`
+        }
+        synthesisIntro += `- **${aiCount} AI models** (${integrated.aiConsensus.providers.map(p => p.name).join(', ')})\n\n`
+      }
 
       sections.push({
         type: 'synthesis',
-        title: 'Clinical Summary',
-        subtitle: 'Synthesized from all available evidence',
-        content: contextLine + aiContent,
-        modelCount: integrated.aiConsensus.modelCount,
-        models: integrated.aiConsensus.providers.map(p => p.name),
+        title: 'Evidence Synthesis',
+        subtitle: 'Unified summary from authorities, research, and AI',
+        content: synthesisIntro + aiContent,
+        modelCount: aiCount,
         isPrimary: true,
       })
     }
 
-    // SECTION 2: Evidence Quality Assessment
-    const guidelineCount = integrated.guidelines?.totalSources || 0
-    const literatureCount = integrated.literature?.totalPapers || 0
-    const aiCount = integrated.aiConsensus?.modelCount || 0
+    // SECTION 2: Agreement & Disagreement Analysis
+    let consensusContent = ''
 
-    let qualityContent = ''
-    if (guidelineCount >= 3 && literatureCount >= 3) {
-      qualityContent = `**Strong evidence base** — ${guidelineCount} official guidelines and ${literatureCount} peer-reviewed studies provide robust support for clinical decision-making.`
-    } else if (guidelineCount >= 1 || literatureCount >= 1) {
-      qualityContent = `**Moderate evidence base** — ${guidelineCount} guideline(s) and ${literatureCount} study/studies available. Consider additional literature review for complex cases.`
-    } else {
-      qualityContent = `**Limited external evidence** — Primarily AI-synthesized analysis. Recommend consulting primary sources for clinical decisions.`
+    // Analyze agreement
+    consensusContent += '### Areas of Agreement\n\n'
+    if (guidelineCount >= 2 && literatureCount >= 2) {
+      consensusContent += `- **Cross-validated findings**: Both official guidelines (${guidelineCount}) and peer-reviewed research (${literatureCount}) address this topic, suggesting established evidence\n`
     }
-
     if (aiCount >= 3) {
-      qualityContent += ` Cross-validated across ${aiCount} AI models.`
+      consensusContent += `- **AI consensus**: ${aiCount} independent AI models analyzed this question and contributed to the synthesis\n`
     }
+    if (orgs.length >= 2) {
+      consensusContent += `- **Multi-authority support**: Guidance from multiple organizations (${orgs.slice(0, 3).join(', ')})\n`
+    }
+    if (guidelineCount === 0 && literatureCount === 0) {
+      consensusContent += `- Limited external evidence available; synthesis primarily reflects AI analysis\n`
+    }
+
+    consensusContent += '\n### Potential Limitations\n\n'
+    if (guidelineCount < 3) {
+      consensusContent += `- Limited official guideline coverage (${guidelineCount} sources)\n`
+    }
+    if (literatureCount < 5) {
+      consensusContent += `- Research base may benefit from additional literature review\n`
+    }
+    consensusContent += `- Guidelines may vary by region; verify against local protocols\n`
+    consensusContent += `- Evidence should be evaluated in individual clinical context\n`
 
     sections.push({
-      type: 'quality',
-      title: 'Evidence Quality',
-      content: qualityContent,
-      isCompact: true,
+      type: 'consensus',
+      title: 'Agreement & Limitations',
+      content: consensusContent,
     })
 
-    // SECTION 3: Supporting References (numbered, hyperlinked)
+    // SECTION 3: References
     if (allRefs.length > 0) {
       const guidelineRefs = allRefs.filter(r => r.type === 'guideline')
       const literatureRefs = allRefs.filter(r => r.type === 'literature')
@@ -1368,7 +1410,7 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
   const topCited = data.top_cited || []
   const links = data.links || []
 
-  // Generate summary paragraph for this evidence type
+  // Generate a rich summary describing what these sources cover
   const generateSummary = () => {
     if (links.length === 0) return null
 
@@ -1381,18 +1423,48 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
       else if (l.url.includes('nih.gov')) org = 'NIH'
       else if (l.url.includes('heart.org')) org = 'AHA'
       else if (l.url.includes('cancer.org')) org = 'ACS'
+      else if (l.url.includes('acog.org')) org = 'ACOG'
+      else if (l.url.includes('aap.org')) org = 'AAP'
       if (!orgMap[org]) orgMap[org] = 0
       orgMap[org]++
     })
 
     const orgs = Object.keys(orgMap).filter(o => o !== 'Other')
-    const topics = links.slice(0, 3).map(l => l.title.split(' - ')[0].split('|')[0].trim().slice(0, 50))
+
+    // Extract key topics from titles
+    const topics = links.slice(0, 5).map(l => {
+      // Clean up the title to extract the main topic
+      const title = l.title
+        .split(' - ')[0]
+        .split('|')[0]
+        .replace(/\.\.\.$/, '')
+        .trim()
+      return title.length > 60 ? title.slice(0, 60) + '...' : title
+    })
 
     if (type === 'guidelines') {
-      return `Found ${count} official sources${orgs.length > 0 ? ` from ${orgs.slice(0, 3).join(', ')}` : ''}. These authoritative sources provide evidence-based recommendations and clinical guidance on this health topic.`
+      let summary = `**${count} official sources** provide authoritative guidance on this topic`
+      if (orgs.length > 0) {
+        summary += ` from ${orgs.slice(0, 4).join(', ')}`
+      }
+      summary += '.\n\n'
+      summary += '**Key resources address:**\n'
+      topics.slice(0, 3).forEach(t => {
+        summary += `- ${t}\n`
+      })
+      return summary
     } else {
       const totalCites = links.reduce((s, l) => s + (l.cited_by || 0), 0)
-      return `Found ${count} peer-reviewed studies${totalCites > 0 ? ` with ${totalCites} combined citations` : ''}. This research provides scientific evidence and clinical insights on this topic.`
+      let summary = `**${count} peer-reviewed studies** provide research evidence`
+      if (totalCites > 0) {
+        summary += ` with ${totalCites} combined citations`
+      }
+      summary += '.\n\n'
+      summary += '**Research covers:**\n'
+      topics.slice(0, 3).forEach(t => {
+        summary += `- ${t}\n`
+      })
+      return summary
     }
   }
 
@@ -1417,7 +1489,7 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
         {/* Summary paragraph */}
         {summary && (
           <div className="evidence-summary">
-            <p>{summary}</p>
+            <ReactMarkdown>{summary}</ReactMarkdown>
           </div>
         )}
 
@@ -2284,6 +2356,11 @@ styleSheet.textContent = `
   .section-sources {
     border-left: 3px solid #0ea5e9;
     background: rgba(14, 165, 233, 0.05);
+  }
+
+  .section-takeaways {
+    border-left: 3px solid #22c55e;
+    background: rgba(34, 197, 94, 0.05);
   }
 
   .section-title-group {
