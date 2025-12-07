@@ -87,7 +87,10 @@ function App() {
   const [studyModalOpen, setStudyModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('patient') // 'patient' or 'clinician'
   const [showAllAI, setShowAllAI] = useState(false)
+  const [followUp, setFollowUp] = useState('')
+  const [conversationHistory, setConversationHistory] = useState([]) // [{question, synthesis}]
   const resultsRef = useRef(null)
+  const followUpRef = useRef(null)
 
   // App configuration from backend
   const [appConfig, setAppConfig] = useState({
@@ -109,6 +112,10 @@ function App() {
       .then(data => {
         setAppConfig(data)
         setMode(data.default_mode)
+        // Chorus defaults to clinician view
+        if (data.app_mode === 'chorus') {
+          setActiveTab('clinician')
+        }
       })
       .catch(() => {})
   }, [])
@@ -141,6 +148,8 @@ function App() {
     setEvidence(null)
     setError(null)
     setShowAllAI(false)
+    setConversationHistory([]) // Clear history on new query
+    setFollowUp('')
 
     try {
       const queryPromise = fetch('/api/query', {
@@ -168,10 +177,61 @@ function App() {
       setResponses(queryData.responses)
       setSynthesis(queryData.synthesis)
 
+      // Save to conversation history
+      setConversationHistory([{ question, synthesis: queryData.synthesis }])
+
       if (evidenceRes && evidenceRes.ok) {
         const evidenceData = await evidenceRes.json()
         setEvidence(evidenceData)
       }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleFollowUp = async (e) => {
+    e.preventDefault()
+    if (!followUp.trim() || loading) return
+
+    setLoading(true)
+    setError(null)
+
+    // Build context from conversation history
+    const context = conversationHistory.map(h =>
+      `Previous question: ${h.question}\nPrevious answer: ${h.synthesis?.content || ''}`
+    ).join('\n\n')
+
+    // Create follow-up query with context
+    const followUpQuestion = `Context from previous conversation:\n${context}\n\nFollow-up question: ${followUp}`
+
+    try {
+      const queryRes = await fetch('/api/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question: followUpQuestion,
+          include_synthesis: true,
+          mode
+        }),
+      })
+
+      if (!queryRes.ok) {
+        const err = await queryRes.json()
+        throw new Error(err.detail || 'Failed to query LLMs')
+      }
+
+      const queryData = await queryRes.json()
+      setResponses(queryData.responses)
+      setSynthesis(queryData.synthesis)
+
+      // Add to conversation history
+      setConversationHistory(prev => [...prev, { question: followUp, synthesis: queryData.synthesis }])
+      setFollowUp('')
+
+      // Focus back on follow-up input
+      setTimeout(() => followUpRef.current?.focus(), 100)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -1152,6 +1212,41 @@ function App() {
                   </div>
                 </section>
               )}
+
+              {/* Follow-up Question */}
+              <section className="follow-up-section animate-slide-up" style={{ animationDelay: '0.5s' }}>
+                <form onSubmit={handleFollowUp} className="follow-up-form glass-card">
+                  <div className="follow-up-header">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <span>Ask a follow-up question</span>
+                    {conversationHistory.length > 1 && (
+                      <span className="conversation-count">{conversationHistory.length} exchanges</span>
+                    )}
+                  </div>
+                  <div className="follow-up-input-group">
+                    <input
+                      ref={followUpRef}
+                      type="text"
+                      value={followUp}
+                      onChange={(e) => setFollowUp(e.target.value)}
+                      placeholder="Tell me more about... What about... Can you clarify..."
+                      disabled={loading}
+                    />
+                    <button type="submit" disabled={!followUp.trim() || loading} className="follow-up-button">
+                      {loading ? (
+                        <span className="spinner-small" />
+                      ) : (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <line x1="22" y1="2" x2="11" y2="13"/>
+                          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </section>
             </div>
           )}
         </main>
@@ -3057,6 +3152,101 @@ styleSheet.textContent = `
     gap: 0.25rem;
     font-size: 0.7rem;
     color: #64748b;
+  }
+
+  /* Follow-up Section */
+  .follow-up-section {
+    margin-top: 2rem;
+  }
+
+  .follow-up-form {
+    padding: 1.25rem;
+  }
+
+  .follow-up-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #94a3b8;
+  }
+
+  .follow-up-header svg {
+    opacity: 0.7;
+  }
+
+  .conversation-count {
+    margin-left: auto;
+    font-size: 0.75rem;
+    background: rgba(99, 102, 241, 0.2);
+    color: #a5b4fc;
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+  }
+
+  .follow-up-input-group {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .follow-up-input-group input {
+    flex: 1;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 0.875rem 1rem;
+    font-size: 0.95rem;
+    color: #e2e8f0;
+    transition: all 0.2s ease;
+  }
+
+  .follow-up-input-group input:focus {
+    outline: none;
+    border-color: rgba(99, 102, 241, 0.5);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+
+  .follow-up-input-group input::placeholder {
+    color: #64748b;
+  }
+
+  .follow-up-input-group input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .follow-up-button {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border: none;
+    border-radius: 12px;
+    padding: 0 1.25rem;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 50px;
+  }
+
+  .follow-up-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  }
+
+  .follow-up-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .spinner-small {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
   }
 
   /* Chorus Footer */
