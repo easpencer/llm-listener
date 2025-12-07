@@ -3,7 +3,6 @@ import ReactMarkdown from 'react-markdown'
 import {
   STUDY_CASES,
   SUS_QUESTIONS,
-  STUDY_TYPES,
   ACCURACY_DIMENSIONS,
   QUALITY_DIMENSIONS,
   EFFECTIVENESS_QUESTIONS
@@ -58,10 +57,12 @@ export function StudyFAB({ onClick }) {
   )
 }
 
-// Main Study Modal
+// Study phases in order
+const PHASES = ['consent', 'demographics', 'accuracy', 'quality', 'usability', 'effectiveness', 'complete']
+
+// Main Study Modal - Single unified flow
 export function StudyModal({ isOpen, onClose, onQuerySubmit, setViewMode }) {
-  const [phase, setPhase] = useState('select') // select, consent, demographics, study, complete
-  const [studyType, setStudyType] = useState(null)
+  const [phase, setPhase] = useState('consent')
   const [sessionId, setSessionId] = useState(null)
   const [consentGiven, setConsentGiven] = useState(false)
 
@@ -73,51 +74,71 @@ export function StudyModal({ isOpen, onClose, onQuerySubmit, setViewMode }) {
     expertiseArea: ''
   })
 
-  // Study-specific state
-  const [currentCase, setCurrentCase] = useState(0)
-  const [responses, setResponses] = useState({})
+  // Randomized case assignment (3 out of 7)
+  const [assignedCases, setAssignedCases] = useState([])
+
+  // Phase 1: Content Accuracy
+  const [currentAccuracyCase, setCurrentAccuracyCase] = useState(0)
+  const [accuracyResponses, setAccuracyResponses] = useState({})
   const [chorusResponses, setChorusResponses] = useState(null)
   const [loadingChorus, setLoadingChorus] = useState(false)
 
-  // For Study 3 (Usability)
-  const [usabilityPhase, setUsabilityPhase] = useState('intro') // intro, tasks, sus, complete
+  // Phase 2: Message Quality
+  const [currentQualityCase, setCurrentQualityCase] = useState(0)
+  const [qualityResponses, setQualityResponses] = useState({})
+  const [messageOrders, setMessageOrders] = useState({}) // Track randomization per case
+
+  // Phase 3: Usability (with Interface A/B)
+  const [assignedInterface, setAssignedInterface] = useState(null) // 'brief' or 'detailed'
+  const [usabilitySubPhase, setUsabilitySubPhase] = useState('intro') // intro, tasks, sus
   const [currentTask, setCurrentTask] = useState(0)
   const [taskStartTime, setTaskStartTime] = useState(null)
   const [taskResults, setTaskResults] = useState([])
   const [susResponses, setSusResponses] = useState(Array(10).fill(0))
 
-  // For Study 3 (Interface A/B)
-  const [assignedInterface, setAssignedInterface] = useState(null) // 'brief' or 'detailed'
-
-  // For Study 4 (Message A/B)
-  const [assignedCondition, setAssignedCondition] = useState(null) // 'chorus' or 'cdc'
+  // Phase 4: Message Effectiveness (with Message A/B)
+  const [assignedMessage, setAssignedMessage] = useState(null) // 'chorus' or 'cdc'
+  const [effectivenessSubPhase, setEffectivenessSubPhase] = useState('baseline') // baseline, message, post
+  const [effectivenessResponses, setEffectivenessResponses] = useState({})
 
   // Reset all state
   const resetState = () => {
-    setPhase('select')
-    setStudyType(null)
+    setPhase('consent')
     setSessionId(null)
     setConsentGiven(false)
     setDemographics({ role: '', experience: '', orgType: '', expertiseArea: '' })
-    setCurrentCase(0)
-    setResponses({})
+    setAssignedCases([])
+    setCurrentAccuracyCase(0)
+    setAccuracyResponses({})
     setChorusResponses(null)
-    setUsabilityPhase('intro')
+    setCurrentQualityCase(0)
+    setQualityResponses({})
+    setMessageOrders({})
+    setAssignedInterface(null)
+    setUsabilitySubPhase('intro')
     setCurrentTask(0)
     setTaskStartTime(null)
     setTaskResults([])
     setSusResponses(Array(10).fill(0))
-    setAssignedInterface(null)
-    setAssignedCondition(null)
+    setAssignedMessage(null)
+    setEffectivenessSubPhase('baseline')
+    setEffectivenessResponses({})
   }
 
   const handleClose = () => {
-    if (phase !== 'select' && phase !== 'complete') {
+    if (phase !== 'consent' && phase !== 'complete') {
       if (!window.confirm('Exit study? Your progress will be saved locally.')) return
       // Save partial progress
-      if (Object.keys(responses).length > 0) {
-        saveToLocalStorage('partial_responses', { studyType: studyType?.id, responses, sessionId })
-      }
+      saveToLocalStorage('partial_study', {
+        sessionId,
+        phase,
+        demographics,
+        accuracyResponses,
+        qualityResponses,
+        taskResults,
+        susResponses,
+        effectivenessResponses
+      })
     }
     resetState()
     onClose()
@@ -148,33 +169,30 @@ export function StudyModal({ isOpen, onClose, onQuerySubmit, setViewMode }) {
     const newSessionId = generateId()
     setSessionId(newSessionId)
 
-    // Save session to API/localStorage
+    // Randomly select 3 cases out of 7
+    const allIndices = [0, 1, 2, 3, 4, 5, 6]
+    const shuffled = allIndices.sort(() => Math.random() - 0.5)
+    const selectedCases = shuffled.slice(0, 3).sort((a, b) => a - b) // Keep in order
+    setAssignedCases(selectedCases)
+
+    // Random assignments for A/B tests
+    setAssignedInterface(Math.random() < 0.5 ? 'brief' : 'detailed')
+    setAssignedMessage(Math.random() < 0.5 ? 'chorus' : 'cdc')
+
+    // Save session
     await saveStudyData('/api/study/session', {
-      participant_type: studyType.participantType,
-      tool_version: studyType.id,
+      session_id: newSessionId,
+      participant_type: demographics.role,
       role: demographics.role,
       experience_years: demographics.experience ? parseInt(demographics.experience) : null,
       organization_type: demographics.orgType,
-      expertise_area: demographics.expertiseArea
+      expertise_area: demographics.expertiseArea,
+      assigned_cases: selectedCases
     })
 
-    // Study-specific initialization
-    if (studyType.id === 'usability') {
-      // Random assignment for Interface A/B test (Brief vs Detailed)
-      setAssignedInterface(Math.random() < 0.5 ? 'brief' : 'detailed')
-    }
-
-    if (studyType.id === 'message_effectiveness') {
-      // Random assignment for Message A/B test
-      setAssignedCondition(Math.random() < 0.5 ? 'chorus' : 'cdc')
-    }
-
-    if (studyType.id === 'content_accuracy' || studyType.id === 'message_quality') {
-      // Load first case
-      fetchChorusResponse(STUDY_CASES[0].query)
-    }
-
-    setPhase('study')
+    // Load first assigned case for accuracy phase
+    fetchChorusResponse(STUDY_CASES[selectedCases[0]].query)
+    setPhase('accuracy')
   }
 
   // Calculate SUS score
@@ -192,18 +210,26 @@ export function StudyModal({ isOpen, onClose, onQuerySubmit, setViewMode }) {
 
   // Complete study
   const completeStudy = async () => {
-    // Save final responses
     await saveStudyData('/api/study/complete', {
       session_id: sessionId,
-      study_type: studyType.id,
-      responses: responses,
-      sus_score: studyType.id === 'usability' ? calculateSusScore() : null,
-      sus_responses: studyType.id === 'usability' ? susResponses : null,
+      demographics,
+      accuracy_responses: accuracyResponses,
+      quality_responses: qualityResponses,
+      message_orders: messageOrders,
+      assigned_interface: assignedInterface,
       task_results: taskResults,
-      assigned_interface: assignedInterface, // Study 3: Brief vs Detailed A/B
-      assigned_condition: assignedCondition  // Study 4: Chorus vs CDC A/B
+      sus_responses: susResponses,
+      sus_score: calculateSusScore(),
+      assigned_message: assignedMessage,
+      effectiveness_responses: effectivenessResponses
     })
     setPhase('complete')
+  }
+
+  // Progress indicator
+  const getProgress = () => {
+    const phaseIndex = PHASES.indexOf(phase)
+    return Math.round((phaseIndex / (PHASES.length - 1)) * 100)
   }
 
   if (!isOpen) return null
@@ -213,71 +239,45 @@ export function StudyModal({ isOpen, onClose, onQuerySubmit, setViewMode }) {
       <div className="study-modal">
         <button className="study-modal-close" onClick={handleClose}>×</button>
 
-        {/* Phase: Study Selection */}
-        {phase === 'select' && (
-          <div className="study-phase">
-            <h2>Chorus Research Study</h2>
-            <p className="study-intro">
-              Thank you for your interest in our research. Please select the study you've been invited to participate in:
-            </p>
-
-            <div className="study-type-grid">
-              {Object.values(STUDY_TYPES).map(study => (
-                <button
-                  key={study.id}
-                  className={`study-type-card ${studyType?.id === study.id ? 'selected' : ''}`}
-                  onClick={() => setStudyType(study)}
-                >
-                  <span className="study-type-icon">{study.icon}</span>
-                  <h3>{study.title}</h3>
-                  <span className="study-type-subtitle">{study.subtitle}</span>
-                  <p>{study.description}</p>
-                  <span className="study-type-time">⏱️ {study.estimatedTime}</span>
-                </button>
-              ))}
-            </div>
-
-            <button
-              className="study-btn primary"
-              disabled={!studyType}
-              onClick={() => setPhase('consent')}
-            >
-              Continue
-            </button>
+        {/* Progress bar */}
+        {phase !== 'consent' && phase !== 'complete' && (
+          <div className="study-progress">
+            <div className="study-progress-bar" style={{ width: `${getProgress()}%` }} />
+            <span className="study-progress-text">{getProgress()}% Complete</span>
           </div>
         )}
 
         {/* Phase: Consent */}
         {phase === 'consent' && (
           <div className="study-phase">
-            <h2>Informed Consent</h2>
+            <h2>Chorus Research Study</h2>
+            <p className="study-intro">
+              Thank you for your interest in evaluating Chorus, an AI-powered tool for public health communication.
+            </p>
+
             <div className="consent-content">
-              <h3>Study: {studyType.title}</h3>
+              <h3>Informed Consent</h3>
 
               <section>
                 <h4>Purpose</h4>
-                <p>This study evaluates Chorus, an AI-powered tool designed to help public health officials understand and respond to health information provided by AI systems.</p>
+                <p>This study evaluates Chorus, a tool that helps public health professionals understand and respond to health misinformation by analyzing what AI systems tell the public.</p>
               </section>
 
               <section>
                 <h4>What You'll Do</h4>
-                {studyType.id === 'content_accuracy' && (
-                  <p>Review AI-generated responses to 7 health questions and rate their accuracy using a standardized form.</p>
-                )}
-                {studyType.id === 'message_quality' && (
-                  <p>Compare pairs of public health messages (presented in random order) and rate them on quality dimensions.</p>
-                )}
-                {studyType.id === 'usability' && (
-                  <p>Complete 3 tasks using the Chorus tool, then answer usability questions.</p>
-                )}
-                {studyType.id === 'message_effectiveness' && (
-                  <p>Read a public health message and answer questions about its effectiveness.</p>
-                )}
+                <p>Complete 4 short evaluation phases:</p>
+                <ol>
+                  <li><strong>Content Accuracy</strong> - Rate AI responses to health questions</li>
+                  <li><strong>Message Quality</strong> - Compare public health messages</li>
+                  <li><strong>Usability</strong> - Complete tasks and rate the tool</li>
+                  <li><strong>Message Effectiveness</strong> - React to a health message</li>
+                </ol>
+                <p>Estimated time: 20-30 minutes total.</p>
               </section>
 
               <section>
                 <h4>Data Collection</h4>
-                <p>We collect your responses and basic demographic information (role, experience). No personally identifiable information (name, email) is collected. All data is anonymized.</p>
+                <p>We collect your responses and basic demographic information (role, experience). No personally identifiable information (name, email) is collected. All data is anonymized and will be weighted by expertise level in analysis.</p>
               </section>
 
               <section>
@@ -291,20 +291,17 @@ export function StudyModal({ isOpen, onClose, onQuerySubmit, setViewMode }) {
                   checked={consentGiven}
                   onChange={(e) => setConsentGiven(e.target.checked)}
                 />
-                <span>I have read and understand the above information. I voluntarily agree to participate in this study.</span>
+                <span>I have read and understand the above information. I voluntarily agree to participate.</span>
               </label>
             </div>
 
-            <div className="study-btn-row">
-              <button className="study-btn secondary" onClick={() => setPhase('select')}>Back</button>
-              <button
-                className="study-btn primary"
-                disabled={!consentGiven}
-                onClick={() => setPhase('demographics')}
-              >
-                Continue
-              </button>
-            </div>
+            <button
+              className="study-btn primary"
+              disabled={!consentGiven}
+              onClick={() => setPhase('demographics')}
+            >
+              Continue
+            </button>
           </div>
         )}
 
@@ -312,71 +309,67 @@ export function StudyModal({ isOpen, onClose, onQuerySubmit, setViewMode }) {
         {phase === 'demographics' && (
           <div className="study-phase">
             <h2>About You</h2>
-            <p className="study-intro">Please provide some background information (anonymous).</p>
+            <p className="study-intro">Your background helps us understand different perspectives on AI health information.</p>
 
             <div className="demographics-form">
               <div className="form-group">
-                <label>Role / Title *</label>
+                <label>What best describes your role? *</label>
                 <select
                   value={demographics.role}
                   onChange={(e) => setDemographics(d => ({ ...d, role: e.target.value }))}
                 >
                   <option value="">Select your role...</option>
                   <option value="public_health_official">Public Health Official</option>
-                  <option value="healthcare_provider">Healthcare Provider</option>
+                  <option value="healthcare_provider">Healthcare Provider (MD, RN, etc.)</option>
                   <option value="researcher">Researcher / Academic</option>
-                  <option value="communications">Communications Professional</option>
-                  <option value="general_public">General Public</option>
+                  <option value="communications">Health Communications Professional</option>
+                  <option value="policy">Health Policy Professional</option>
+                  <option value="general_public">General Public / Patient</option>
                   <option value="other">Other</option>
                 </select>
               </div>
 
-              {(studyType.participantType === 'expert' || studyType.participantType === 'professional') && (
-                <>
-                  <div className="form-group">
-                    <label>Years of Experience</label>
-                    <select
-                      value={demographics.experience}
-                      onChange={(e) => setDemographics(d => ({ ...d, experience: e.target.value }))}
-                    >
-                      <option value="">Select...</option>
-                      <option value="0-2">0-2 years</option>
-                      <option value="3-5">3-5 years</option>
-                      <option value="6-10">6-10 years</option>
-                      <option value="11-20">11-20 years</option>
-                      <option value="20+">20+ years</option>
-                    </select>
-                  </div>
+              <div className="form-group">
+                <label>Years of experience in health-related work</label>
+                <select
+                  value={demographics.experience}
+                  onChange={(e) => setDemographics(d => ({ ...d, experience: e.target.value }))}
+                >
+                  <option value="">Select...</option>
+                  <option value="0">None / Not applicable</option>
+                  <option value="1">Less than 2 years</option>
+                  <option value="3">2-5 years</option>
+                  <option value="7">6-10 years</option>
+                  <option value="15">11-20 years</option>
+                  <option value="25">More than 20 years</option>
+                </select>
+              </div>
 
-                  <div className="form-group">
-                    <label>Organization Type</label>
-                    <select
-                      value={demographics.orgType}
-                      onChange={(e) => setDemographics(d => ({ ...d, orgType: e.target.value }))}
-                    >
-                      <option value="">Select...</option>
-                      <option value="government">Government / Public Health Agency</option>
-                      <option value="healthcare">Healthcare Organization</option>
-                      <option value="academia">Academic Institution</option>
-                      <option value="nonprofit">Non-profit Organization</option>
-                      <option value="private">Private Sector</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-                </>
-              )}
+              <div className="form-group">
+                <label>Organization type</label>
+                <select
+                  value={demographics.orgType}
+                  onChange={(e) => setDemographics(d => ({ ...d, orgType: e.target.value }))}
+                >
+                  <option value="">Select...</option>
+                  <option value="government">Government / Public Health Agency</option>
+                  <option value="healthcare">Healthcare Organization</option>
+                  <option value="academia">Academic Institution</option>
+                  <option value="nonprofit">Non-profit Organization</option>
+                  <option value="private">Private Sector</option>
+                  <option value="none">Not applicable</option>
+                </select>
+              </div>
 
-              {studyType.participantType === 'expert' && (
-                <div className="form-group">
-                  <label>Area of Expertise</label>
-                  <input
-                    type="text"
-                    value={demographics.expertiseArea}
-                    onChange={(e) => setDemographics(d => ({ ...d, expertiseArea: e.target.value }))}
-                    placeholder="e.g., Infectious Disease, Health Communication"
-                  />
-                </div>
-              )}
+              <div className="form-group">
+                <label>Area of expertise (if applicable)</label>
+                <input
+                  type="text"
+                  value={demographics.expertiseArea}
+                  onChange={(e) => setDemographics(d => ({ ...d, expertiseArea: e.target.value }))}
+                  placeholder="e.g., Infectious Disease, Health Communication, Epidemiology"
+                />
+              </div>
             </div>
 
             <div className="study-btn-row">
@@ -392,39 +385,53 @@ export function StudyModal({ isOpen, onClose, onQuerySubmit, setViewMode }) {
           </div>
         )}
 
-        {/* Phase: Study 1 - Content Accuracy */}
-        {phase === 'study' && studyType.id === 'content_accuracy' && (
-          <ContentAccuracyStudy
-            currentCase={currentCase}
-            setCurrentCase={setCurrentCase}
-            responses={responses}
-            setResponses={setResponses}
+        {/* Phase 1: Content Accuracy */}
+        {phase === 'accuracy' && (
+          <ContentAccuracyPhase
+            assignedCases={assignedCases}
+            currentCase={currentAccuracyCase}
+            setCurrentCase={setCurrentAccuracyCase}
+            responses={accuracyResponses}
+            setResponses={setAccuracyResponses}
             chorusResponses={chorusResponses}
             loadingChorus={loadingChorus}
             fetchChorusResponse={fetchChorusResponse}
-            onComplete={completeStudy}
+            onComplete={() => {
+              setCurrentQualityCase(0)
+              fetchChorusResponse(STUDY_CASES[assignedCases[0]].query)
+              // Set initial message order for first case
+              setMessageOrders(prev => ({
+                ...prev,
+                0: Math.random() < 0.5 ? ['chorus', 'cdc'] : ['cdc', 'chorus']
+              }))
+              setPhase('quality')
+            }}
           />
         )}
 
-        {/* Phase: Study 2 - Message Quality */}
-        {phase === 'study' && studyType.id === 'message_quality' && (
-          <MessageQualityStudy
-            currentCase={currentCase}
-            setCurrentCase={setCurrentCase}
-            responses={responses}
-            setResponses={setResponses}
+        {/* Phase 2: Message Quality */}
+        {phase === 'quality' && (
+          <MessageQualityPhase
+            assignedCases={assignedCases}
+            currentCase={currentQualityCase}
+            setCurrentCase={setCurrentQualityCase}
+            responses={qualityResponses}
+            setResponses={setQualityResponses}
+            messageOrders={messageOrders}
+            setMessageOrders={setMessageOrders}
             chorusResponses={chorusResponses}
             loadingChorus={loadingChorus}
             fetchChorusResponse={fetchChorusResponse}
-            onComplete={completeStudy}
+            onComplete={() => setPhase('usability')}
           />
         )}
 
-        {/* Phase: Study 3 - Usability (Interface A/B: Brief vs Detailed) */}
-        {phase === 'study' && studyType.id === 'usability' && (
-          <UsabilityStudy
-            usabilityPhase={usabilityPhase}
-            setUsabilityPhase={setUsabilityPhase}
+        {/* Phase 3: Usability */}
+        {phase === 'usability' && (
+          <UsabilityPhase
+            subPhase={usabilitySubPhase}
+            setSubPhase={setUsabilitySubPhase}
+            assignedInterface={assignedInterface}
             currentTask={currentTask}
             setCurrentTask={setCurrentTask}
             taskStartTime={taskStartTime}
@@ -435,18 +442,18 @@ export function StudyModal({ isOpen, onClose, onQuerySubmit, setViewMode }) {
             setSusResponses={setSusResponses}
             onQuerySubmit={onQuerySubmit}
             setViewMode={setViewMode}
-            onComplete={completeStudy}
-            assignedInterface={assignedInterface}
-            setAssignedInterface={setAssignedInterface}
+            onComplete={() => setPhase('effectiveness')}
           />
         )}
 
-        {/* Phase: Study 4 - Message Effectiveness */}
-        {phase === 'study' && studyType.id === 'message_effectiveness' && (
-          <MessageEffectivenessStudy
-            assignedCondition={assignedCondition}
-            responses={responses}
-            setResponses={setResponses}
+        {/* Phase 4: Message Effectiveness */}
+        {phase === 'effectiveness' && (
+          <EffectivenessPhase
+            subPhase={effectivenessSubPhase}
+            setSubPhase={setEffectivenessSubPhase}
+            assignedMessage={assignedMessage}
+            responses={effectivenessResponses}
+            setResponses={setEffectivenessResponses}
             onComplete={completeStudy}
           />
         )}
@@ -460,6 +467,7 @@ export function StudyModal({ isOpen, onClose, onQuerySubmit, setViewMode }) {
             <p className="session-id">Session ID: <code>{sessionId}</code></p>
             <p className="complete-note">
               Your participation helps improve AI-assisted public health communication tools.
+              Responses will be analyzed based on expertise level to ensure appropriate weighting.
             </p>
             <button className="study-btn primary" onClick={() => { resetState(); onClose(); }}>
               Close
@@ -473,9 +481,11 @@ export function StudyModal({ isOpen, onClose, onQuerySubmit, setViewMode }) {
   )
 }
 
-// Study 1: Content Accuracy Component
-function ContentAccuracyStudy({ currentCase, setCurrentCase, responses, setResponses, chorusResponses, loadingChorus, fetchChorusResponse, onComplete }) {
-  const caseData = STUDY_CASES[currentCase]
+// Phase 1: Content Accuracy
+function ContentAccuracyPhase({ assignedCases, currentCase, setCurrentCase, responses, setResponses, chorusResponses, loadingChorus, fetchChorusResponse, onComplete }) {
+  // Use assigned case index to get actual case data
+  const actualCaseIndex = assignedCases[currentCase]
+  const caseData = STUDY_CASES[actualCaseIndex]
   const caseResponses = responses[currentCase] || {}
 
   const updateRating = (provider, dimension, value) => {
@@ -483,6 +493,7 @@ function ContentAccuracyStudy({ currentCase, setCurrentCase, responses, setRespo
       ...r,
       [currentCase]: {
         ...r[currentCase],
+        caseIndex: actualCaseIndex, // Track which actual case this was
         [provider]: {
           ...(r[currentCase]?.[provider] || {}),
           [dimension]: value
@@ -500,10 +511,10 @@ function ContentAccuracyStudy({ currentCase, setCurrentCase, responses, setRespo
   }
 
   const nextCase = () => {
-    if (currentCase < STUDY_CASES.length - 1) {
+    if (currentCase < assignedCases.length - 1) {
       const next = currentCase + 1
       setCurrentCase(next)
-      fetchChorusResponse(STUDY_CASES[next].query)
+      fetchChorusResponse(STUDY_CASES[assignedCases[next]].query)
     } else {
       onComplete()
     }
@@ -512,8 +523,11 @@ function ContentAccuracyStudy({ currentCase, setCurrentCase, responses, setRespo
   return (
     <div className="study-phase content-accuracy">
       <div className="study-header">
-        <h2>Content Accuracy Review</h2>
-        <span className="case-counter">Case {currentCase + 1} of {STUDY_CASES.length}</span>
+        <div>
+          <h2>Phase 1: Content Accuracy</h2>
+          <p className="phase-desc">Rate the accuracy of AI responses to health questions</p>
+        </div>
+        <span className="case-counter">Case {currentCase + 1} of {assignedCases.length}</span>
       </div>
 
       <div className="case-info">
@@ -573,8 +587,9 @@ function ContentAccuracyStudy({ currentCase, setCurrentCase, responses, setRespo
           className="study-btn secondary"
           disabled={currentCase === 0}
           onClick={() => {
-            setCurrentCase(c => c - 1)
-            fetchChorusResponse(STUDY_CASES[currentCase - 1].query)
+            const prev = currentCase - 1
+            setCurrentCase(prev)
+            fetchChorusResponse(STUDY_CASES[assignedCases[prev]].query)
           }}
         >
           Previous
@@ -584,18 +599,20 @@ function ContentAccuracyStudy({ currentCase, setCurrentCase, responses, setRespo
           disabled={!isCurrentCaseComplete()}
           onClick={nextCase}
         >
-          {currentCase === STUDY_CASES.length - 1 ? 'Complete Study' : 'Next Case'}
+          {currentCase === assignedCases.length - 1 ? 'Continue to Phase 2' : 'Next Case'}
         </button>
       </div>
     </div>
   )
 }
 
-// Study 2: Message Quality Component
-function MessageQualityStudy({ currentCase, setCurrentCase, responses, setResponses, chorusResponses, loadingChorus, fetchChorusResponse, onComplete }) {
-  const caseData = STUDY_CASES[currentCase]
-  const [messageOrder, setMessageOrder] = useState(() => Math.random() < 0.5 ? ['chorus', 'cdc'] : ['cdc', 'chorus'])
+// Phase 2: Message Quality
+function MessageQualityPhase({ assignedCases, currentCase, setCurrentCase, responses, setResponses, messageOrders, setMessageOrders, chorusResponses, loadingChorus, fetchChorusResponse, onComplete }) {
+  // Use assigned case index to get actual case data
+  const actualCaseIndex = assignedCases[currentCase]
+  const caseData = STUDY_CASES[actualCaseIndex]
   const caseResponses = responses[currentCase] || {}
+  const messageOrder = messageOrders[currentCase] || ['chorus', 'cdc']
 
   // Extract Chorus message from synthesis
   const getChorusMessage = () => {
@@ -621,8 +638,7 @@ function MessageQualityStudy({ currentCase, setCurrentCase, responses, setRespon
         [message]: {
           ...(r[currentCase]?.[message] || {}),
           [dimension]: value
-        },
-        messageOrder
+        }
       }
     }))
   }
@@ -630,7 +646,7 @@ function MessageQualityStudy({ currentCase, setCurrentCase, responses, setRespon
   const updatePreference = (value) => {
     setResponses(r => ({
       ...r,
-      [currentCase]: { ...r[currentCase], preference: value, messageOrder }
+      [currentCase]: { ...r[currentCase], preference: value }
     }))
   }
 
@@ -641,11 +657,15 @@ function MessageQualityStudy({ currentCase, setCurrentCase, responses, setRespon
   }
 
   const nextCase = () => {
-    if (currentCase < STUDY_CASES.length - 1) {
+    if (currentCase < assignedCases.length - 1) {
       const next = currentCase + 1
       setCurrentCase(next)
-      setMessageOrder(Math.random() < 0.5 ? ['chorus', 'cdc'] : ['cdc', 'chorus'])
-      fetchChorusResponse(STUDY_CASES[next].query)
+      // Set random order for next case
+      setMessageOrders(prev => ({
+        ...prev,
+        [next]: Math.random() < 0.5 ? ['chorus', 'cdc'] : ['cdc', 'chorus']
+      }))
+      fetchChorusResponse(STUDY_CASES[assignedCases[next]].query)
     } else {
       onComplete()
     }
@@ -654,8 +674,11 @@ function MessageQualityStudy({ currentCase, setCurrentCase, responses, setRespon
   return (
     <div className="study-phase message-quality">
       <div className="study-header">
-        <h2>Message Quality Comparison</h2>
-        <span className="case-counter">Case {currentCase + 1} of {STUDY_CASES.length}</span>
+        <div>
+          <h2>Phase 2: Message Quality</h2>
+          <p className="phase-desc">Compare two public health messages (blinded)</p>
+        </div>
+        <span className="case-counter">Case {currentCase + 1} of {assignedCases.length}</span>
       </div>
 
       <div className="case-info">
@@ -725,8 +748,9 @@ function MessageQualityStudy({ currentCase, setCurrentCase, responses, setRespon
           className="study-btn secondary"
           disabled={currentCase === 0}
           onClick={() => {
-            setCurrentCase(c => c - 1)
-            fetchChorusResponse(STUDY_CASES[currentCase - 1].query)
+            const prev = currentCase - 1
+            setCurrentCase(prev)
+            fetchChorusResponse(STUDY_CASES[assignedCases[prev]].query)
           }}
         >
           Previous
@@ -736,33 +760,31 @@ function MessageQualityStudy({ currentCase, setCurrentCase, responses, setRespon
           disabled={!isCurrentCaseComplete()}
           onClick={nextCase}
         >
-          {currentCase === STUDY_CASES.length - 1 ? 'Complete Study' : 'Next Case'}
+          {currentCase === assignedCases.length - 1 ? 'Continue to Phase 3' : 'Next Case'}
         </button>
       </div>
     </div>
   )
 }
 
-// Study 3: Usability Component - Interface A/B Test (Brief vs Detailed)
-function UsabilityStudy({ usabilityPhase, setUsabilityPhase, currentTask, setCurrentTask, taskStartTime, setTaskStartTime, taskResults, setTaskResults, susResponses, setSusResponses, onQuerySubmit, setViewMode, onComplete, assignedInterface, setAssignedInterface }) {
+// Phase 3: Usability
+function UsabilityPhase({ subPhase, setSubPhase, assignedInterface, currentTask, setCurrentTask, taskStartTime, setTaskStartTime, taskResults, setTaskResults, susResponses, setSusResponses, onQuerySubmit, setViewMode, onComplete }) {
   const tasks = [
     { query: "Should I get a flu vaccine this year?", instruction: "Use Chorus to investigate what AI systems tell users about flu vaccination." },
     { query: "Are COVID boosters still recommended?", instruction: "Generate information about current COVID-19 booster recommendations." },
     { query: "What are the side effects of the MMR vaccine?", instruction: "Look up AI responses about MMR vaccine side effects." }
   ]
 
-  // Set view mode when starting tasks
+  // Set view mode when entering tasks
   useEffect(() => {
-    if (usabilityPhase === 'tasks' && assignedInterface) {
+    if (subPhase === 'tasks' && assignedInterface) {
       setViewMode?.(assignedInterface)
     }
-  }, [usabilityPhase, assignedInterface])
+  }, [subPhase, assignedInterface])
 
   const startTask = () => {
     setTaskStartTime(Date.now())
-    // Set view mode based on A/B assignment
-    setViewMode?.(assignedInterface || 'detailed')
-    // Submit query
+    setViewMode?.(assignedInterface)
     onQuerySubmit?.(tasks[currentTask].query)
   }
 
@@ -772,14 +794,15 @@ function UsabilityStudy({ usabilityPhase, setUsabilityPhase, currentTask, setCur
       task: currentTask,
       query: tasks[currentTask].query,
       timeSpent,
-      rating
+      rating,
+      interface: assignedInterface
     }])
 
     if (currentTask < tasks.length - 1) {
       setCurrentTask(c => c + 1)
       setTaskStartTime(null)
     } else {
-      setUsabilityPhase('sus')
+      setSubPhase('sus')
     }
   }
 
@@ -791,23 +814,21 @@ function UsabilityStudy({ usabilityPhase, setUsabilityPhase, currentTask, setCur
 
   const isSusComplete = () => susResponses.every(r => r > 0)
 
-  if (usabilityPhase === 'intro') {
+  if (subPhase === 'intro') {
     return (
       <div className="study-phase usability-intro">
-        <h2>Usability Assessment</h2>
+        <h2>Phase 3: Usability Assessment</h2>
         <p>You will complete 3 tasks using the Chorus tool, then answer usability questions.</p>
 
-        {assignedInterface && (
-          <div className="interface-assignment">
-            <h4>Your Interface Assignment</h4>
-            <p>
-              You have been randomly assigned to the <strong>{assignedInterface === 'brief' ? 'Brief' : 'Detailed'}</strong> view mode.
-              {assignedInterface === 'brief'
-                ? ' This shows a concise summary of AI responses.'
-                : ' This shows full responses from each AI provider.'}
-            </p>
-          </div>
-        )}
+        <div className="interface-assignment">
+          <h4>Your Interface</h4>
+          <p>
+            You have been randomly assigned to the <strong>{assignedInterface === 'brief' ? 'Brief' : 'Detailed'}</strong> view.
+            {assignedInterface === 'brief'
+              ? ' This shows a concise summary of AI responses.'
+              : ' This shows full responses from each AI provider.'}
+          </p>
+        </div>
 
         <div className="task-list">
           <h4>Tasks:</h4>
@@ -817,17 +838,17 @@ function UsabilityStudy({ usabilityPhase, setUsabilityPhase, currentTask, setCur
             ))}
           </ol>
         </div>
-        <button className="study-btn primary" onClick={() => setUsabilityPhase('tasks')}>
+        <button className="study-btn primary" onClick={() => setSubPhase('tasks')}>
           Begin Tasks
         </button>
       </div>
     )
   }
 
-  if (usabilityPhase === 'tasks') {
+  if (subPhase === 'tasks') {
     return (
       <div className="study-phase usability-tasks">
-        <h2>Task {currentTask + 1} of {tasks.length}</h2>
+        <h2>Phase 3: Task {currentTask + 1} of {tasks.length}</h2>
         <div className="task-card">
           <p className="task-instruction">{tasks[currentTask].instruction}</p>
 
@@ -837,7 +858,7 @@ function UsabilityStudy({ usabilityPhase, setUsabilityPhase, currentTask, setCur
             </button>
           ) : (
             <div className="task-complete-section">
-              <p>When you've completed the task, rate how useful the results were:</p>
+              <p>When you've reviewed the results, rate how useful they were:</p>
               <div className="usefulness-rating">
                 {[1, 2, 3, 4, 5].map(val => (
                   <button
@@ -859,11 +880,11 @@ function UsabilityStudy({ usabilityPhase, setUsabilityPhase, currentTask, setCur
     )
   }
 
-  if (usabilityPhase === 'sus') {
+  if (subPhase === 'sus') {
     return (
       <div className="study-phase usability-sus">
-        <h2>System Usability Scale</h2>
-        <p>Please rate your agreement with each statement (1 = Strongly Disagree, 5 = Strongly Agree):</p>
+        <h2>Phase 3: System Usability Scale</h2>
+        <p>Rate your agreement with each statement (1 = Strongly Disagree, 5 = Strongly Agree):</p>
 
         <div className="sus-questions">
           {SUS_QUESTIONS.map((q, idx) => (
@@ -889,7 +910,7 @@ function UsabilityStudy({ usabilityPhase, setUsabilityPhase, currentTask, setCur
           disabled={!isSusComplete()}
           onClick={onComplete}
         >
-          Complete Study
+          Continue to Phase 4
         </button>
       </div>
     )
@@ -898,17 +919,14 @@ function UsabilityStudy({ usabilityPhase, setUsabilityPhase, currentTask, setCur
   return null
 }
 
-// Study 4: Message Effectiveness Component
-function MessageEffectivenessStudy({ assignedCondition, responses, setResponses, onComplete }) {
+// Phase 4: Message Effectiveness
+function EffectivenessPhase({ subPhase, setSubPhase, assignedMessage, responses, setResponses, onComplete }) {
   const caseData = STUDY_CASES[0] // Use flu vaccination case
-  const [phase, setPhase] = useState('baseline')
 
-  // Get message based on condition
   const getMessage = () => {
-    if (assignedCondition === 'cdc') {
+    if (assignedMessage === 'cdc') {
       return caseData.cdc_message
     }
-    // For Chorus condition, we'd use pre-generated response
     return `**Get Protected: Your Annual Flu Shot Matters**
 
 Getting your flu vaccine this year is one of the simplest steps you can take to protect yourself and those around you. Here's what the latest medical guidance tells us:
@@ -933,10 +951,10 @@ Contact your pharmacy or healthcare provider today to schedule your vaccination.
     setResponses(r => ({ ...r, [key]: value }))
   }
 
-  if (phase === 'baseline') {
+  if (subPhase === 'baseline') {
     return (
       <div className="study-phase effectiveness-baseline">
-        <h2>Before We Begin</h2>
+        <h2>Phase 4: Message Effectiveness</h2>
         <p>Please answer this question before seeing the message:</p>
 
         <div className="baseline-question">
@@ -961,7 +979,7 @@ Contact your pharmacy or healthcare provider today to schedule your vaccination.
         <button
           className="study-btn primary"
           disabled={!responses.baseline}
-          onClick={() => setPhase('message')}
+          onClick={() => setSubPhase('message')}
         >
           Continue
         </button>
@@ -969,26 +987,26 @@ Contact your pharmacy or healthcare provider today to schedule your vaccination.
     )
   }
 
-  if (phase === 'message') {
+  if (subPhase === 'message') {
     return (
       <div className="study-phase effectiveness-message">
-        <h2>Please Read This Message</h2>
+        <h2>Phase 4: Please Read This Message</h2>
         <div className="study-message-content">
           <ReactMarkdown>{getMessage()}</ReactMarkdown>
         </div>
-        <button className="study-btn primary" onClick={() => setPhase('post')}>
+        <button className="study-btn primary" onClick={() => setSubPhase('post')}>
           I've Read the Message
         </button>
       </div>
     )
   }
 
-  if (phase === 'post') {
+  if (subPhase === 'post') {
     const allAnswered = EFFECTIVENESS_QUESTIONS.every(q => responses[q.id])
 
     return (
       <div className="study-phase effectiveness-post">
-        <h2>Your Reactions</h2>
+        <h2>Phase 4: Your Reactions</h2>
 
         {EFFECTIVENESS_QUESTIONS.map(q => (
           <div key={q.id} className="effectiveness-question">
@@ -1025,38 +1043,61 @@ Contact your pharmacy or healthcare provider today to schedule your vaccination.
 const studyStyles = `
   .study-fab {
     position: fixed;
-    bottom: 24px;
-    right: 24px;
+    bottom: 2rem;
+    right: 2rem;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
+    border: none;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4);
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 12px 20px;
-    background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
-    color: white;
-    border: none;
-    border-radius: 50px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);
-    transition: all 0.2s;
+    justify-content: center;
     z-index: 1000;
   }
 
   .study-fab:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(168, 85, 247, 0.5);
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(168, 85, 247, 0.6);
+  }
+
+  .study-fab-text {
+    display: none;
+  }
+
+  @media (min-width: 768px) {
+    .study-fab {
+      width: auto;
+      height: auto;
+      padding: 1rem 1.5rem;
+      border-radius: 2rem;
+      gap: 0.5rem;
+    }
+
+    .study-fab-text {
+      display: inline;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
   }
 
   .study-modal-overlay {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: rgba(0, 0, 0, 0.8);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 2000;
-    padding: 20px;
+    padding: 1rem;
+    backdrop-filter: blur(4px);
   }
 
   .study-modal {
@@ -1082,6 +1123,26 @@ const studyStyles = `
     z-index: 10;
   }
 
+  .study-progress {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    position: relative;
+  }
+
+  .study-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #a855f7, #6366f1);
+    transition: width 0.3s ease;
+  }
+
+  .study-progress-text {
+    position: absolute;
+    right: 16px;
+    top: 8px;
+    font-size: 0.75rem;
+    color: #a1a1aa;
+  }
+
   .study-phase {
     padding: 32px;
   }
@@ -1089,69 +1150,18 @@ const studyStyles = `
   .study-phase h2 {
     color: #f4f4f5;
     font-size: 1.5rem;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
+  }
+
+  .phase-desc {
+    color: #a1a1aa;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
   }
 
   .study-intro {
     color: #a1a1aa;
     margin-bottom: 24px;
-  }
-
-  .study-type-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-
-  .study-type-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 20px;
-    text-align: left;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .study-type-card:hover {
-    border-color: rgba(168, 85, 247, 0.5);
-    background: rgba(168, 85, 247, 0.05);
-  }
-
-  .study-type-card.selected {
-    border-color: #a855f7;
-    background: rgba(168, 85, 247, 0.1);
-  }
-
-  .study-type-icon {
-    font-size: 2rem;
-    display: block;
-    margin-bottom: 8px;
-  }
-
-  .study-type-card h3 {
-    color: #f4f4f5;
-    font-size: 1rem;
-    margin-bottom: 4px;
-  }
-
-  .study-type-subtitle {
-    color: #a855f7;
-    font-size: 0.8rem;
-    display: block;
-    margin-bottom: 8px;
-  }
-
-  .study-type-card p {
-    color: #a1a1aa;
-    font-size: 0.85rem;
-    margin-bottom: 12px;
-  }
-
-  .study-type-time {
-    color: #71717a;
-    font-size: 0.75rem;
   }
 
   .study-btn {
@@ -1208,10 +1218,19 @@ const studyStyles = `
     font-size: 0.95rem;
   }
 
-  .consent-content p {
+  .consent-content p, .consent-content ol {
     color: #a1a1aa;
     font-size: 0.9rem;
     line-height: 1.6;
+  }
+
+  .consent-content ol {
+    margin-left: 20px;
+    margin-bottom: 12px;
+  }
+
+  .consent-content li {
+    margin-bottom: 8px;
   }
 
   .consent-checkbox {
@@ -1273,7 +1292,7 @@ const studyStyles = `
   .study-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     margin-bottom: 20px;
   }
 
@@ -1283,6 +1302,7 @@ const studyStyles = `
     padding: 6px 12px;
     border-radius: 20px;
     font-size: 0.8rem;
+    white-space: nowrap;
   }
 
   .case-info {
@@ -1725,10 +1745,6 @@ const studyStyles = `
 
   /* Mobile */
   @media (max-width: 768px) {
-    .study-type-grid {
-      grid-template-columns: 1fr;
-    }
-
     .message-comparison {
       grid-template-columns: 1fr;
     }
