@@ -181,15 +181,12 @@ class EvidenceSearcher:
             }
 
     def _create_digest(self, snippets: List[str], source_type: str) -> str:
-        """Create a brief digest from snippets."""
+        """Create a detailed digest from snippets."""
         if not snippets:
             return f"No {source_type} found for this query."
 
-        # Combine snippets and truncate if too long
+        # Combine all snippets - no truncation for full detail
         combined = " | ".join(snippets)
-        if len(combined) > 500:
-            combined = combined[:497] + "..."
-
         return combined
 
     def _categorize_sources(self, links: List[Dict]) -> Dict[str, int]:

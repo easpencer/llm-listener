@@ -683,7 +683,7 @@ function App() {
         type: 'synthesis',
         icon: '💡',
         title: 'What You Should Know',
-        content: intro + paragraphs.slice(0, 4).join('\n\n'),
+        content: intro + paragraphs.join('\n\n'),
         modelCount: aiCount,
         isPrimary: true,
       })
@@ -717,16 +717,16 @@ function App() {
     const sourceLinks = []
 
     if (integrated.guidelines.available && integrated.guidelines.sources) {
-      const guidelineLinks = integrated.guidelines.sources.slice(0, 4).map(s =>
-        `- [${s.title.slice(0, 60)}...](${s.url}) *(${extractOrgFromUrl(s.url)})*`
+      const guidelineLinks = integrated.guidelines.sources.slice(0, 8).map(s =>
+        `- [${s.title}](${s.url}) *(${extractOrgFromUrl(s.url)})*`
       ).join('\n')
       sourceLinks.push(`**Official Guidelines:**\n${guidelineLinks}`)
     }
 
     if (integrated.literature.available && integrated.literature.sources) {
-      const researchLinks = integrated.literature.sources.slice(0, 4).map(s => {
+      const researchLinks = integrated.literature.sources.slice(0, 8).map(s => {
         const cites = s.cited_by > 0 ? ` *(${s.cited_by} citations)*` : ''
-        return `- [${s.title.slice(0, 60)}...](${s.url})${cites}`
+        return `- [${s.title}](${s.url})${cites}`
       }).join('\n')
       sourceLinks.push(`**Research:**\n${researchLinks}`)
     }
