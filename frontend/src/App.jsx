@@ -69,6 +69,7 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [responses, setResponses] = useState([])
   const [synthesis, setSynthesis] = useState(null)
+  const [evidence, setEvidence] = useState(null)
   const [providers, setProviders] = useState([])
   const [error, setError] = useState(null)
   const [copied, setCopied] = useState(false)
@@ -124,23 +125,46 @@ function App() {
     setLoading(true)
     setResponses([])
     setSynthesis(null)
+    setEvidence(null)
     setError(null)
 
     try {
-      const res = await fetch('/api/query', {
+      // Query LLMs
+      const queryPromise = fetch('/api/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question, include_synthesis: true, mode }),
       })
 
-      if (!res.ok) {
-        const err = await res.json()
+      // Search evidence (only in health_research mode)
+      const evidencePromise = mode === 'health_research'
+        ? fetch('/api/evidence', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: question }),
+          })
+        : null
+
+      // Wait for both to complete
+      const [queryRes, evidenceRes] = await Promise.all([
+        queryPromise,
+        evidencePromise,
+      ])
+
+      if (!queryRes.ok) {
+        const err = await queryRes.json()
         throw new Error(err.detail || 'Failed to query LLMs')
       }
 
-      const data = await res.json()
-      setResponses(data.responses)
-      setSynthesis(data.synthesis)
+      const queryData = await queryRes.json()
+      setResponses(queryData.responses)
+      setSynthesis(queryData.synthesis)
+
+      // Process evidence if available
+      if (evidenceRes && evidenceRes.ok) {
+        const evidenceData = await evidenceRes.json()
+        setEvidence(evidenceData)
+      }
     } catch (err) {
       setError(err.message)
     } finally {
@@ -327,6 +351,40 @@ function App() {
           </div>
         )}
 
+        {/* Evidence Cards - show in health_research mode */}
+        {mode === 'health_research' && evidence && (
+          <section className="section">
+            <div className="section-header">
+              <h2 className="section-title">
+                <span className="section-icon">📚</span>
+                Evidence-Based Sources
+              </h2>
+            </div>
+            <div className="evidence-grid">
+              {/* Official Guidelines Card */}
+              {evidence.guidelines && evidence.guidelines.count > 0 && (
+                <EvidenceCard
+                  title="Official Guidelines"
+                  icon="🏛️"
+                  color="#14b8a6"
+                  data={evidence.guidelines}
+                  type="guidelines"
+                />
+              )}
+              {/* Scientific Literature Card */}
+              {evidence.literature && evidence.literature.count > 0 && (
+                <EvidenceCard
+                  title="Scientific Literature"
+                  icon="🔬"
+                  color="#0ea5e9"
+                  data={evidence.literature}
+                  type="literature"
+                />
+              )}
+            </div>
+          </section>
+        )}
+
         {/* Individual AI Responses - only show in detailed view */}
         {viewMode === 'detailed' && responses.length > 0 && (
           <section className="section">
@@ -472,6 +530,106 @@ function AnalysisCard({ title, content, icon, color }) {
       </div>
       <div className="analysis-card-content">
         <ReactMarkdown>{content}</ReactMarkdown>
+      </div>
+    </div>
+  )
+}
+
+function EvidenceCard({ title, icon, color, data, type }) {
+  const [expanded, setExpanded] = useState(false)
+
+  // Get numeric summary
+  const count = data.count || 0
+  const sourceTypes = data.source_types || {}
+  const topCited = data.top_cited || []
+
+  // Build summary text
+  let summaryText = `${count} sources found`
+  if (type === 'guidelines' && Object.keys(sourceTypes).length > 0) {
+    const breakdown = Object.entries(sourceTypes)
+      .map(([org, cnt]) => `${cnt} ${org}`)
+      .join(', ')
+    summaryText = breakdown
+  } else if (type === 'literature' && topCited.length > 0) {
+    summaryText = `${count} peer-reviewed articles`
+  }
+
+  return (
+    <div className="evidence-card" style={{ borderColor: color }}>
+      <div
+        className="evidence-card-header"
+        style={{ background: `${color}15`, borderBottomColor: `${color}30` }}
+      >
+        <div className="evidence-header-top">
+          <div className="evidence-title-row">
+            <span className="evidence-icon">{icon}</span>
+            <h3 className="evidence-card-title" style={{ color }}>{title}</h3>
+          </div>
+          <div className="evidence-count" style={{ color }}>{summaryText}</div>
+        </div>
+      </div>
+
+      <div className="evidence-card-content">
+        {/* Digest */}
+        {data.digest && (
+          <div className="evidence-digest">
+            <p>{data.digest}</p>
+          </div>
+        )}
+
+        {/* Links */}
+        {data.links && data.links.length > 0 && (
+          <div className="evidence-links">
+            <button
+              className="evidence-toggle"
+              onClick={() => setExpanded(!expanded)}
+              style={{ color }}
+            >
+              {expanded ? '▼' : '▶'} {expanded ? 'Hide' : 'Show'} all {data.links.length} sources
+            </button>
+
+            {expanded && (
+              <div className="evidence-links-list">
+                {data.links.map((link, i) => (
+                  <div key={i} className="evidence-link-item">
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color }}
+                    >
+                      {link.title}
+                    </a>
+                    {link.snippet && <p className="link-snippet">{link.snippet}</p>}
+                    {link.cited_by > 0 && (
+                      <span className="citation-count">Cited by {link.cited_by}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Top cited papers for literature */}
+        {type === 'literature' && topCited.length > 0 && !expanded && (
+          <div className="top-cited">
+            <h4>Highly Cited Papers:</h4>
+            {topCited.map((paper, i) => (
+              <div key={i} className="cited-paper">
+                <a
+                  href={paper.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color }}
+                >
+                  {paper.title}
+                </a>
+                <span className="citation-count">({paper.cited_by} citations)</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -1032,6 +1190,179 @@ styleSheet.textContent = `
     font-size: 0.85rem;
     line-height: 1.7;
     color: #d4d4d8;
+  }
+
+  /* Evidence cards */
+  .evidence-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 900px) {
+    .evidence-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .evidence-card {
+    background: rgba(255,255,255,0.02);
+    border-radius: 0.75rem;
+    border: 1px solid;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .evidence-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  }
+
+  .evidence-card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid;
+  }
+
+  .evidence-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .evidence-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .evidence-icon {
+    font-size: 1.25rem;
+  }
+
+  .evidence-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .evidence-count {
+    font-size: 0.75rem;
+    font-weight: 500;
+    opacity: 0.9;
+  }
+
+  .evidence-card-content {
+    padding: 1rem 1.25rem;
+  }
+
+  .evidence-digest {
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: #d4d4d8;
+  }
+
+  .evidence-digest p {
+    margin: 0;
+  }
+
+  .evidence-toggle {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+  }
+
+  .evidence-toggle:hover {
+    background: rgba(255,255,255,0.1);
+  }
+
+  .evidence-links-list {
+    margin-top: 0.75rem;
+  }
+
+  .evidence-link-item {
+    padding: 0.75rem;
+    background: rgba(255,255,255,0.02);
+    border-radius: 0.375rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .evidence-link-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .evidence-link-item a {
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+
+  .evidence-link-item a:hover {
+    text-decoration: underline;
+  }
+
+  .link-snippet {
+    font-size: 0.75rem;
+    color: #a1a1aa;
+    margin: 0.25rem 0 0 0;
+    line-height: 1.4;
+  }
+
+  .citation-count {
+    font-size: 0.7rem;
+    color: #71717a;
+    font-style: italic;
+  }
+
+  .top-cited {
+    margin-top: 1rem;
+  }
+
+  .top-cited h4 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #e4e4e7;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .cited-paper {
+    padding: 0.5rem;
+    background: rgba(255,255,255,0.02);
+    border-radius: 0.375rem;
+    margin-bottom: 0.375rem;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .cited-paper:last-child {
+    margin-bottom: 0;
+  }
+
+  .cited-paper a {
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-decoration: none;
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+
+  .cited-paper a:hover {
+    text-decoration: underline;
+  }
+
+  .cited-paper .citation-count {
+    display: block;
+    margin-top: 0.25rem;
   }
 
   .footer {

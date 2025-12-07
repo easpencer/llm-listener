@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     anthropic_api_key: Optional[str] = None
     gemini_api_key: Optional[str] = None
     grok_api_key: Optional[str] = None
+    serpapi_api_key: Optional[str] = None
 
     # Ollama settings (no API key needed, just enable/disable)
     ollama_enabled: bool = False
@@ -64,6 +65,7 @@ class Settings(BaseSettings):
             anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
             gemini_api_key=os.getenv("GEMINI_API_KEY"),
             grok_api_key=os.getenv("GROK_API_KEY"),
+            serpapi_api_key=os.getenv("SERPAPI_API_KEY"),
             ollama_enabled=os.getenv("OLLAMA_ENABLED", "").lower() in ("true", "1", "yes"),
             ollama_base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
             openai_model=os.getenv("OPENAI_MODEL"),

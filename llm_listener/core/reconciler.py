@@ -60,22 +60,24 @@ Original Question:
 AI Responses:
 {responses}
 
+{evidence_section}
+
 Provide your analysis in this format:
 
 ## Evidence Summary
-[Provide a comprehensive summary of the evidence and information presented across all AI responses. What are the key facts, findings, and recommendations mentioned?]
+[Provide a comprehensive summary of the evidence and information presented across all AI responses. If official guidelines or scientific literature are provided, integrate key findings from those sources. What are the key facts, findings, and recommendations mentioned?]
 
 ## Points of Agreement
-[What do the AI models consistently agree on? Identify areas where there is clear consensus across responses.]
+[What do the AI models consistently agree on? Identify areas where there is clear consensus across responses. Note if official guidelines align with AI responses.]
 
 ## Points of Disagreement
-[Where do the AI models differ in their responses? Highlight contradictions, varying interpretations, or different emphasis on certain aspects.]
+[Where do the AI models differ in their responses? Highlight contradictions, varying interpretations, or different emphasis on certain aspects. Note any discrepancies with official guidelines or scientific literature.]
 
 ## Confidence Level
-[Assess the overall confidence level of the information provided. Are the responses based on strong evidence, preliminary findings, or expert opinion? Note any hedging language or uncertainty expressed.]
+[Assess the overall confidence level of the information provided. Are the responses based on strong evidence, preliminary findings, or expert opinion? Note any hedging language or uncertainty expressed. If official guidelines are available, note their authority.]
 
 ## Recommendations for Further Research
-[Based on gaps or uncertainties identified in the responses, what areas would benefit from additional research or expert consultation? What questions remain unanswered?]
+[Based on gaps or uncertainties identified in the responses, what areas would benefit from additional research or expert consultation? What questions remain unanswered? Reference specific scientific literature if provided.]
 """
 
 
@@ -141,6 +143,7 @@ class ResponseReconciler:
         question: str,
         responses: list[LLMResponse],
         mode: str = "public_health",
+        evidence_data: Optional[dict] = None,
     ) -> Optional[LLMResponse]:
         """Generate a reconciled synthesis of multiple LLM responses.
 
@@ -148,6 +151,7 @@ class ResponseReconciler:
             question: The original question asked
             responses: List of LLM responses to reconcile
             mode: Either "public_health" or "health_research"
+            evidence_data: Optional evidence from SERPAPI searches
         """
         if not self.synthesis_provider:
             return None
@@ -159,6 +163,11 @@ class ResponseReconciler:
 
         formatted = self.format_responses(successful)
 
+        # Format evidence section if available
+        evidence_section = ""
+        if evidence_data and mode == "health_research":
+            evidence_section = self._format_evidence(evidence_data)
+
         # Select the appropriate prompt based on mode
         prompt_template = (
             HEALTH_RESEARCH_PROMPT if mode == "health_research"
@@ -168,6 +177,57 @@ class ResponseReconciler:
         prompt = prompt_template.format(
             question=question,
             responses=formatted,
+            evidence_section=evidence_section,
         )
 
         return await self.synthesis_provider.query(prompt)
+
+    def _format_evidence(self, evidence_data: dict) -> str:
+        """Format evidence data for inclusion in prompt."""
+        parts = []
+
+        # Format guidelines
+        guidelines = evidence_data.get("guidelines", {})
+        if guidelines.get("count", 0) > 0:
+            parts.append("## Official Guidelines & Sources")
+            parts.append(f"Found {guidelines['count']} official sources:")
+
+            # Add source breakdown
+            source_types = guidelines.get("source_types", {})
+            if source_types:
+                source_list = ", ".join([f"{count} from {org}" for org, count in source_types.items()])
+                parts.append(f"- {source_list}")
+
+            # Add digest
+            parts.append(f"\nKey findings: {guidelines.get('digest', 'N/A')}")
+
+            # Add top links
+            links = guidelines.get("links", [])[:3]
+            if links:
+                parts.append("\nTop sources:")
+                for link in links:
+                    parts.append(f"- {link['title']}: {link['url']}")
+
+        # Format literature
+        literature = evidence_data.get("literature", {})
+        if literature.get("count", 0) > 0:
+            if parts:
+                parts.append("")  # Add spacing
+            parts.append("## Scientific Literature")
+            parts.append(f"Found {literature['count']} peer-reviewed articles")
+
+            # Add digest
+            parts.append(f"\nKey findings: {literature.get('digest', 'N/A')}")
+
+            # Add top cited papers
+            top_cited = literature.get("top_cited", [])[:3]
+            if top_cited:
+                parts.append("\nHighly cited papers:")
+                for paper in top_cited:
+                    cited = paper.get("cited_by", 0)
+                    parts.append(f"- {paper['title']} ({cited} citations): {paper['url']}")
+
+        if not parts:
+            return ""
+
+        return "\n".join(parts)

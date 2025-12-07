@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from .core import Settings, LLMOrchestrator, ResponseReconciler
 from .providers import LLMResponse
+from .evidence import EvidenceSearcher
 from .database import (
     SessionLocal,
     get_db,
@@ -175,6 +176,16 @@ class StudyResultsResponse(BaseModel):
     trust_metrics: Dict[str, float]
 
 
+class EvidenceRequest(BaseModel):
+    query: str
+
+
+class EvidenceResponse(BaseModel):
+    query: str
+    guidelines: Dict[str, Any]
+    literature: Dict[str, Any]
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initialize database on startup if configured
@@ -283,6 +294,33 @@ async def query_llms(request: QueryRequest):
         question=request.question,
         responses=provider_responses,
         synthesis=synthesis,
+    )
+
+
+@app.post("/api/evidence", response_model=EvidenceResponse)
+async def search_evidence(request: EvidenceRequest):
+    """Search for evidence using SERPAPI.
+
+    This endpoint searches government guidelines and scientific literature
+    to provide evidence-based context for health queries.
+    """
+    settings = Settings.from_env()
+
+    if not settings.serpapi_api_key:
+        raise HTTPException(
+            status_code=400,
+            detail="SERPAPI not configured. Set SERPAPI_API_KEY in environment.",
+        )
+
+    searcher = EvidenceSearcher(settings.serpapi_api_key)
+
+    # Search both guidelines and literature
+    results = await searcher.search_all(request.query)
+
+    return EvidenceResponse(
+        query=request.query,
+        guidelines=results["guidelines"],
+        literature=results["literature"],
     )
 
 
