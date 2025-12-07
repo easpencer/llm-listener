@@ -26,11 +26,12 @@ class EvidenceSearcher:
         self.api_key = api_key
         self.base_url = "https://serpapi.com/search"
 
-    async def search_government_guidelines(self, query: str) -> Dict[str, Any]:
+    async def search_government_guidelines(self, query: str, max_results: int = 30) -> Dict[str, Any]:
         """Search government and medical organization sites for guidelines.
 
         Args:
             query: The health question to search for
+            max_results: Maximum number of results to fetch (uses pagination)
 
         Returns:
             Dictionary with count, digest, and links
@@ -39,37 +40,50 @@ class EvidenceSearcher:
         site_restriction = " OR ".join([f"site:{site}" for site in self.GOVERNMENT_SITES])
         full_query = f"{query} ({site_restriction})"
 
-        params = {
-            "api_key": self.api_key,
-            "engine": "google",
-            "q": full_query,
-            "num": 50,  # Fetch more results, Google ranks by relevance
-        }
+        links = []
+        snippets = []
+        seen_urls = set()
 
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(self.base_url, params=params)
-                response.raise_for_status()
-                data = response.json()
+                # Paginate to get more results (SERPAPI returns max 10 per page)
+                for start in range(0, max_results, 10):
+                    params = {
+                        "api_key": self.api_key,
+                        "engine": "google",
+                        "q": full_query,
+                        "num": 10,
+                        "start": start,
+                    }
 
-                results = data.get("organic_results", [])
+                    response = await client.get(self.base_url, params=params)
+                    response.raise_for_status()
+                    data = response.json()
 
-                # Extract relevant information
-                links = []
-                snippets = []
+                    results = data.get("organic_results", [])
 
-                for result in results:
-                    title = result.get("title", "")
-                    link = result.get("link", "")
-                    snippet = result.get("snippet", "")
+                    # If no more results, stop paginating
+                    if not results:
+                        break
 
-                    if link and title:
-                        links.append({
-                            "title": title,
-                            "url": link,
-                            "snippet": snippet,
-                        })
-                        snippets.append(f"{title}: {snippet}")
+                    for result in results:
+                        title = result.get("title", "")
+                        link = result.get("link", "")
+                        snippet = result.get("snippet", "")
+
+                        # Deduplicate by URL
+                        if link and title and link not in seen_urls:
+                            seen_urls.add(link)
+                            links.append({
+                                "title": title,
+                                "url": link,
+                                "snippet": snippet,
+                            })
+                            snippets.append(f"{title}: {snippet}")
+
+                    # If we got fewer than 10, there are no more pages
+                    if len(results) < 10:
+                        break
 
                 # Create digest from top snippets
                 digest = self._create_digest(snippets[:5], "official guidelines")
@@ -83,56 +97,70 @@ class EvidenceSearcher:
 
         except Exception as e:
             return {
-                "count": 0,
-                "digest": f"Error searching guidelines: {str(e)}",
-                "links": [],
-                "source_types": {},
+                "count": len(links) if links else 0,
+                "digest": f"Error searching guidelines: {str(e)}" if not links else self._create_digest(snippets[:5], "official guidelines"),
+                "links": links,
+                "source_types": self._categorize_sources(links) if links else {},
             }
 
-    async def search_scholarly_literature(self, query: str) -> Dict[str, Any]:
+    async def search_scholarly_literature(self, query: str, max_results: int = 30) -> Dict[str, Any]:
         """Search Google Scholar for peer-reviewed articles.
 
         Args:
             query: The health question to search for
+            max_results: Maximum number of results to fetch (uses pagination)
 
         Returns:
             Dictionary with count, digest, and links
         """
-        params = {
-            "api_key": self.api_key,
-            "engine": "google_scholar",
-            "q": query,
-            "num": 50,  # Fetch more results, Scholar ranks by relevance
-        }
+        links = []
+        snippets = []
+        seen_urls = set()
 
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(self.base_url, params=params)
-                response.raise_for_status()
-                data = response.json()
+                # Paginate to get more results (SERPAPI returns max 10 per page)
+                for start in range(0, max_results, 10):
+                    params = {
+                        "api_key": self.api_key,
+                        "engine": "google_scholar",
+                        "q": query,
+                        "num": 10,
+                        "start": start,
+                    }
 
-                results = data.get("organic_results", [])
+                    response = await client.get(self.base_url, params=params)
+                    response.raise_for_status()
+                    data = response.json()
 
-                # Extract relevant information
-                links = []
-                snippets = []
+                    results = data.get("organic_results", [])
 
-                for result in results:
-                    title = result.get("title", "")
-                    link = result.get("link", "")
-                    snippet = result.get("snippet", "")
-                    publication_info = result.get("publication_info", {})
-                    cited_by = result.get("inline_links", {}).get("cited_by", {}).get("total", 0)
+                    # If no more results, stop paginating
+                    if not results:
+                        break
 
-                    if link and title:
-                        links.append({
-                            "title": title,
-                            "url": link,
-                            "snippet": snippet,
-                            "publication_info": publication_info.get("summary", ""),
-                            "cited_by": cited_by,
-                        })
-                        snippets.append(f"{title}: {snippet}")
+                    for result in results:
+                        title = result.get("title", "")
+                        link = result.get("link", "")
+                        snippet = result.get("snippet", "")
+                        publication_info = result.get("publication_info", {})
+                        cited_by = result.get("inline_links", {}).get("cited_by", {}).get("total", 0)
+
+                        # Deduplicate by URL
+                        if link and title and link not in seen_urls:
+                            seen_urls.add(link)
+                            links.append({
+                                "title": title,
+                                "url": link,
+                                "snippet": snippet,
+                                "publication_info": publication_info.get("summary", ""),
+                                "cited_by": cited_by,
+                            })
+                            snippets.append(f"{title}: {snippet}")
+
+                    # If we got fewer than 10, there are no more pages
+                    if len(results) < 10:
+                        break
 
                 # Create digest from top snippets
                 digest = self._create_digest(snippets[:5], "scientific literature")
@@ -146,10 +174,10 @@ class EvidenceSearcher:
 
         except Exception as e:
             return {
-                "count": 0,
-                "digest": f"Error searching literature: {str(e)}",
-                "links": [],
-                "top_cited": [],
+                "count": len(links) if links else 0,
+                "digest": f"Error searching literature: {str(e)}" if not links else self._create_digest(snippets[:5], "scientific literature"),
+                "links": links,
+                "top_cited": sorted(links, key=lambda x: x.get("cited_by", 0), reverse=True)[:3] if links else [],
             }
 
     def _create_digest(self, snippets: List[str], source_type: str) -> str:
