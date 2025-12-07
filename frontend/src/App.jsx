@@ -97,6 +97,7 @@ function App() {
   const [clarifyReady, setClarifyReady] = useState(false) // Whether the refined question is ready
   const resultsRef = useRef(null)
   const followUpRef = useRef(null)
+  const clarifyRef = useRef(null)
 
   // App configuration from backend
   const [appConfig, setAppConfig] = useState({
@@ -143,6 +144,15 @@ function App() {
       resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }, [synthesis])
+
+  // Auto-scroll to clarification conversation when it starts
+  useEffect(() => {
+    if (clarifyConvo.length > 0 && clarifyRef.current) {
+      setTimeout(() => {
+        clarifyRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 100)
+    }
+  }, [clarifyConvo.length])
 
   const handleSubmit = async (e, skipClarification = false) => {
     e?.preventDefault?.()
@@ -1065,7 +1075,7 @@ function App() {
 
           {/* Conversational Clarification UI */}
           {clarification && clarifyConvo.length > 0 && (
-            <div className="chorus-clarification glass-card animate-fade-in">
+            <div ref={clarifyRef} className="chorus-clarification glass-card animate-fade-in">
               <div className="clarification-header">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
