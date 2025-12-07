@@ -91,6 +91,7 @@ function App() {
   const [conversationHistory, setConversationHistory] = useState([]) // [{question, synthesis}]
   const [clarification, setClarification] = useState(null) // Clarification suggestions from AI
   const [clarifying, setClarifying] = useState(false) // Loading state for clarification
+  const [followUpOpen, setFollowUpOpen] = useState(false) // FAB panel state
   const resultsRef = useRef(null)
   const followUpRef = useRef(null)
 
@@ -1343,43 +1344,86 @@ function App() {
                 </section>
               )}
 
-              {/* Follow-up Question */}
-              <section className="follow-up-section animate-slide-up" style={{ animationDelay: '0.5s' }}>
-                <form onSubmit={handleFollowUp} className="follow-up-form glass-card">
-                  <div className="follow-up-header">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            </div>
+          )}
+        </main>
+
+        {/* Floating Follow-up FAB */}
+        {synthesis && (
+          <div className={`follow-up-fab-container ${followUpOpen ? 'open' : ''}`}>
+            {/* Expanded Panel */}
+            {followUpOpen && (
+              <div className="follow-up-panel glass-card animate-slide-up">
+                <div className="follow-up-panel-header">
+                  <div className="follow-up-panel-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                     </svg>
-                    <span>Ask a follow-up question</span>
+                    <span>Ask a follow-up</span>
                     {conversationHistory.length > 1 && (
                       <span className="conversation-count">{conversationHistory.length} exchanges</span>
                     )}
                   </div>
-                  <div className="follow-up-input-group">
-                    <input
-                      ref={followUpRef}
-                      type="text"
-                      value={followUp}
-                      onChange={(e) => setFollowUp(e.target.value)}
-                      placeholder="Tell me more about... What about... Can you clarify..."
-                      disabled={loading}
-                    />
-                    <button type="submit" disabled={!followUp.trim() || loading} className="follow-up-button">
-                      {loading ? (
-                        <span className="spinner-small" />
-                      ) : (
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <line x1="22" y1="2" x2="11" y2="13"/>
-                          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                        </svg>
-                      )}
-                    </button>
-                  </div>
+                  <button
+                    className="follow-up-panel-close"
+                    onClick={() => setFollowUpOpen(false)}
+                    aria-label="Close"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                </div>
+                <form onSubmit={(e) => { handleFollowUp(e); setFollowUpOpen(false); }} className="follow-up-panel-form">
+                  <input
+                    ref={followUpRef}
+                    type="text"
+                    value={followUp}
+                    onChange={(e) => setFollowUp(e.target.value)}
+                    placeholder="Tell me more about... What about... Can you clarify..."
+                    disabled={loading}
+                    autoFocus
+                  />
+                  <button type="submit" disabled={!followUp.trim() || loading} className="follow-up-panel-submit">
+                    {loading ? (
+                      <span className="spinner-small" />
+                    ) : (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="22" y1="2" x2="11" y2="13"/>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                      </svg>
+                    )}
+                  </button>
                 </form>
-              </section>
-            </div>
-          )}
-        </main>
+              </div>
+            )}
+
+            {/* FAB Button */}
+            <button
+              className={`follow-up-fab ${followUpOpen ? 'active' : ''}`}
+              onClick={() => {
+                setFollowUpOpen(!followUpOpen);
+                if (!followUpOpen) {
+                  setTimeout(() => followUpRef.current?.focus(), 100);
+                }
+              }}
+              aria-label="Ask follow-up question"
+            >
+              {followUpOpen ? (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              ) : (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  <line x1="9" y1="10" x2="15" y2="10"/>
+                </svg>
+              )}
+            </button>
+          </div>
+        )}
 
         {/* Footer */}
         <footer className="chorus-footer">
@@ -3397,6 +3441,176 @@ styleSheet.textContent = `
     margin-top: 0.5rem !important;
     font-size: 0.75rem !important;
     color: #52525b !important;
+  }
+
+  /* Follow-up FAB */
+  .follow-up-fab-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.75rem;
+  }
+
+  .follow-up-fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+    transition: all 0.3s ease;
+  }
+
+  .follow-up-fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5);
+  }
+
+  .follow-up-fab.active {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+    box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4);
+  }
+
+  .follow-up-fab svg {
+    transition: transform 0.2s ease;
+  }
+
+  .follow-up-panel {
+    width: 340px;
+    padding: 1rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    animation: slideUpFade 0.2s ease-out;
+  }
+
+  @keyframes slideUpFade {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .follow-up-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+
+  .follow-up-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #94a3b8;
+  }
+
+  .follow-up-panel-title svg {
+    opacity: 0.7;
+  }
+
+  .follow-up-panel-close {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .follow-up-panel-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+  }
+
+  .follow-up-panel-form {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .follow-up-panel-form input {
+    flex: 1;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    color: #e2e8f0;
+    transition: all 0.2s ease;
+  }
+
+  .follow-up-panel-form input:focus {
+    outline: none;
+    border-color: rgba(6, 182, 212, 0.5);
+    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+  }
+
+  .follow-up-panel-form input::placeholder {
+    color: #64748b;
+  }
+
+  .follow-up-panel-form input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .follow-up-panel-submit {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    border: none;
+    border-radius: 10px;
+    padding: 0 1rem;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+  }
+
+  .follow-up-panel-submit:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
+  }
+
+  .follow-up-panel-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Mobile adjustments for FAB */
+  @media (max-width: 480px) {
+    .follow-up-fab-container {
+      bottom: 1rem;
+      right: 1rem;
+    }
+
+    .follow-up-panel {
+      width: calc(100vw - 2rem);
+      max-width: 340px;
+    }
+
+    .follow-up-fab {
+      width: 52px;
+      height: 52px;
+    }
   }
 
   /* ===== PRISM STYLES (Original) ===== */
