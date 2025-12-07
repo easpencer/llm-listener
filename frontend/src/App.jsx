@@ -30,25 +30,21 @@ function App() {
     tagline: 'AI-Powered Public Health Communication',
   })
 
-  const [mode, setMode] = useState(() => {
-    // Load preference from localStorage, default will be set by config
-    return localStorage.getItem('chorusMode') || 'public_health'
-  })
+  // Mode is determined by app_mode - no user toggle
+  const [mode, setMode] = useState('public_health')
   const [viewMode, setViewMode] = useState(() => {
     // Load view preference from localStorage, default to 'detailed'
     return localStorage.getItem('chorusViewMode') || 'detailed'
   })
 
-  // Fetch app config on mount
+  // Fetch app config on mount - mode is locked based on app_mode
   useEffect(() => {
     fetch('/api/config')
       .then(res => res.json())
       .then(data => {
         setAppConfig(data)
-        // Set default mode if not already set in localStorage
-        if (!localStorage.getItem('chorusMode')) {
-          setMode(data.default_mode)
-        }
+        // Lock mode based on app_mode (no user choice)
+        setMode(data.default_mode)
       })
       .catch(() => {
         // Keep default config on error
@@ -62,10 +58,6 @@ function App() {
       .catch(() => setProviders([]))
   }, [])
 
-  useEffect(() => {
-    // Save preference to localStorage whenever it changes
-    localStorage.setItem('chorusMode', mode)
-  }, [mode])
 
   useEffect(() => {
     // Save view preference to localStorage whenever it changes
@@ -190,23 +182,7 @@ function App() {
   return (
     <div className="app-container" data-mode={mode}>
       <header className="header">
-        {/* Mode Toggle */}
-        <div className="mode-toggle">
-          <button
-            className={`mode-btn ${mode === 'public_health' ? 'active' : ''}`}
-            onClick={() => setMode('public_health')}
-          >
-            Public Health
-          </button>
-          <button
-            className={`mode-btn ${mode === 'health_research' ? 'active' : ''}`}
-            onClick={() => setMode('health_research')}
-          >
-            Health Research
-          </button>
-        </div>
-
-        {/* View Mode Toggle */}
+        {/* View Mode Toggle (Brief/Detailed) */}
         <div className="view-toggle">
           <button
             className={`view-btn ${viewMode === 'brief' ? 'active' : ''}`}
@@ -223,15 +199,9 @@ function App() {
         </div>
 
         <h1 className="title" style={{ background: modeColors.gradient, WebkitBackgroundClip: 'text', backgroundClip: 'text' }}>
-          {appConfig.app_mode === 'chorus'
-            ? (mode === 'health_research' ? 'Chorus Research' : 'Chorus')
-            : (mode === 'health_research' ? 'Prism Research' : 'Prism')}
+          {appConfig.app_name}
         </h1>
-        <p className="subtitle">
-          {appConfig.app_mode === 'chorus'
-            ? (mode === 'health_research' ? 'Compare AI responses on medical questions' : 'Multi-LLM Evidence Synthesis')
-            : (mode === 'health_research' ? 'Compare AI responses on medical questions' : appConfig.tagline)}
-        </p>
+        <p className="subtitle">{appConfig.tagline}</p>
       </header>
 
       <main className="main">
@@ -365,11 +335,9 @@ function App() {
       </main>
 
       <footer className="footer">
-        <p>{mode === 'health_research'
-          ? 'Compare AI responses on medical research questions'
-          : appConfig.app_mode === 'chorus'
-            ? 'Chorus synthesizes evidence from multiple AI models'
-            : 'Prism helps public health officials understand AI narratives'}</p>
+        <p>{appConfig.app_mode === 'chorus'
+          ? 'Chorus synthesizes evidence from multiple AI models'
+          : 'Prism helps public health officials understand AI narratives'}</p>
         <ViewResultsLink />
       </footer>
 
