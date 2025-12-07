@@ -17,6 +17,7 @@ from .providers import LLMResponse
 class QueryRequest(BaseModel):
     question: str
     include_synthesis: bool = True
+    mode: str = "public_health"  # "public_health" or "health_research"
 
 
 class ProviderResponse(BaseModel):
@@ -103,7 +104,9 @@ async def query_llms(request: QueryRequest):
     if request.include_synthesis:
         successful_count = sum(1 for r in responses if r.success)
         if successful_count >= 2:
-            synth_response = await reconciler.reconcile(request.question, responses)
+            synth_response = await reconciler.reconcile(
+                request.question, responses, mode=request.mode
+            )
             if synth_response and synth_response.success:
                 synthesis = ProviderResponse(
                     provider_name="Synthesis",

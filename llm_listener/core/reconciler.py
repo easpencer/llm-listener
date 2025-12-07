@@ -52,6 +52,33 @@ Start with the message itself (no preamble), then briefly explain why this frami
 """
 
 
+HEALTH_RESEARCH_PROMPT = """You are a medical research analyst synthesizing AI responses to a health-related question. Your goal is to provide a balanced, evidence-based summary that highlights consensus, disagreements, and knowledge gaps.
+
+Original Question:
+{question}
+
+AI Responses:
+{responses}
+
+Provide your analysis in this format:
+
+## Evidence Summary
+[Provide a comprehensive summary of the evidence and information presented across all AI responses. What are the key facts, findings, and recommendations mentioned?]
+
+## Points of Agreement
+[What do the AI models consistently agree on? Identify areas where there is clear consensus across responses.]
+
+## Points of Disagreement
+[Where do the AI models differ in their responses? Highlight contradictions, varying interpretations, or different emphasis on certain aspects.]
+
+## Confidence Level
+[Assess the overall confidence level of the information provided. Are the responses based on strong evidence, preliminary findings, or expert opinion? Note any hedging language or uncertainty expressed.]
+
+## Recommendations for Further Research
+[Based on gaps or uncertainties identified in the responses, what areas would benefit from additional research or expert consultation? What questions remain unanswered?]
+"""
+
+
 class ResponseReconciler:
     """Reconciles and synthesizes responses from multiple LLMs."""
 
@@ -113,8 +140,15 @@ class ResponseReconciler:
         self,
         question: str,
         responses: list[LLMResponse],
+        mode: str = "public_health",
     ) -> Optional[LLMResponse]:
-        """Generate a reconciled synthesis of multiple LLM responses."""
+        """Generate a reconciled synthesis of multiple LLM responses.
+
+        Args:
+            question: The original question asked
+            responses: List of LLM responses to reconcile
+            mode: Either "public_health" or "health_research"
+        """
         if not self.synthesis_provider:
             return None
 
@@ -124,7 +158,14 @@ class ResponseReconciler:
             return None  # Need at least 2 responses to reconcile
 
         formatted = self.format_responses(successful)
-        prompt = RECONCILIATION_PROMPT.format(
+
+        # Select the appropriate prompt based on mode
+        prompt_template = (
+            HEALTH_RESEARCH_PROMPT if mode == "health_research"
+            else RECONCILIATION_PROMPT
+        )
+
+        prompt = prompt_template.format(
             question=question,
             responses=formatted,
         )

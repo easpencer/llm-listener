@@ -17,6 +17,10 @@ function App() {
   const [providers, setProviders] = useState([])
   const [error, setError] = useState(null)
   const [copied, setCopied] = useState(false)
+  const [mode, setMode] = useState(() => {
+    // Load preference from localStorage, default to 'public_health'
+    return localStorage.getItem('chorusMode') || 'public_health'
+  })
 
   useEffect(() => {
     fetch('/api/providers')
@@ -24,6 +28,11 @@ function App() {
       .then(data => setProviders(data.configured))
       .catch(() => setProviders([]))
   }, [])
+
+  useEffect(() => {
+    // Save preference to localStorage whenever it changes
+    localStorage.setItem('chorusMode', mode)
+  }, [mode])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -38,7 +47,7 @@ function App() {
       const res = await fetch('/api/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question, include_synthesis: true }),
+        body: JSON.stringify({ question, include_synthesis: true, mode }),
       })
 
       if (!res.ok) {
@@ -84,12 +93,21 @@ function App() {
   }
 
   const getSectionMeta = (title) => {
+    // For Public Health mode
     if (title.includes('Hearing')) return { icon: '👂', color: '#3b82f6', priority: 1 }
     if (title.includes('Concerns') || title.includes('Hesitanc')) return { icon: '⚠️', color: '#f59e0b', priority: 2 }
     if (title.includes('Misinformation')) return { icon: '🚨', color: '#ef4444', priority: 3 }
     if (title.includes('Effective') || title.includes('Messaging Angles')) return { icon: '✅', color: '#10b981', priority: 4 }
-    if (title.includes('Recommendations')) return { icon: '📋', color: '#8b5cf6', priority: 5 }
+    if (title.includes('Recommendations for Public Health Officials')) return { icon: '📋', color: '#8b5cf6', priority: 5 }
     if (title.includes('Recommended Public Health Message')) return { icon: '💬', color: '#ec4899', priority: 6, highlight: true }
+
+    // For Health Research mode
+    if (title.includes('Evidence Summary')) return { icon: '📚', color: '#0ea5e9', priority: 1 }
+    if (title.includes('Points of Agreement')) return { icon: '✅', color: '#10b981', priority: 2 }
+    if (title.includes('Points of Disagreement')) return { icon: '⚡', color: '#f59e0b', priority: 3 }
+    if (title.includes('Confidence Level')) return { icon: '📊', color: '#14b8a6', priority: 4 }
+    if (title.includes('Recommendations for Further Research')) return { icon: '🔬', color: '#06b6d4', priority: 5 }
+
     return { icon: '📝', color: '#6b7280', priority: 99 }
   }
 
@@ -113,22 +131,64 @@ function App() {
   const highlightSection = analysisSection.find(s => getSectionMeta(s.title).highlight)
   const regularSections = analysisSection.filter(s => !getSectionMeta(s.title).highlight)
 
+  // Get mode-specific styling
+  const getModeColors = () => {
+    if (mode === 'health_research') {
+      return {
+        primary: '#0ea5e9', // blue
+        secondary: '#14b8a6', // teal
+        gradient: 'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%)',
+      }
+    }
+    return {
+      primary: '#a855f7', // purple
+      secondary: '#6366f1', // indigo
+      gradient: 'linear-gradient(135deg, #a855f7 0%, #6366f1 100%)',
+    }
+  }
+
+  const modeColors = getModeColors()
+
   return (
-    <div className="app-container">
+    <div className="app-container" data-mode={mode}>
       <header className="header">
-        <h1 className="title">Chorus</h1>
-        <p className="subtitle">Hear what AI is telling the public</p>
+        {/* Mode Toggle */}
+        <div className="mode-toggle">
+          <button
+            className={`mode-btn ${mode === 'public_health' ? 'active' : ''}`}
+            onClick={() => setMode('public_health')}
+          >
+            Public Health
+          </button>
+          <button
+            className={`mode-btn ${mode === 'health_research' ? 'active' : ''}`}
+            onClick={() => setMode('health_research')}
+          >
+            Health Research
+          </button>
+        </div>
+
+        <h1 className="title" style={{ background: modeColors.gradient, WebkitBackgroundClip: 'text', backgroundClip: 'text' }}>
+          {mode === 'health_research' ? 'Health Research Assistant' : 'Chorus'}
+        </h1>
+        <p className="subtitle">
+          {mode === 'health_research' ? 'Compare AI responses on medical questions' : 'Hear what AI is telling the public'}
+        </p>
       </header>
 
       <main className="main">
         {/* Input Section */}
         <div className="input-section">
           <form onSubmit={handleSubmit} className="form">
-            <label className="label">What question are people asking AI?</label>
+            <label className="label">
+              {mode === 'health_research' ? 'What medical question do you want to research?' : 'What question are people asking AI?'}
+            </label>
             <textarea
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder="Enter a health question the public might ask..."
+              placeholder={mode === 'health_research'
+                ? "Enter a medical research question..."
+                : "Enter a health question the public might ask..."}
               className="textarea"
               rows={2}
             />
@@ -148,6 +208,7 @@ function App() {
                 type="submit"
                 disabled={loading || !question.trim()}
                 className="submit-btn"
+                style={{ background: modeColors.gradient }}
               >
                 {loading ? 'Analyzing...' : 'Analyze'}
               </button>
@@ -172,7 +233,7 @@ function App() {
 
         {loading && (
           <div className="loading">
-            <div className="spinner"></div>
+            <div className="spinner" style={{ borderTopColor: modeColors.primary }}></div>
             <p>Listening to {providers.length} AI voices...</p>
           </div>
         )}
@@ -195,8 +256,8 @@ function App() {
           </section>
         )}
 
-        {/* Highlighted Message - Ready to Use */}
-        {highlightSection && (
+        {/* Public Health Mode: Show highlight message */}
+        {mode === 'public_health' && highlightSection && (
           <section className="section">
             <div className="highlight-card">
               <div className="highlight-header">
@@ -224,7 +285,7 @@ function App() {
             <div className="section-header">
               <h2 className="section-title">
                 <span className="section-icon">📊</span>
-                Detailed Analysis
+                {mode === 'health_research' ? 'Evidence Analysis' : 'Detailed Analysis'}
               </h2>
             </div>
             <div className="analysis-grid" data-count={regularSections.length}>
@@ -246,7 +307,9 @@ function App() {
       </main>
 
       <footer className="footer">
-        <p>Chorus helps public health officials understand AI narratives</p>
+        <p>{mode === 'health_research'
+          ? 'Compare AI responses on medical research questions'
+          : 'Chorus helps public health officials understand AI narratives'}</p>
       </footer>
     </div>
   )
@@ -327,10 +390,48 @@ styleSheet.textContent = `
     padding-top: 1rem;
   }
 
+  /* Mode Toggle - at the very top */
+  .mode-toggle {
+    display: inline-flex;
+    gap: 0.5rem;
+    background: rgba(255,255,255,0.05);
+    border-radius: 0.5rem;
+    padding: 0.25rem;
+    border: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 1.5rem;
+  }
+
+  .mode-btn {
+    padding: 0.5rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    border: none;
+    background: transparent;
+    color: #a1a1aa;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .mode-btn:hover {
+    color: #d4d4d8;
+  }
+
+  .app-container[data-mode="public_health"] .mode-btn.active {
+    background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(168, 85, 247, 0.3);
+  }
+
+  .app-container[data-mode="health_research"] .mode-btn.active {
+    background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+  }
+
   .title {
     font-size: 2.5rem;
     font-weight: 600;
-    background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -378,8 +479,12 @@ styleSheet.textContent = `
     transition: border-color 0.2s;
   }
 
-  .textarea:focus {
+  .app-container[data-mode="public_health"] .textarea:focus {
     border-color: rgba(168, 85, 247, 0.5);
+  }
+
+  .app-container[data-mode="health_research"] .textarea:focus {
+    border-color: rgba(14, 165, 233, 0.5);
   }
 
   .form-footer {
@@ -412,7 +517,6 @@ styleSheet.textContent = `
     font-weight: 500;
     border-radius: 0.5rem;
     border: none;
-    background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
     color: white;
     cursor: pointer;
     transition: transform 0.2s, opacity 0.2s;
@@ -476,7 +580,6 @@ styleSheet.textContent = `
     width: 36px;
     height: 36px;
     border: 3px solid rgba(255,255,255,0.1);
-    border-top-color: #a855f7;
     border-radius: 50%;
     margin: 0 auto 1rem;
     animation: spin 1s linear infinite;
