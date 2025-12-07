@@ -465,55 +465,76 @@ function App() {
 
     let sections = []
 
-    // Clinical guidelines with proper citations
-    if (integrated.guidelines.available) {
-      const citedPoints = integrated.guidelines.keyPoints.map((p, i) =>
-        `${p.text} [${i + 1}]`
-      ).join('\n\n')
-
+    // Full AI synthesis FIRST - this is the actual expert analysis
+    if (integrated.aiConsensus.available && integrated.aiConsensus.synthesisContent) {
       sections.push({
-        type: 'guidelines',
-        title: 'Clinical Guidelines',
-        content: citedPoints,
-        references: integrated.guidelines.keyPoints.map((p, i) => ({
+        type: 'synthesis',
+        title: 'Evidence-Based Analysis',
+        content: integrated.aiConsensus.synthesisContent,
+        modelCount: integrated.aiConsensus.modelCount,
+        models: integrated.aiConsensus.providers.map(p => p.name),
+      })
+    }
+
+    // Source references section - clean list format, not raw snippets
+    const allRefs = []
+
+    // Add guideline references
+    if (integrated.guidelines.available) {
+      integrated.guidelines.keyPoints.forEach((p, i) => {
+        allRefs.push({
           num: i + 1,
           title: p.title,
           source: p.source,
           url: p.url,
-        })),
+          type: 'guideline',
+        })
       })
     }
 
-    // Peer-reviewed evidence with citation counts
+    // Add literature references
     if (integrated.literature.available) {
-      const citedFindings = integrated.literature.researchFindings.map((f, i) => {
-        const citationNote = f.citations > 0 ? ` (${f.citations} citations)` : ''
-        return `${f.text}${citationNote} [${i + 1 + (integrated.guidelines.keyPoints?.length || 0)}]`
-      }).join('\n\n')
-
-      const refOffset = integrated.guidelines.keyPoints?.length || 0
-      sections.push({
-        type: 'literature',
-        title: 'Peer-Reviewed Evidence',
-        content: citedFindings,
-        references: integrated.literature.researchFindings.map((f, i) => ({
-          num: i + 1 + refOffset,
+      const offset = integrated.guidelines.keyPoints?.length || 0
+      integrated.literature.researchFindings.forEach((f, i) => {
+        allRefs.push({
+          num: i + 1 + offset,
           title: f.title,
           source: f.publication || 'Academic Literature',
           url: f.url,
           citations: f.citations,
-        })),
+          type: 'literature',
+        })
       })
     }
 
-    // Full AI synthesis for clinical context
-    if (integrated.aiConsensus.available && integrated.aiConsensus.synthesisContent) {
+    // Add sources section with clean formatting
+    if (allRefs.length > 0) {
+      const guidelineRefs = allRefs.filter(r => r.type === 'guideline')
+      const literatureRefs = allRefs.filter(r => r.type === 'literature')
+
+      let sourcesContent = ''
+
+      if (guidelineRefs.length > 0) {
+        sourcesContent += '**Official Guidelines & Recommendations:**\n\n'
+        guidelineRefs.forEach(r => {
+          sourcesContent += `- **${r.source}**: ${r.title}\n`
+        })
+        sourcesContent += '\n'
+      }
+
+      if (literatureRefs.length > 0) {
+        sourcesContent += '**Peer-Reviewed Literature:**\n\n'
+        literatureRefs.forEach(r => {
+          const citationInfo = r.citations > 0 ? ` *(${r.citations} citations)*` : ''
+          sourcesContent += `- ${r.title}${citationInfo}\n`
+        })
+      }
+
       sections.push({
-        type: 'synthesis',
-        title: 'Multi-Model AI Analysis',
-        content: integrated.aiConsensus.synthesisContent,
-        modelCount: integrated.aiConsensus.modelCount,
-        models: integrated.aiConsensus.providers.map(p => p.name),
+        type: 'references',
+        title: 'Supporting Evidence Sources',
+        content: sourcesContent,
+        references: allRefs,
       })
     }
 
@@ -2105,6 +2126,11 @@ styleSheet.textContent = `
 
   .section-guidelines {
     border-left: 3px solid #14b8a6;
+  }
+
+  .section-references {
+    border-left: 3px solid #64748b;
+    background: rgba(100, 116, 139, 0.05);
   }
 
   .section-literature {
