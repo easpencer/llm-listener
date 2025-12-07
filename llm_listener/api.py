@@ -23,6 +23,7 @@ from .database import (
     MessageRating,
     UsabilityRating,
     TrustRating,
+    StudyCompletedResponse,
     init_db,
     DATABASE_URL,
 )
@@ -143,6 +144,27 @@ class CreateTrustRequest(BaseModel):
 class CompleteSessionResponse(BaseModel):
     session_id: str
     completed_at: datetime
+
+
+class CompleteStudyRequest(BaseModel):
+    """Request to save complete study data."""
+    session_id: str
+    demographics: Dict[str, Any]
+    accuracy_responses: Dict[str, Any]
+    quality_responses: Dict[str, Any]
+    message_orders: Dict[str, Any]
+    assigned_interface: str
+    task_results: List[Dict[str, Any]]
+    sus_responses: List[int]
+    sus_score: float
+    assigned_message: str
+    effectiveness_responses: Dict[str, Any]
+    assigned_cases: Optional[List[int]] = None
+
+
+class CompleteStudyResponse(BaseModel):
+    session_id: str
+    saved: bool
 
 
 class StudyResultsResponse(BaseModel):
@@ -536,6 +558,58 @@ async def complete_study_session(session_id: str, db: Session = Depends(get_db))
         session_id=session.session_id,
         completed_at=session.completed_at,
     )
+
+
+@app.post("/api/study/complete", response_model=CompleteStudyResponse)
+async def save_complete_study(request: CompleteStudyRequest, db: Session = Depends(get_db)):
+    """Save complete study response data."""
+    check_db_configured()
+
+    if db is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Database not configured. Set DATABASE_URL environment variable.",
+        )
+
+    # Check if already exists
+    existing = db.query(StudyCompletedResponse).filter(
+        StudyCompletedResponse.session_id == request.session_id
+    ).first()
+
+    if existing:
+        # Update existing record
+        existing.demographics = request.demographics
+        existing.accuracy_responses = request.accuracy_responses
+        existing.quality_responses = request.quality_responses
+        existing.message_orders = request.message_orders
+        existing.assigned_interface = request.assigned_interface
+        existing.task_results = request.task_results
+        existing.sus_responses = request.sus_responses
+        existing.sus_score = request.sus_score
+        existing.assigned_message = request.assigned_message
+        existing.effectiveness_responses = request.effectiveness_responses
+        existing.assigned_cases = request.assigned_cases
+    else:
+        # Create new record
+        response = StudyCompletedResponse(
+            session_id=request.session_id,
+            demographics=request.demographics,
+            accuracy_responses=request.accuracy_responses,
+            quality_responses=request.quality_responses,
+            message_orders=request.message_orders,
+            assigned_interface=request.assigned_interface,
+            task_results=request.task_results,
+            sus_responses=request.sus_responses,
+            sus_score=request.sus_score,
+            assigned_message=request.assigned_message,
+            effectiveness_responses=request.effectiveness_responses,
+            assigned_cases=request.assigned_cases,
+        )
+        db.add(response)
+
+    db.commit()
+
+    return CompleteStudyResponse(session_id=request.session_id, saved=True)
 
 
 @app.get("/api/study/results", response_model=StudyResultsResponse)

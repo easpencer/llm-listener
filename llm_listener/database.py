@@ -239,3 +239,35 @@ class TrustRating(Base):
     trust_comments = Column(Text, nullable=True)
 
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class StudyCompletedResponse(Base):
+    """Complete study response data - stores all phases as JSON."""
+    __tablename__ = "study_completed_responses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String(64), unique=True, index=True)  # UUID from frontend
+
+    # Demographics
+    demographics = Column(JSON)  # {role, experience, orgType, expertiseArea}
+
+    # Phase 1: Content Accuracy - ratings for each AI provider per case
+    accuracy_responses = Column(JSON)  # {case_num: {provider: {dimension: rating}}}
+
+    # Phase 2: Message Quality - A/B comparison ratings
+    quality_responses = Column(JSON)  # {case_num: {A: {ratings}, B: {ratings}, preference}}
+    message_orders = Column(JSON)  # {case_num: ["chorus", "cdc"] or ["cdc", "chorus"]}
+
+    # Phase 3: Usability
+    assigned_interface = Column(String(20))  # "brief" or "detailed"
+    task_results = Column(JSON)  # [{task, query, timeSpent, rating, interface}]
+    sus_responses = Column(JSON)  # [1-5 for each of 10 SUS questions]
+    sus_score = Column(Float)  # Calculated 0-100 score
+
+    # Phase 4: Message Effectiveness
+    assigned_message = Column(String(20))  # "chorus" or "cdc"
+    effectiveness_responses = Column(JSON)  # {baseline, post_* questions}
+
+    # Metadata
+    assigned_cases = Column(JSON)  # Which 3 of 7 cases were assigned [0, 2, 5]
+    created_at = Column(DateTime, default=datetime.utcnow)
