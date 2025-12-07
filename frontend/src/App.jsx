@@ -407,47 +407,59 @@ function App() {
     const integrated = generateIntegratedSynthesis()
     if (!integrated) return null
 
-    // Build a patient-friendly narrative
     let sections = []
 
-    // Key takeaways from official sources
-    if (integrated.guidelines.available) {
-      const orgs = integrated.guidelines.organizations.join(', ')
-      sections.push({
-        type: 'official',
-        icon: '🏛️',
-        title: 'What Health Authorities Say',
-        content: integrated.guidelines.keyPoints.slice(0, 3).map(p =>
-          `**${p.source}:** ${p.text}`
-        ).join('\n\n'),
-        sourceCount: integrated.guidelines.totalSources,
-      })
-    }
-
-    // Research findings in simple terms
-    if (integrated.literature.available) {
-      sections.push({
-        type: 'research',
-        icon: '🔬',
-        title: 'What Research Shows',
-        content: integrated.literature.researchFindings.slice(0, 2).map(f =>
-          f.text + (f.citations > 50 ? ` *(widely cited research)*` : '')
-        ).join('\n\n'),
-        sourceCount: integrated.literature.totalPapers,
-      })
-    }
-
-    // AI synthesis in simple terms
+    // Main AI synthesis as the primary content - this is complete, eloquent prose
     if (integrated.aiConsensus.available && integrated.aiConsensus.synthesisContent) {
-      // Extract the most relevant part of synthesis for patients
-      const synthContent = integrated.aiConsensus.synthesisContent
-      const simpleVersion = synthContent.split('\n').slice(0, 8).join('\n')
+      // Simplify for patients: take first portion and ensure it's accessible
+      const fullContent = integrated.aiConsensus.synthesisContent
+      // Get a reasonable portion for patients (not overwhelming)
+      const paragraphs = fullContent.split('\n\n').filter(p => p.trim())
+      const patientContent = paragraphs.slice(0, 4).join('\n\n')
+
       sections.push({
         type: 'synthesis',
         icon: '💡',
-        title: 'Summary',
-        content: simpleVersion,
+        title: 'What You Need to Know',
+        content: patientContent,
         modelCount: integrated.aiConsensus.modelCount,
+      })
+    }
+
+    // Add source links section (not snippets, just helpful links)
+    const sourceLinks = []
+
+    if (integrated.guidelines.available && integrated.guidelines.sources) {
+      // Group by organization for cleaner display
+      const orgLinks = {}
+      integrated.guidelines.sources.slice(0, 5).forEach(link => {
+        const org = extractOrgFromUrl(link.url)
+        if (!orgLinks[org]) {
+          orgLinks[org] = { org, links: [] }
+        }
+        orgLinks[org].links.push({ title: link.title, url: link.url })
+      })
+
+      Object.values(orgLinks).forEach(({ org, links }) => {
+        sourceLinks.push({
+          org,
+          url: links[0].url,
+          label: `${org} Guidance`,
+        })
+      })
+    }
+
+    if (sourceLinks.length > 0) {
+      const linksContent = sourceLinks.map(s =>
+        `- [${s.label}](${s.url})`
+      ).join('\n')
+
+      sections.push({
+        type: 'sources',
+        icon: '🔗',
+        title: 'Learn More From Trusted Sources',
+        content: linksContent,
+        sourceCount: sourceLinks.length,
       })
     }
 
@@ -465,7 +477,7 @@ function App() {
 
     let sections = []
 
-    // Full AI synthesis FIRST - this is the actual expert analysis
+    // Full AI synthesis - complete expert analysis
     if (integrated.aiConsensus.available && integrated.aiConsensus.synthesisContent) {
       sections.push({
         type: 'synthesis',
@@ -476,64 +488,63 @@ function App() {
       })
     }
 
-    // Source references section - clean list format, not raw snippets
+    // Build numbered references with hyperlinks
     const allRefs = []
+    let refNum = 1
 
-    // Add guideline references
-    if (integrated.guidelines.available) {
-      integrated.guidelines.keyPoints.forEach((p, i) => {
+    // Add guideline references with links
+    if (integrated.guidelines.available && integrated.guidelines.sources) {
+      integrated.guidelines.sources.slice(0, 8).forEach(link => {
         allRefs.push({
-          num: i + 1,
-          title: p.title,
-          source: p.source,
-          url: p.url,
+          num: refNum++,
+          title: link.title,
+          source: extractOrgFromUrl(link.url),
+          url: link.url,
           type: 'guideline',
         })
       })
     }
 
-    // Add literature references
-    if (integrated.literature.available) {
-      const offset = integrated.guidelines.keyPoints?.length || 0
-      integrated.literature.researchFindings.forEach((f, i) => {
+    // Add literature references with links
+    if (integrated.literature.available && integrated.literature.sources) {
+      integrated.literature.sources.slice(0, 8).forEach(link => {
         allRefs.push({
-          num: i + 1 + offset,
-          title: f.title,
-          source: f.publication || 'Academic Literature',
-          url: f.url,
-          citations: f.citations,
+          num: refNum++,
+          title: link.title,
+          source: link.publication_info || 'Peer-reviewed',
+          url: link.url,
+          citations: link.cited_by || 0,
           type: 'literature',
         })
       })
     }
 
-    // Add sources section with clean formatting
+    // Format references as markdown hyperlinks
     if (allRefs.length > 0) {
       const guidelineRefs = allRefs.filter(r => r.type === 'guideline')
       const literatureRefs = allRefs.filter(r => r.type === 'literature')
 
-      let sourcesContent = ''
+      let refsContent = ''
 
       if (guidelineRefs.length > 0) {
-        sourcesContent += '**Official Guidelines & Recommendations:**\n\n'
+        refsContent += '### Official Guidelines\n\n'
         guidelineRefs.forEach(r => {
-          sourcesContent += `- **${r.source}**: ${r.title}\n`
+          refsContent += `${r.num}. [${r.title}](${r.url}) — *${r.source}*\n\n`
         })
-        sourcesContent += '\n'
       }
 
       if (literatureRefs.length > 0) {
-        sourcesContent += '**Peer-Reviewed Literature:**\n\n'
+        refsContent += '### Peer-Reviewed Literature\n\n'
         literatureRefs.forEach(r => {
-          const citationInfo = r.citations > 0 ? ` *(${r.citations} citations)*` : ''
-          sourcesContent += `- ${r.title}${citationInfo}\n`
+          const citationInfo = r.citations > 0 ? ` (${r.citations} citations)` : ''
+          refsContent += `${r.num}. [${r.title}](${r.url})${citationInfo}\n\n`
         })
       }
 
       sections.push({
         type: 'references',
-        title: 'Supporting Evidence Sources',
-        content: sourcesContent,
+        title: 'References',
+        content: refsContent,
         references: allRefs,
       })
     }
@@ -793,7 +804,13 @@ function App() {
                             )}
                           </div>
                           <div className="section-content">
-                            <ReactMarkdown>{section.content}</ReactMarkdown>
+                            <ReactMarkdown
+                              components={{
+                                a: ({ node, ...props }) => (
+                                  <a {...props} target="_blank" rel="noopener noreferrer" className="evidence-link" />
+                                ),
+                              }}
+                            >{section.content}</ReactMarkdown>
                           </div>
                         </div>
                       ))}
@@ -848,25 +865,14 @@ function App() {
                             )}
                           </div>
                           <div className="clinician-section-content">
-                            <ReactMarkdown>{section.content}</ReactMarkdown>
+                            <ReactMarkdown
+                              components={{
+                                a: ({ node, ...props }) => (
+                                  <a {...props} target="_blank" rel="noopener noreferrer" className="evidence-link" />
+                                ),
+                              }}
+                            >{section.content}</ReactMarkdown>
                           </div>
-                          {section.references && section.references.length > 0 && (
-                            <div className="inline-references">
-                              <h5>References</h5>
-                              {section.references.map((ref, j) => (
-                                <div key={j} className="inline-ref">
-                                  <span className="ref-num">[{ref.num}]</span>
-                                  <a href={ref.url} target="_blank" rel="noopener noreferrer">
-                                    {ref.title}
-                                  </a>
-                                  <span className="ref-source">- {ref.source}</span>
-                                  {ref.citations > 0 && (
-                                    <span className="ref-citations">({ref.citations} citations)</span>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          )}
                         </div>
                       ))}
                     </div>
@@ -2131,6 +2137,42 @@ styleSheet.textContent = `
   .section-references {
     border-left: 3px solid #64748b;
     background: rgba(100, 116, 139, 0.05);
+  }
+
+  .section-sources {
+    border-left: 3px solid #0ea5e9;
+    background: rgba(14, 165, 233, 0.05);
+  }
+
+  .evidence-link {
+    color: #06b6d4;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+  }
+
+  .evidence-link:hover {
+    color: #22d3ee;
+    text-decoration: underline;
+  }
+
+  .clinician-section-content h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #94a3b8;
+    margin: 1.5rem 0 0.75rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .clinician-section-content ol {
+    padding-left: 1.5rem;
+    margin: 0;
+  }
+
+  .clinician-section-content ol li {
+    margin-bottom: 0.75rem;
+    line-height: 1.5;
   }
 
   .section-literature {
