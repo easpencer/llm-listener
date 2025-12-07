@@ -53,6 +53,14 @@ class ProvidersResponse(BaseModel):
     available: list[str]
 
 
+class AppConfigResponse(BaseModel):
+    app_mode: str  # "prism" or "chorus"
+    app_name: str  # Display name
+    show_study: bool
+    default_mode: str  # "public_health" or "health_research"
+    tagline: str
+
+
 # Study System Request/Response Models
 
 class CreateSessionRequest(BaseModel):
@@ -177,6 +185,30 @@ async def get_providers():
         configured=settings.get_available_providers(),
         available=["openai", "anthropic", "gemini", "ollama"],
     )
+
+
+@app.get("/api/config", response_model=AppConfigResponse)
+async def get_app_config():
+    """Get app configuration based on APP_MODE."""
+    settings = Settings.from_env()
+    app_mode = settings.app_mode.lower()
+
+    if app_mode == "chorus":
+        return AppConfigResponse(
+            app_mode="chorus",
+            app_name="Chorus",
+            show_study=False,
+            default_mode="health_research",
+            tagline="Multi-LLM Evidence Synthesis for Health Research",
+        )
+    else:  # Default to prism
+        return AppConfigResponse(
+            app_mode="prism",
+            app_name="Prism",
+            show_study=True,
+            default_mode="public_health",
+            tagline="AI-Powered Public Health Communication",
+        )
 
 
 @app.post("/api/query", response_model=QueryResponse)

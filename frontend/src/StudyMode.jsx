@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
 import {
   STUDY_CASES,
@@ -7,6 +7,25 @@ import {
   QUALITY_DIMENSIONS,
   EFFECTIVENESS_QUESTIONS
 } from './studyData'
+
+// Pre-generated responses cache (loaded dynamically)
+let pregeneratedCache = null
+let pregeneratedLoaded = false
+
+async function loadPregeneratedResponses() {
+  if (pregeneratedLoaded) return pregeneratedCache
+  pregeneratedLoaded = true
+
+  try {
+    const module = await import('./pregenerated_responses.json')
+    pregeneratedCache = module.default || module
+    console.log('Loaded pre-generated responses for study')
+    return pregeneratedCache
+  } catch (e) {
+    console.log('Pre-generated responses not found, will use live API')
+    return null
+  }
+}
 
 // Generate unique ID
 const generateId = () => Math.random().toString(36).substring(2, 15) + Date.now().toString(36)
@@ -144,10 +163,38 @@ export function StudyModal({ isOpen, onClose, onQuerySubmit, setViewMode }) {
     onClose()
   }
 
-  // Fetch Chorus response for a case
+  // Get pre-generated response for a case by query
+  const getPregenerated = async (query) => {
+    const pregenerated = await loadPregeneratedResponses()
+    if (!pregenerated?.cases) return null
+
+    const caseData = pregenerated.cases.find(c => c.query === query)
+    if (!caseData) return null
+
+    // Transform to match API response format
+    const responses = Object.values(caseData.responses || {})
+    return {
+      question: caseData.query,
+      responses: responses,
+      synthesis: caseData.synthesis
+    }
+  }
+
+  // Fetch Chorus response for a case (uses pre-generated if available)
   const fetchChorusResponse = async (query) => {
     setLoadingChorus(true)
+
     try {
+      // Try pre-generated responses first
+      const pregenerated = await getPregenerated(query)
+      if (pregenerated) {
+        console.log('Using pre-generated response for:', query.substring(0, 30) + '...')
+        setChorusResponses(pregenerated)
+        setLoadingChorus(false)
+        return
+      }
+
+      // Fall back to live API
       const res = await fetch('/api/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

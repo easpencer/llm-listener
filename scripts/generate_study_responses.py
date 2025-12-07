@@ -1,266 +1,167 @@
 #!/usr/bin/env python3
-"""Pre-generate responses for the 7 study cases.
+"""Generate pre-computed AI responses for study cases.
 
-This script queries all configured LLM providers for each of the 7 health communication
-cases defined in the research protocol and saves the responses to JSON for analysis.
+This script queries all configured LLM providers for each study case
+and saves the responses to a JSON file that can be used by the frontend.
+
+Usage:
+    python scripts/generate_study_responses.py
 """
 
 import asyncio
 import json
-import time
+import os
+import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
 
-from llm_listener.core.config import Settings
-from llm_listener.core.orchestrator import LLMOrchestrator
-from llm_listener.core.reconciler import ResponseReconciler
-from llm_listener.providers import LLMResponse
+# Add project root to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from llm_listener.core import Settings, LLMOrchestrator, ResponseReconciler
 
 
-# Define the 7 study cases based on research protocol
+# Study cases matching frontend/src/studyData.js
 STUDY_CASES = [
     {
         "case_number": 1,
-        "topic": "Flu Vaccination",
+        "topic": "Seasonal Flu Vaccination",
         "query": "Should I get a flu vaccine this year?",
     },
     {
         "case_number": 2,
-        "topic": "COVID Boosters",
+        "topic": "COVID-19 Boosters",
         "query": "Are COVID boosters still recommended?",
     },
     {
         "case_number": 3,
         "topic": "Bird Flu Food Safety",
-        "query": "Is it safe to eat eggs during a bird flu outbreak?",
+        "query": "Is it safe to eat eggs and chicken during the bird flu outbreak?",
     },
     {
         "case_number": 4,
-        "topic": "MMR Vaccine/Autism Myth",
-        "query": "Do vaccines cause autism?",
+        "topic": "MMR Vaccine Safety",
+        "query": "What are the side effects of the MMR vaccine? Is it linked to autism?",
     },
     {
         "case_number": 5,
         "topic": "HPV Vaccination",
-        "query": "Should my 12-year-old get the HPV vaccine?",
+        "query": "Should my 12-year-old get the HPV vaccine? Is it safe?",
     },
     {
         "case_number": 6,
-        "topic": "Antibiotic Stewardship",
-        "query": "Can I get antibiotics for my cold?",
+        "topic": "Antibiotic Use",
+        "query": "Can I take leftover antibiotics for a cold?",
     },
     {
         "case_number": 7,
-        "topic": "Mental Health/Antidepressants",
-        "query": "Are antidepressants safe to take?",
+        "topic": "Mental Health Treatment",
+        "query": "Are antidepressants safe? Do they change your personality?",
     },
 ]
 
 
-def format_response(response: LLMResponse) -> Dict[str, Any]:
-    """Format an LLMResponse object for JSON serialization."""
-    return {
-        "content": response.content if response.success else None,
-        "model": response.model,
-        "error": response.error,
-        "success": response.success,
-    }
-
-
-async def query_case(
+async def generate_responses_for_case(
+    case: dict,
     orchestrator: LLMOrchestrator,
     reconciler: ResponseReconciler,
-    case: Dict[str, Any],
-) -> Dict[str, Any]:
-    """Query all providers for a single case and generate synthesis.
-
-    Args:
-        orchestrator: LLMOrchestrator instance
-        reconciler: ResponseReconciler instance
-        case: Study case dictionary with case_number, topic, and query
-
-    Returns:
-        Dictionary with case info, responses, synthesis, and timing
-    """
-    print(f"\n[Case {case['case_number']}] {case['topic']}")
-    print(f"Query: {case['query']}")
+) -> dict:
+    """Generate AI responses for a single study case."""
+    print(f"  Querying case {case['case_number']}: {case['topic']}...")
 
     # Query all providers
-    start_time = time.time()
     responses = await orchestrator.query_all(case["query"])
-    query_duration = (time.time() - start_time) * 1000  # Convert to ms
 
-    # Format responses for JSON
-    responses_dict = {}
-    for response in responses:
-        provider_key = response.provider_name.lower()
-        responses_dict[provider_key] = format_response(response)
+    # Format individual responses
+    provider_responses = {}
+    for r in responses:
+        provider_responses[r.provider_name.lower().replace(" ", "_")] = {
+            "provider_name": r.provider_name,
+            "model": r.model,
+            "content": r.content,
+            "error": r.error,
+            "success": r.success,
+        }
 
-        if response.success:
-            print(f"  ✓ {response.provider_name} ({response.model})")
-        else:
-            print(f"  ✗ {response.provider_name}: {response.error}")
+    # Generate synthesis
+    synthesis = await reconciler.reconcile(case["query"], responses, mode="public_health")
 
-    # Generate synthesis in public_health mode
-    synthesis_content = None
-    synthesis_error = None
-
-    successful_count = sum(1 for r in responses if r.success)
-    if successful_count >= 2:
-        print(f"  Generating synthesis...")
-        start_time = time.time()
-        synthesis = await reconciler.reconcile(
-            case["query"],
-            responses,
-            mode="public_health"
-        )
-        synthesis_duration = (time.time() - start_time) * 1000
-
-        if synthesis and synthesis.success:
-            synthesis_content = synthesis.content
-            print(f"  ✓ Synthesis generated ({synthesis.model})")
-        else:
-            synthesis_error = synthesis.error if synthesis else "Failed to generate synthesis"
-            print(f"  ✗ Synthesis failed: {synthesis_error}")
-    else:
-        synthesis_error = f"Need at least 2 successful responses (got {successful_count})"
-        print(f"  ⚠ Skipping synthesis: {synthesis_error}")
+    synthesis_data = None
+    if synthesis and synthesis.success:
+        synthesis_data = {
+            "provider_name": "Synthesis",
+            "model": synthesis.model,
+            "content": synthesis.content,
+            "error": synthesis.error,
+            "success": synthesis.success,
+        }
 
     return {
         "case_number": case["case_number"],
         "topic": case["topic"],
         "query": case["query"],
-        "responses": responses_dict,
-        "synthesis": {
-            "content": synthesis_content,
-            "error": synthesis_error,
-        },
-        "timing": {
-            "query_duration_ms": round(query_duration, 2),
-            "synthesis_duration_ms": round(synthesis_duration, 2) if synthesis_content else None,
-        },
-    }
-
-
-async def generate_all_responses(settings: Settings) -> Dict[str, Any]:
-    """Generate responses for all study cases.
-
-    Args:
-        settings: Application settings
-
-    Returns:
-        Dictionary containing all cases with responses and metadata
-    """
-    # Initialize orchestrator and reconciler
-    orchestrator = LLMOrchestrator(settings)
-    reconciler = ResponseReconciler(settings)
-
-    # Check for available providers
-    available_providers = settings.get_available_providers()
-    if not available_providers:
-        raise ValueError(
-            "No LLM providers configured. Set at least one: "
-            "OPENAI_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY, GROK_API_KEY, "
-            "or OLLAMA_ENABLED=true"
-        )
-
-    print(f"Configured providers: {', '.join(available_providers)}")
-    print(f"Synthesis provider: {settings.reconciler_provider}")
-    print(f"\nProcessing {len(STUDY_CASES)} study cases...")
-
-    # Process all cases
-    cases_results = []
-    total_start = time.time()
-
-    for case in STUDY_CASES:
-        try:
-            case_result = await query_case(orchestrator, reconciler, case)
-            cases_results.append(case_result)
-        except Exception as e:
-            print(f"  ✗ Error processing case {case['case_number']}: {e}")
-            cases_results.append({
-                "case_number": case["case_number"],
-                "topic": case["topic"],
-                "query": case["query"],
-                "responses": {},
-                "synthesis": {
-                    "content": None,
-                    "error": str(e),
-                },
-                "timing": {},
-            })
-
-    total_duration = time.time() - total_start
-
-    return {
-        "generated_at": datetime.utcnow().isoformat() + "Z",
-        "metadata": {
-            "total_cases": len(STUDY_CASES),
-            "configured_providers": available_providers,
-            "synthesis_provider": settings.reconciler_provider,
-            "total_duration_seconds": round(total_duration, 2),
-        },
-        "cases": cases_results,
+        "responses": provider_responses,
+        "synthesis": synthesis_data,
+        "generated_at": datetime.utcnow().isoformat(),
     }
 
 
 async def main():
-    """Main entry point."""
-    # Load settings from environment
+    """Generate and save all study responses."""
+    print("Generating AI responses for study cases...")
+    print("=" * 60)
+
+    # Initialize components
     settings = Settings.from_env()
+    orchestrator = LLMOrchestrator(settings)
+    reconciler = ResponseReconciler(settings)
 
-    # Determine output path
-    project_root = Path(__file__).parent.parent
-    output_dir = project_root / "data"
-    output_file = output_dir / "study_responses.json"
+    providers = orchestrator.get_provider_names()
+    print(f"Configured providers: {', '.join(providers)}")
+    print()
 
-    # Ensure output directory exists
-    output_dir.mkdir(parents=True, exist_ok=True)
+    if not providers:
+        print("ERROR: No LLM providers configured. Set API keys in .env file.")
+        print("Required: OPENAI_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY, or GROK_API_KEY")
+        sys.exit(1)
 
-    print("=" * 70)
-    print("LLM Listener - Study Response Generator")
-    print("=" * 70)
+    # Generate responses for each case
+    results = []
+    for case in STUDY_CASES:
+        try:
+            result = await generate_responses_for_case(case, orchestrator, reconciler)
+            results.append(result)
+            print(f"    ✓ Generated {len(result['responses'])} responses + synthesis")
+        except Exception as e:
+            print(f"    ✗ Error: {e}")
+            results.append({
+                "case_number": case["case_number"],
+                "topic": case["topic"],
+                "query": case["query"],
+                "responses": {},
+                "synthesis": None,
+                "error": str(e),
+                "generated_at": datetime.utcnow().isoformat(),
+            })
 
-    try:
-        # Generate all responses
-        results = await generate_all_responses(settings)
+    print()
+    print("=" * 60)
 
-        # Save to JSON
-        print(f"\nSaving results to: {output_file}")
-        with open(output_file, "w", encoding="utf-8") as f:
-            json.dump(results, f, indent=2, ensure_ascii=False)
+    # Save to JSON file
+    output_path = Path(__file__).parent.parent / "frontend" / "src" / "pregenerated_responses.json"
+    with open(output_path, "w") as f:
+        json.dump({
+            "generated_at": datetime.utcnow().isoformat(),
+            "providers": providers,
+            "cases": results,
+        }, f, indent=2)
 
-        # Print summary
-        print("\n" + "=" * 70)
-        print("SUMMARY")
-        print("=" * 70)
-        print(f"Total cases processed: {results['metadata']['total_cases']}")
-        print(f"Providers queried: {', '.join(results['metadata']['configured_providers'])}")
-        print(f"Total duration: {results['metadata']['total_duration_seconds']}s")
+    print(f"Saved to: {output_path}")
+    print(f"Total cases: {len(results)}")
 
-        # Count successful responses and syntheses
-        total_responses = 0
-        successful_responses = 0
-        successful_syntheses = 0
-
-        for case in results["cases"]:
-            for provider, response in case["responses"].items():
-                total_responses += 1
-                if response.get("success"):
-                    successful_responses += 1
-
-            if case["synthesis"]["content"]:
-                successful_syntheses += 1
-
-        print(f"Successful responses: {successful_responses}/{total_responses}")
-        print(f"Successful syntheses: {successful_syntheses}/{len(STUDY_CASES)}")
-        print(f"\nOutput saved to: {output_file}")
-        print("=" * 70)
-
-    except Exception as e:
-        print(f"\n✗ Fatal error: {e}")
-        raise
+    # Summary
+    successful = sum(1 for r in results if r.get("synthesis"))
+    print(f"Successful syntheses: {successful}/{len(results)}")
 
 
 if __name__ == "__main__":

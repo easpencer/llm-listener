@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     # Reconciliation settings
     reconciler_provider: str = "anthropic"  # Which provider to use for synthesis
 
+    # App mode: "prism" (public health + study) or "chorus" (research focus, no study)
+    app_mode: str = "prism"
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
@@ -69,4 +72,5 @@ class Settings(BaseSettings):
             grok_model=os.getenv("GROK_MODEL"),
             ollama_model=os.getenv("OLLAMA_MODEL"),
             reconciler_provider=os.getenv("RECONCILER_PROVIDER", "anthropic"),
+            app_mode=os.getenv("APP_MODE", "prism"),
         )

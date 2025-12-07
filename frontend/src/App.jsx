@@ -19,15 +19,41 @@ function App() {
   const [providers, setProviders] = useState([])
   const [error, setError] = useState(null)
   const [copied, setCopied] = useState(false)
+  const [studyModalOpen, setStudyModalOpen] = useState(false)
+
+  // App configuration from backend
+  const [appConfig, setAppConfig] = useState({
+    app_mode: 'prism',
+    app_name: 'Prism',
+    show_study: true,
+    default_mode: 'public_health',
+    tagline: 'AI-Powered Public Health Communication',
+  })
+
   const [mode, setMode] = useState(() => {
-    // Load preference from localStorage, default to 'public_health'
+    // Load preference from localStorage, default will be set by config
     return localStorage.getItem('chorusMode') || 'public_health'
   })
   const [viewMode, setViewMode] = useState(() => {
     // Load view preference from localStorage, default to 'detailed'
     return localStorage.getItem('chorusViewMode') || 'detailed'
   })
-  const [studyModalOpen, setStudyModalOpen] = useState(false)
+
+  // Fetch app config on mount
+  useEffect(() => {
+    fetch('/api/config')
+      .then(res => res.json())
+      .then(data => {
+        setAppConfig(data)
+        // Set default mode if not already set in localStorage
+        if (!localStorage.getItem('chorusMode')) {
+          setMode(data.default_mode)
+        }
+      })
+      .catch(() => {
+        // Keep default config on error
+      })
+  }, [])
 
   useEffect(() => {
     fetch('/api/providers')
@@ -197,10 +223,14 @@ function App() {
         </div>
 
         <h1 className="title" style={{ background: modeColors.gradient, WebkitBackgroundClip: 'text', backgroundClip: 'text' }}>
-          {mode === 'health_research' ? 'Health Research Assistant' : 'Chorus'}
+          {appConfig.app_mode === 'chorus'
+            ? (mode === 'health_research' ? 'Chorus Research' : 'Chorus')
+            : (mode === 'health_research' ? 'Prism Research' : 'Prism')}
         </h1>
         <p className="subtitle">
-          {mode === 'health_research' ? 'Compare AI responses on medical questions' : 'Hear what AI is telling the public'}
+          {appConfig.app_mode === 'chorus'
+            ? (mode === 'health_research' ? 'Compare AI responses on medical questions' : 'Multi-LLM Evidence Synthesis')
+            : (mode === 'health_research' ? 'Compare AI responses on medical questions' : appConfig.tagline)}
         </p>
       </header>
 
@@ -337,24 +367,28 @@ function App() {
       <footer className="footer">
         <p>{mode === 'health_research'
           ? 'Compare AI responses on medical research questions'
-          : 'Chorus helps public health officials understand AI narratives'}</p>
+          : appConfig.app_mode === 'chorus'
+            ? 'Chorus synthesizes evidence from multiple AI models'
+            : 'Prism helps public health officials understand AI narratives'}</p>
         <ViewResultsLink />
       </footer>
 
-      {/* Study Participation */}
-      <StudyFAB onClick={() => setStudyModalOpen(true)} />
-      <StudyModal
-        isOpen={studyModalOpen}
-        onClose={() => setStudyModalOpen(false)}
-        onQuerySubmit={(query) => {
-          setQuestion(query)
-          // Auto-submit after short delay to let state update
-          setTimeout(() => {
-            document.querySelector('.submit-btn')?.click()
-          }, 100)
-        }}
-        setViewMode={setViewMode}
-      />
+      {/* Study Participation - only show in Prism mode */}
+      {appConfig.show_study && <StudyFAB onClick={() => setStudyModalOpen(true)} />}
+      {appConfig.show_study && (
+        <StudyModal
+          isOpen={studyModalOpen}
+          onClose={() => setStudyModalOpen(false)}
+          onQuerySubmit={(query) => {
+            setQuestion(query)
+            // Auto-submit after short delay to let state update
+            setTimeout(() => {
+              document.querySelector('.submit-btn')?.click()
+            }, 100)
+          }}
+          setViewMode={setViewMode}
+        />
+      )}
     </div>
   )
 }
