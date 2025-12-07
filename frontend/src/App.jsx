@@ -92,6 +92,9 @@ function App() {
   const [clarification, setClarification] = useState(null) // Clarification suggestions from AI
   const [clarifying, setClarifying] = useState(false) // Loading state for clarification
   const [followUpOpen, setFollowUpOpen] = useState(false) // FAB panel state
+  const [clarifyConvo, setClarifyConvo] = useState([]) // Conversational clarification: [{role: 'ai'|'user', text: string}]
+  const [clarifyInput, setClarifyInput] = useState('') // Current clarification input
+  const [clarifyReady, setClarifyReady] = useState(false) // Whether the refined question is ready
   const resultsRef = useRef(null)
   const followUpRef = useRef(null)
 
@@ -145,82 +148,23 @@ function App() {
     e?.preventDefault?.()
     if (!question.trim() || loading || clarifying) return
 
-    // First, check if we should clarify the question (for Chorus mode)
-    if (appConfig.app_mode === 'chorus' && !skipClarification && !clarification) {
-      setClarifying(true)
-      setError(null)
-      try {
-        const clarifyRes = await fetch('/api/clarify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question }),
-        })
-        if (clarifyRes.ok) {
-          const clarifyData = await clarifyRes.json()
-          if (clarifyData.needs_clarification) {
-            setClarification(clarifyData)
-            setClarifying(false)
-            return // Don't proceed to search, show clarification UI
-          }
-        }
-      } catch (err) {
-        // If clarification fails, just proceed with the query
-        console.error('Clarification check failed:', err)
-      }
-      setClarifying(false)
-    }
-
-    setLoading(true)
-    setResponses([])
-    setSynthesis(null)
-    setEvidence(null)
+    // Clear any existing clarification state
+    setClarification(null)
+    setClarifyConvo([])
+    setClarifyReady(false)
     setError(null)
-    setShowAllAI(false)
-    setConversationHistory([]) // Clear history on new query
-    setFollowUp('')
-    setClarification(null) // Clear any previous clarification
 
-    try {
-      const queryPromise = fetch('/api/query', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question, include_synthesis: true, mode }),
-      })
-
-      const evidencePromise = mode === 'health_research'
-        ? fetch('/api/evidence', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: question }),
-          })
-        : null
-
-      const [queryRes, evidenceRes] = await Promise.all([queryPromise, evidencePromise])
-
-      if (!queryRes.ok) {
-        const err = await queryRes.json()
-        throw new Error(err.detail || 'Failed to query LLMs')
-      }
-
-      const queryData = await queryRes.json()
-      setResponses(queryData.responses)
-      setSynthesis(queryData.synthesis)
-
-      // Save to conversation history
-      setConversationHistory([{ question, synthesis: queryData.synthesis }])
-
-      if (evidenceRes && evidenceRes.ok) {
-        const evidenceData = await evidenceRes.json()
-        setEvidence(evidenceData)
-      }
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
+    // For Chorus mode, start conversational clarification
+    if (appConfig.app_mode === 'chorus' && !skipClarification) {
+      startClarifyConversation(question)
+      return
     }
+
+    // For Prism mode or skipped clarification, run search directly
+    runSearch(question)
   }
 
-  // Handle user choice from clarification UI
+  // Handle user choice from clarification UI (legacy)
   const handleClarificationChoice = (choice, customQuestion = null) => {
     const newQuestion = choice === 'custom' ? customQuestion :
                         choice === 'refined' ? clarification.refined_question :
@@ -237,12 +181,170 @@ function App() {
     }
   }
 
-  // Skip clarification and search with original question
+  // Skip clarification and search with original question (legacy)
   const handleSkipClarification = () => {
     setClarification(null)
     setTimeout(() => {
       handleSubmit(null, true)
     }, 100)
+  }
+
+  // Start conversational clarification
+  const startClarifyConversation = async (originalQuestion) => {
+    setClarifying(true)
+    setClarifyConvo([])
+    setClarifyInput('')
+    setClarifyReady(false)
+
+    try {
+      const res = await fetch('/api/clarify-step', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          original_question: originalQuestion,
+          conversation: [],
+        }),
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        if (data.is_ready) {
+          // Question is already clear enough, proceed to search
+          setClarifying(false)
+          setQuestion(data.refined_question)
+          runSearch(data.refined_question)
+        } else {
+          // Start conversation with AI's first question
+          setClarification({ originalQuestion, refinedQuestion: data.refined_question, quickOptions: data.quick_options })
+          setClarifyConvo([{ role: 'ai', text: data.clarifying_question }])
+          setClarifying(false)
+        }
+      } else {
+        // API error, proceed with original
+        setClarifying(false)
+        runSearch(originalQuestion)
+      }
+    } catch (err) {
+      console.error('Clarification failed:', err)
+      setClarifying(false)
+      runSearch(originalQuestion)
+    }
+  }
+
+  // Continue clarification conversation
+  const handleClarifyResponse = async (userResponse) => {
+    if (!userResponse.trim()) return
+
+    // Add user's response to conversation
+    const newConvo = [...clarifyConvo, { role: 'user', text: userResponse }]
+    setClarifyConvo(newConvo)
+    setClarifyInput('')
+    setClarifying(true)
+
+    try {
+      const res = await fetch('/api/clarify-step', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          original_question: clarification.originalQuestion,
+          conversation: newConvo,
+        }),
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setClarification(prev => ({
+          ...prev,
+          refinedQuestion: data.refined_question,
+          quickOptions: data.quick_options,
+        }))
+
+        if (data.is_ready) {
+          // Question is refined enough, show ready state
+          setClarifyReady(true)
+          setClarifying(false)
+        } else {
+          // Continue conversation
+          setClarifyConvo([...newConvo, { role: 'ai', text: data.clarifying_question }])
+          setClarifying(false)
+        }
+      } else {
+        setClarifying(false)
+        setClarifyReady(true)
+      }
+    } catch (err) {
+      console.error('Clarification step failed:', err)
+      setClarifying(false)
+      setClarifyReady(true)
+    }
+  }
+
+  // Search with refined question
+  const searchWithRefined = () => {
+    const refinedQ = clarification?.refinedQuestion || question
+    setQuestion(refinedQ)
+    setClarification(null)
+    setClarifyConvo([])
+    setClarifyReady(false)
+    runSearch(refinedQ)
+  }
+
+  // Skip clarification conversation
+  const skipClarifyConvo = () => {
+    const originalQ = clarification?.originalQuestion || question
+    setClarification(null)
+    setClarifyConvo([])
+    setClarifyReady(false)
+    runSearch(originalQ)
+  }
+
+  // Actual search function
+  const runSearch = async (searchQuestion) => {
+    setLoading(true)
+    setResponses([])
+    setSynthesis(null)
+    setEvidence(null)
+    setError(null)
+    setShowAllAI(false)
+    setConversationHistory([])
+    setFollowUp('')
+
+    try {
+      const queryPromise = fetch('/api/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: searchQuestion, include_synthesis: true, mode }),
+      })
+
+      const evidencePromise = mode === 'health_research'
+        ? fetch('/api/evidence', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: searchQuestion }),
+          })
+        : null
+
+      const [queryRes, evidenceRes] = await Promise.all([queryPromise, evidencePromise])
+
+      if (!queryRes.ok) {
+        const err = await queryRes.json()
+        throw new Error(err.detail || 'Failed to query LLMs')
+      }
+
+      const queryData = await queryRes.json()
+      setResponses(queryData.responses)
+      setSynthesis(queryData.synthesis)
+      setConversationHistory([{ question: searchQuestion, synthesis: queryData.synthesis }])
+
+      if (evidenceRes && evidenceRes.ok) {
+        const evidenceData = await evidenceRes.json()
+        setEvidence(evidenceData)
+      }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleFollowUp = async (e) => {
@@ -961,66 +1063,118 @@ function App() {
             </div>
           )}
 
-          {/* Clarification Suggestions UI */}
-          {clarification && (
+          {/* Conversational Clarification UI */}
+          {clarification && clarifyConvo.length > 0 && (
             <div className="chorus-clarification glass-card animate-fade-in">
               <div className="clarification-header">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                 </svg>
                 <div>
-                  <h3>Refine Your Question?</h3>
-                  {clarification.explanation && (
-                    <p className="clarification-explanation">{clarification.explanation}</p>
-                  )}
+                  <h3>Let's Refine Your Question</h3>
+                  <p className="clarification-explanation">A few quick questions to help get you better results</p>
                 </div>
               </div>
 
-              {/* Clarifying questions from AI */}
-              {clarification.clarifying_questions?.length > 0 && (
-                <div className="clarification-questions">
-                  <h4>Consider these aspects:</h4>
-                  <ul>
-                    {clarification.clarifying_questions.map((q, i) => (
-                      <li key={i}>{q}</li>
-                    ))}
-                  </ul>
+              {/* Chat-like conversation */}
+              <div className="clarify-conversation">
+                {clarifyConvo.map((msg, i) => (
+                  <div key={i} className={`clarify-message ${msg.role}`}>
+                    {msg.role === 'ai' ? (
+                      <div className="clarify-ai-message">
+                        <span className="clarify-avatar">
+                          <ChorusLogo size={20} animated={false} />
+                        </span>
+                        <span className="clarify-text">{msg.text}</span>
+                      </div>
+                    ) : (
+                      <div className="clarify-user-message">
+                        <span className="clarify-text">{msg.text}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {/* Loading indicator when waiting for AI response */}
+                {clarifying && (
+                  <div className="clarify-message ai">
+                    <div className="clarify-ai-message">
+                      <span className="clarify-avatar">
+                        <ChorusLogo size={20} animated={true} />
+                      </span>
+                      <span className="clarify-typing">
+                        <span></span><span></span><span></span>
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Quick options */}
+              {!clarifying && !clarifyReady && clarification.quickOptions?.length > 0 && (
+                <div className="clarify-quick-options">
+                  {clarification.quickOptions.map((opt, i) => (
+                    <button
+                      key={i}
+                      className="clarify-quick-btn"
+                      onClick={() => handleClarifyResponse(opt)}
+                    >
+                      {opt}
+                    </button>
+                  ))}
                 </div>
               )}
 
-              {/* Suggested refinements */}
-              <div className="clarification-options">
-                {clarification.refined_question && (
+              {/* Custom input */}
+              {!clarifying && !clarifyReady && (
+                <div className="clarify-input-row">
+                  <input
+                    type="text"
+                    value={clarifyInput}
+                    onChange={(e) => setClarifyInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleClarifyResponse(clarifyInput)}
+                    placeholder="Type your answer..."
+                    className="clarify-input"
+                  />
                   <button
-                    className="clarification-option refined"
-                    onClick={() => handleClarificationChoice('refined')}
+                    className="clarify-send-btn"
+                    onClick={() => handleClarifyResponse(clarifyInput)}
+                    disabled={!clarifyInput.trim()}
                   >
-                    <span className="option-label">Suggested refinement:</span>
-                    <span className="option-text">{clarification.refined_question}</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="22" y1="2" x2="11" y2="13"/>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
                   </button>
-                )}
+                </div>
+              )}
 
-                {clarification.suggestions?.map((suggestion, i) => (
-                  <button
-                    key={i}
-                    className="clarification-option suggestion"
-                    onClick={() => handleClarificationChoice(i)}
-                  >
-                    <span className="option-label">Alternative {i + 1}:</span>
-                    <span className="option-text">{suggestion}</span>
-                  </button>
-                ))}
-              </div>
+              {/* Ready state - show refined question and search button */}
+              {clarifyReady && (
+                <div className="clarify-ready">
+                  <div className="clarify-refined-preview">
+                    <span className="clarify-refined-label">Ready to search:</span>
+                    <span className="clarify-refined-text">{clarification.refinedQuestion}</span>
+                  </div>
+                </div>
+              )}
 
+              {/* Action buttons */}
               <div className="clarification-actions">
                 <button
                   className="clarification-skip"
-                  onClick={handleSkipClarification}
+                  onClick={skipClarifyConvo}
                 >
-                  Search with original question
+                  Skip & search original
                 </button>
+                {(clarifyReady || clarifyConvo.length >= 2) && (
+                  <button
+                    className="clarification-search"
+                    onClick={searchWithRefined}
+                  >
+                    {clarifyReady ? 'Search Now' : 'Search with refinement'}
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -4181,6 +4335,224 @@ styleSheet.textContent = `
 
   .clarification-skip:hover {
     color: #a1a1aa;
+  }
+
+  .clarification-search {
+    background: linear-gradient(135deg, #06b6d4, #0891b2);
+    border: none;
+    color: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    margin-left: 1rem;
+  }
+
+  .clarification-search:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+  }
+
+  /* Conversational Clarification Styles */
+  .clarify-conversation {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+  }
+
+  .clarify-message {
+    animation: slideUp 0.3s ease;
+  }
+
+  .clarify-message.ai {
+    align-self: flex-start;
+  }
+
+  .clarify-message.user {
+    align-self: flex-end;
+  }
+
+  .clarify-ai-message {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .clarify-avatar {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(6, 182, 212, 0.15);
+    border-radius: 50%;
+  }
+
+  .clarify-ai-message .clarify-text {
+    background: rgba(6, 182, 212, 0.1);
+    border: 1px solid rgba(6, 182, 212, 0.2);
+    padding: 0.75rem 1rem;
+    border-radius: 0 12px 12px 12px;
+    color: #e4e4e7;
+    font-size: 0.95rem;
+    max-width: 90%;
+    line-height: 1.5;
+  }
+
+  .clarify-user-message {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .clarify-user-message .clarify-text {
+    background: rgba(20, 184, 166, 0.15);
+    border: 1px solid rgba(20, 184, 166, 0.25);
+    padding: 0.75rem 1rem;
+    border-radius: 12px 0 12px 12px;
+    color: #e4e4e7;
+    font-size: 0.95rem;
+    max-width: 80%;
+    line-height: 1.5;
+  }
+
+  .clarify-typing {
+    display: flex;
+    gap: 4px;
+    padding: 0.75rem 1rem;
+    background: rgba(6, 182, 212, 0.1);
+    border: 1px solid rgba(6, 182, 212, 0.2);
+    border-radius: 0 12px 12px 12px;
+  }
+
+  .clarify-typing span {
+    width: 6px;
+    height: 6px;
+    background: #06b6d4;
+    border-radius: 50%;
+    animation: typing 1.4s infinite;
+  }
+
+  .clarify-typing span:nth-child(2) { animation-delay: 0.2s; }
+  .clarify-typing span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+
+  .clarify-quick-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    margin-left: 2.5rem;
+  }
+
+  .clarify-quick-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #e4e4e7;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+  }
+
+  .clarify-quick-btn:hover {
+    background: rgba(6, 182, 212, 0.15);
+    border-color: rgba(6, 182, 212, 0.3);
+    color: #06b6d4;
+  }
+
+  .clarify-input-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-left: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .clarify-input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    color: #e4e4e7;
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: all 0.2s ease;
+  }
+
+  .clarify-input:focus {
+    outline: none;
+    border-color: rgba(6, 182, 212, 0.4);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .clarify-input::placeholder {
+    color: #71717a;
+  }
+
+  .clarify-send-btn {
+    background: linear-gradient(135deg, #06b6d4, #0891b2);
+    border: none;
+    color: white;
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .clarify-send-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+  }
+
+  .clarify-send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .clarify-ready {
+    margin-left: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .clarify-refined-preview {
+    background: rgba(20, 184, 166, 0.1);
+    border: 1px solid rgba(20, 184, 166, 0.25);
+    border-radius: 8px;
+    padding: 1rem;
+  }
+
+  .clarify-refined-label {
+    display: block;
+    font-size: 0.75rem;
+    color: #14b8a6;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+
+  .clarify-refined-text {
+    color: #e4e4e7;
+    font-size: 0.95rem;
+    line-height: 1.5;
   }
 
   /* Mobile */

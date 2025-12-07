@@ -76,6 +76,24 @@ class ClarifyResponse(BaseModel):
     explanation: Optional[str] = None  # Why clarification might help
 
 
+# Conversational clarification models
+class ConvoMessage(BaseModel):
+    role: str  # "ai" or "user"
+    text: str
+
+
+class ClarifyStepRequest(BaseModel):
+    original_question: str
+    conversation: List[ConvoMessage] = []  # Previous exchanges
+
+
+class ClarifyStepResponse(BaseModel):
+    clarifying_question: Optional[str] = None  # Next question to ask user (null if ready)
+    is_ready: bool  # Whether the question is refined enough
+    refined_question: str  # Current refined version of the question
+    quick_options: List[str] = []  # Quick response options for the user
+
+
 # Study System Request/Response Models
 
 class CreateSessionRequest(BaseModel):
@@ -388,6 +406,95 @@ Only respond with valid JSON, no other text."""
         return ClarifyResponse(
             needs_clarification=False,
             original_question=request.question,
+        )
+
+
+@app.post("/api/clarify-step", response_model=ClarifyStepResponse)
+async def clarify_step(request: ClarifyStepRequest):
+    """Conversational clarification - one step at a time.
+
+    Takes the original question and any conversation history,
+    returns either a clarifying question or indicates the question is ready.
+    """
+    import json
+    settings = Settings.from_env()
+
+    providers = settings.get_available_providers()
+    if not providers:
+        # No AI available, return ready immediately
+        return ClarifyStepResponse(
+            is_ready=True,
+            refined_question=request.original_question,
+        )
+
+    orchestrator = LLMOrchestrator(settings)
+
+    # Build conversation context
+    convo_context = ""
+    if request.conversation:
+        convo_context = "\n".join([
+            f"{'Assistant' if m.role == 'ai' else 'User'}: {m.text}"
+            for m in request.conversation
+        ])
+
+    # Create the prompt
+    prompt = f"""You are helping refine a health-related question for research.
+
+Original question: "{request.original_question}"
+
+{f'Conversation so far:{chr(10)}{convo_context}' if convo_context else ''}
+
+Analyze if the question is specific enough for effective health research. Consider:
+- Is the target population clear? (age, gender, conditions)
+- Is the health context clear? (prevention, treatment, symptoms, medications)
+- Is there ambiguity that could lead to unhelpful results?
+
+Respond in JSON format:
+{{
+    "is_ready": true/false,
+    "refined_question": "the current best version of the question based on conversation",
+    "clarifying_question": "a single, specific question to ask the user to refine their query (null if is_ready is true)",
+    "quick_options": ["2-3 short clickable options for the user to quickly answer the clarifying question"]
+}}
+
+Rules:
+- Ask at most 2-3 clarifying questions total (check conversation length)
+- If the question is already clear OR you've asked enough questions, set is_ready to true
+- Make clarifying questions conversational and helpful, not interrogative
+- Quick options should be common/likely answers, 2-5 words each
+- Always provide a reasonable refined_question even if still refining
+
+Only respond with valid JSON."""
+
+    response = await orchestrator.query_single(providers[0], prompt)
+
+    if not response.success:
+        return ClarifyStepResponse(
+            is_ready=True,
+            refined_question=request.original_question,
+        )
+
+    try:
+        content = response.content.strip()
+        if content.startswith("```"):
+            lines = content.split("\n")
+            content = "\n".join(lines[1:-1] if lines[-1] == "```" else lines[1:])
+
+        analysis = json.loads(content)
+
+        # Force ready after 3 exchanges to prevent endless loops
+        force_ready = len(request.conversation) >= 6  # 3 AI + 3 user messages
+
+        return ClarifyStepResponse(
+            is_ready=force_ready or analysis.get("is_ready", True),
+            refined_question=analysis.get("refined_question", request.original_question),
+            clarifying_question=None if force_ready else analysis.get("clarifying_question"),
+            quick_options=[] if force_ready else analysis.get("quick_options", []),
+        )
+    except (json.JSONDecodeError, KeyError):
+        return ClarifyStepResponse(
+            is_ready=True,
+            refined_question=request.original_question,
         )
 
 
