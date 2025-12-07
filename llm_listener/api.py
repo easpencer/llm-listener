@@ -63,6 +63,19 @@ class AppConfigResponse(BaseModel):
     tagline: str
 
 
+class ClarifyRequest(BaseModel):
+    question: str
+
+
+class ClarifyResponse(BaseModel):
+    needs_clarification: bool
+    original_question: str
+    refined_question: Optional[str] = None  # AI-improved version
+    clarifying_questions: List[str] = []  # Questions to ask user
+    suggestions: List[str] = []  # Alternative phrasings
+    explanation: Optional[str] = None  # Why clarification might help
+
+
 # Study System Request/Response Models
 
 class CreateSessionRequest(BaseModel):
@@ -295,6 +308,87 @@ async def query_llms(request: QueryRequest):
         responses=provider_responses,
         synthesis=synthesis,
     )
+
+
+@app.post("/api/clarify", response_model=ClarifyResponse)
+async def clarify_query(request: ClarifyRequest):
+    """Analyze a query for ambiguity and suggest refinements.
+
+    Uses AI to determine if the question is clear enough for effective search,
+    and provides suggestions for improvement if needed.
+    """
+    import json
+    settings = Settings.from_env()
+
+    # Use the first available provider to analyze the query
+    providers = settings.get_available_providers()
+    if not providers:
+        # No AI available, return no clarification needed
+        return ClarifyResponse(
+            needs_clarification=False,
+            original_question=request.question,
+        )
+
+    orchestrator = LLMOrchestrator(settings)
+
+    # Create a prompt for query analysis
+    analysis_prompt = f"""Analyze this health-related question and determine if it needs clarification for effective research.
+
+Question: "{request.question}"
+
+Respond in JSON format:
+{{
+    "needs_clarification": true/false,
+    "refined_question": "improved version of the question if unclear, or null if clear",
+    "clarifying_questions": ["list of 1-3 questions to ask the user if clarification needed"],
+    "suggestions": ["list of 2-3 alternative ways to phrase the question"],
+    "explanation": "brief explanation of why clarification might help, or null if question is clear"
+}}
+
+Consider these factors:
+- Is the question specific enough? (e.g., "heart health" vs "how to reduce cardiovascular disease risk")
+- Is there ambiguity about population? (children vs adults, pregnant women, etc.)
+- Is the medical context clear? (prevention vs treatment, acute vs chronic)
+- Could the question be interpreted multiple ways?
+
+If the question is already clear and specific, set needs_clarification to false.
+Only respond with valid JSON, no other text."""
+
+    # Query just one provider for speed
+    response = await orchestrator.query_single(providers[0], analysis_prompt)
+
+    if not response.success:
+        # Fallback - no clarification
+        return ClarifyResponse(
+            needs_clarification=False,
+            original_question=request.question,
+        )
+
+    # Parse the JSON response
+    try:
+        # Extract JSON from the response (handle markdown code blocks)
+        content = response.content.strip()
+        if content.startswith("```"):
+            # Remove markdown code block
+            lines = content.split("\n")
+            content = "\n".join(lines[1:-1] if lines[-1] == "```" else lines[1:])
+
+        analysis = json.loads(content)
+
+        return ClarifyResponse(
+            needs_clarification=analysis.get("needs_clarification", False),
+            original_question=request.question,
+            refined_question=analysis.get("refined_question"),
+            clarifying_questions=analysis.get("clarifying_questions", []),
+            suggestions=analysis.get("suggestions", []),
+            explanation=analysis.get("explanation"),
+        )
+    except (json.JSONDecodeError, KeyError):
+        # If parsing fails, assume no clarification needed
+        return ClarifyResponse(
+            needs_clarification=False,
+            original_question=request.question,
+        )
 
 
 @app.post("/api/evidence", response_model=EvidenceResponse)

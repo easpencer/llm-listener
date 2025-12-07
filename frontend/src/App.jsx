@@ -89,6 +89,8 @@ function App() {
   const [showAllAI, setShowAllAI] = useState(false)
   const [followUp, setFollowUp] = useState('')
   const [conversationHistory, setConversationHistory] = useState([]) // [{question, synthesis}]
+  const [clarification, setClarification] = useState(null) // Clarification suggestions from AI
+  const [clarifying, setClarifying] = useState(false) // Loading state for clarification
   const resultsRef = useRef(null)
   const followUpRef = useRef(null)
 
@@ -138,9 +140,34 @@ function App() {
     }
   }, [synthesis])
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!question.trim() || loading) return
+  const handleSubmit = async (e, skipClarification = false) => {
+    e?.preventDefault?.()
+    if (!question.trim() || loading || clarifying) return
+
+    // First, check if we should clarify the question (for Chorus mode)
+    if (appConfig.app_mode === 'chorus' && !skipClarification && !clarification) {
+      setClarifying(true)
+      setError(null)
+      try {
+        const clarifyRes = await fetch('/api/clarify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question }),
+        })
+        if (clarifyRes.ok) {
+          const clarifyData = await clarifyRes.json()
+          if (clarifyData.needs_clarification) {
+            setClarification(clarifyData)
+            setClarifying(false)
+            return // Don't proceed to search, show clarification UI
+          }
+        }
+      } catch (err) {
+        // If clarification fails, just proceed with the query
+        console.error('Clarification check failed:', err)
+      }
+      setClarifying(false)
+    }
 
     setLoading(true)
     setResponses([])
@@ -150,6 +177,7 @@ function App() {
     setShowAllAI(false)
     setConversationHistory([]) // Clear history on new query
     setFollowUp('')
+    setClarification(null) // Clear any previous clarification
 
     try {
       const queryPromise = fetch('/api/query', {
@@ -189,6 +217,31 @@ function App() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Handle user choice from clarification UI
+  const handleClarificationChoice = (choice, customQuestion = null) => {
+    const newQuestion = choice === 'custom' ? customQuestion :
+                        choice === 'refined' ? clarification.refined_question :
+                        choice === 'original' ? clarification.original_question :
+                        clarification.suggestions[choice]
+
+    if (newQuestion) {
+      setQuestion(newQuestion)
+      setClarification(null)
+      // Trigger search with the new question
+      setTimeout(() => {
+        handleSubmit(null, true) // Skip clarification since user already made a choice
+      }, 100)
+    }
+  }
+
+  // Skip clarification and search with original question
+  const handleSkipClarification = () => {
+    setClarification(null)
+    setTimeout(() => {
+      handleSubmit(null, true)
+    }, 100)
   }
 
   const handleFollowUp = async (e) => {
@@ -891,6 +944,83 @@ function App() {
                 <line x1="9" y1="9" x2="15" y2="15"/>
               </svg>
               {error}
+            </div>
+          )}
+
+          {/* Clarification Loading */}
+          {clarifying && (
+            <div className="chorus-clarifying glass-card animate-fade-in">
+              <div className="chorus-loading-animation">
+                <div className="chorus-loading-wave"></div>
+                <div className="chorus-loading-wave"></div>
+                <div className="chorus-loading-wave"></div>
+              </div>
+              <h3>Analyzing Your Question</h3>
+              <p>Checking if we can help refine your query for better results...</p>
+            </div>
+          )}
+
+          {/* Clarification Suggestions UI */}
+          {clarification && (
+            <div className="chorus-clarification glass-card animate-fade-in">
+              <div className="clarification-header">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <div>
+                  <h3>Refine Your Question?</h3>
+                  {clarification.explanation && (
+                    <p className="clarification-explanation">{clarification.explanation}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Clarifying questions from AI */}
+              {clarification.clarifying_questions?.length > 0 && (
+                <div className="clarification-questions">
+                  <h4>Consider these aspects:</h4>
+                  <ul>
+                    {clarification.clarifying_questions.map((q, i) => (
+                      <li key={i}>{q}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Suggested refinements */}
+              <div className="clarification-options">
+                {clarification.refined_question && (
+                  <button
+                    className="clarification-option refined"
+                    onClick={() => handleClarificationChoice('refined')}
+                  >
+                    <span className="option-label">Suggested refinement:</span>
+                    <span className="option-text">{clarification.refined_question}</span>
+                  </button>
+                )}
+
+                {clarification.suggestions?.map((suggestion, i) => (
+                  <button
+                    key={i}
+                    className="clarification-option suggestion"
+                    onClick={() => handleClarificationChoice(i)}
+                  >
+                    <span className="option-label">Alternative {i + 1}:</span>
+                    <span className="option-text">{suggestion}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="clarification-actions">
+                <button
+                  className="clarification-skip"
+                  onClick={handleSkipClarification}
+                >
+                  Search with original question
+                </button>
+              </div>
             </div>
           )}
 
@@ -3679,6 +3809,165 @@ styleSheet.textContent = `
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+  /* Clarification UI */
+  .chorus-clarifying,
+  .chorus-clarification {
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .chorus-clarifying h3,
+  .chorus-clarification h3 {
+    color: #f4f4f5;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+  }
+
+  .chorus-clarifying p {
+    color: #a1a1aa;
+    font-size: 0.95rem;
+  }
+
+  .clarification-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    text-align: left;
+    margin-bottom: 1.25rem;
+  }
+
+  .clarification-header svg {
+    color: #06b6d4;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .clarification-explanation {
+    color: #a1a1aa;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+  }
+
+  .clarification-questions {
+    background: rgba(6, 182, 212, 0.08);
+    border: 1px solid rgba(6, 182, 212, 0.2);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    text-align: left;
+  }
+
+  .clarification-questions h4 {
+    color: #06b6d4;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .clarification-questions ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .clarification-questions li {
+    color: #d4d4d8;
+    font-size: 0.95rem;
+    padding: 0.4rem 0;
+    padding-left: 1.25rem;
+    position: relative;
+  }
+
+  .clarification-questions li::before {
+    content: '?';
+    position: absolute;
+    left: 0;
+    color: #06b6d4;
+    font-weight: 600;
+  }
+
+  .clarification-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .clarification-option {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    padding: 1rem 1.25rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    width: 100%;
+    font-family: inherit;
+    color: inherit;
+  }
+
+  .clarification-option:hover {
+    background: rgba(6, 182, 212, 0.1);
+    border-color: rgba(6, 182, 212, 0.3);
+    transform: translateY(-1px);
+  }
+
+  .clarification-option.refined {
+    border-color: rgba(16, 185, 129, 0.3);
+    background: rgba(16, 185, 129, 0.08);
+  }
+
+  .clarification-option.refined:hover {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.5);
+  }
+
+  .option-label {
+    font-size: 0.75rem;
+    color: #71717a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+
+  .clarification-option.refined .option-label {
+    color: #10b981;
+  }
+
+  .option-text {
+    color: #e4e4e7;
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+
+  .clarification-actions {
+    display: flex;
+    justify-content: center;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .clarification-skip {
+    background: transparent;
+    border: none;
+    color: #71717a;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0.75rem 1rem;
+    transition: color 0.2s ease;
+    font-family: inherit;
+  }
+
+  .clarification-skip:hover {
+    color: #a1a1aa;
+  }
 
   /* Mobile */
   @media (max-width: 600px) {

@@ -101,3 +101,30 @@ class LLMOrchestrator:
     def get_provider_names(self) -> list[str]:
         """Return list of configured provider names."""
         return [p.name for p in self.providers]
+
+    async def query_single(
+        self,
+        provider_name: str,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+    ) -> LLMResponse:
+        """Query a single provider by name."""
+        for provider in self.providers:
+            if provider.name.lower() == provider_name.lower():
+                try:
+                    return await provider.query(prompt, system_prompt)
+                except Exception as e:
+                    return LLMResponse(
+                        provider_name=provider.name,
+                        model=provider.model,
+                        content="",
+                        error=str(e),
+                    )
+
+        # Provider not found
+        return LLMResponse(
+            provider_name=provider_name,
+            model="unknown",
+            content="",
+            error=f"Provider '{provider_name}' not configured",
+        )
