@@ -402,64 +402,81 @@ function App() {
     }
   }
 
-  // Generate patient-friendly summary
+  // Generate a summary for a set of sources (for evidence cards)
+  const generateSourceSummary = (sources, type) => {
+    if (!sources || sources.length === 0) return null
+
+    const orgs = {}
+    sources.forEach(s => {
+      const org = extractOrgFromUrl(s.url)
+      if (!orgs[org]) orgs[org] = 0
+      orgs[org]++
+    })
+
+    const orgList = Object.keys(orgs)
+    const topics = sources.slice(0, 3).map(s => s.title.split(' - ')[0].split('|')[0].trim())
+
+    if (type === 'guidelines') {
+      return `This topic is addressed by ${sources.length} official sources from ${orgList.slice(0, 3).join(', ')}${orgList.length > 3 ? ` and ${orgList.length - 3} other organizations` : ''}. Key guidance covers: ${topics.slice(0, 2).join('; ')}.`
+    } else {
+      const totalCitations = sources.reduce((sum, s) => sum + (s.cited_by || 0), 0)
+      return `Found ${sources.length} peer-reviewed studies on this topic${totalCitations > 0 ? `, with a combined ${totalCitations} citations` : ''}. Research covers: ${topics.slice(0, 2).join('; ')}.`
+    }
+  }
+
+  // Generate patient-friendly summary with Authority/Science/AI structure
   const generatePatientSummary = () => {
     const integrated = generateIntegratedSynthesis()
     if (!integrated) return null
 
     let sections = []
+    const aiContent = integrated.aiConsensus.synthesisContent || ''
+    const paragraphs = aiContent.split('\n\n').filter(p => p.trim())
 
-    // Main AI synthesis as the primary content - this is complete, eloquent prose
-    if (integrated.aiConsensus.available && integrated.aiConsensus.synthesisContent) {
-      // Simplify for patients: take first portion and ensure it's accessible
-      const fullContent = integrated.aiConsensus.synthesisContent
-      // Get a reasonable portion for patients (not overwhelming)
-      const paragraphs = fullContent.split('\n\n').filter(p => p.trim())
-      const patientContent = paragraphs.slice(0, 4).join('\n\n')
+    // Section 1: What Health Authorities Say
+    if (integrated.guidelines.available && integrated.guidelines.sources) {
+      const orgs = [...new Set(integrated.guidelines.sources.map(s => extractOrgFromUrl(s.url)))]
+      const guidelineLinks = integrated.guidelines.sources.slice(0, 4).map(s =>
+        `- [${s.title.slice(0, 80)}${s.title.length > 80 ? '...' : ''}](${s.url}) — *${extractOrgFromUrl(s.url)}*`
+      ).join('\n')
+
+      sections.push({
+        type: 'official',
+        icon: '🏛️',
+        title: 'What Health Authorities Say',
+        content: `Official guidance from ${orgs.join(', ')} addresses this topic:\n\n${guidelineLinks}`,
+        sourceCount: integrated.guidelines.totalSources,
+      })
+    }
+
+    // Section 2: What Research Shows
+    if (integrated.literature.available && integrated.literature.sources) {
+      const topPapers = integrated.literature.sources.slice(0, 3)
+      const researchLinks = topPapers.map(s => {
+        const citations = s.cited_by > 0 ? ` (${s.cited_by} citations)` : ''
+        return `- [${s.title.slice(0, 80)}${s.title.length > 80 ? '...' : ''}](${s.url})${citations}`
+      }).join('\n')
+
+      sections.push({
+        type: 'research',
+        icon: '🔬',
+        title: 'What Research Shows',
+        content: `Recent scientific studies have examined this topic:\n\n${researchLinks}`,
+        sourceCount: integrated.literature.totalPapers,
+      })
+    }
+
+    // Section 3: Expert Summary (simplified AI synthesis)
+    if (integrated.aiConsensus.available && paragraphs.length > 0) {
+      // Take the most accessible portions for patients
+      const simpleContent = paragraphs.slice(0, 3).join('\n\n')
 
       sections.push({
         type: 'synthesis',
         icon: '💡',
-        title: 'What You Need to Know',
-        content: patientContent,
+        title: 'Expert Summary',
+        content: simpleContent,
         modelCount: integrated.aiConsensus.modelCount,
-      })
-    }
-
-    // Add source links section (not snippets, just helpful links)
-    const sourceLinks = []
-
-    if (integrated.guidelines.available && integrated.guidelines.sources) {
-      // Group by organization for cleaner display
-      const orgLinks = {}
-      integrated.guidelines.sources.slice(0, 5).forEach(link => {
-        const org = extractOrgFromUrl(link.url)
-        if (!orgLinks[org]) {
-          orgLinks[org] = { org, links: [] }
-        }
-        orgLinks[org].links.push({ title: link.title, url: link.url })
-      })
-
-      Object.values(orgLinks).forEach(({ org, links }) => {
-        sourceLinks.push({
-          org,
-          url: links[0].url,
-          label: `${org} Guidance`,
-        })
-      })
-    }
-
-    if (sourceLinks.length > 0) {
-      const linksContent = sourceLinks.map(s =>
-        `- [${s.label}](${s.url})`
-      ).join('\n')
-
-      sections.push({
-        type: 'sources',
-        icon: '🔗',
-        title: 'Learn More From Trusted Sources',
-        content: linksContent,
-        sourceCount: sourceLinks.length,
       })
     }
 
@@ -470,31 +487,23 @@ function App() {
     }
   }
 
-  // Generate clinician-focused summary with citations
+  // Generate clinician-focused summary with Authority/Science/AI/Consensus structure
   const generateClinicianSummary = () => {
     const integrated = generateIntegratedSynthesis()
     if (!integrated) return null
 
     let sections = []
-
-    // Full AI synthesis - complete expert analysis
-    if (integrated.aiConsensus.available && integrated.aiConsensus.synthesisContent) {
-      sections.push({
-        type: 'synthesis',
-        title: 'Evidence-Based Analysis',
-        content: integrated.aiConsensus.synthesisContent,
-        modelCount: integrated.aiConsensus.modelCount,
-        models: integrated.aiConsensus.providers.map(p => p.name),
-      })
-    }
-
-    // Build numbered references with hyperlinks
-    const allRefs = []
+    const aiContent = integrated.aiConsensus.synthesisContent || ''
     let refNum = 1
+    const allRefs = []
 
-    // Add guideline references with links
+    // Section 1: Official Guidelines Summary
     if (integrated.guidelines.available && integrated.guidelines.sources) {
-      integrated.guidelines.sources.slice(0, 8).forEach(link => {
+      const sources = integrated.guidelines.sources
+      const orgs = [...new Set(sources.map(s => extractOrgFromUrl(s.url)))]
+
+      // Build references
+      sources.slice(0, 6).forEach(link => {
         allRefs.push({
           num: refNum++,
           title: link.title,
@@ -503,11 +512,27 @@ function App() {
           type: 'guideline',
         })
       })
+
+      const guidelineLinks = allRefs.filter(r => r.type === 'guideline').map(r =>
+        `${r.num}. [${r.title}](${r.url}) — *${r.source}*`
+      ).join('\n\n')
+
+      sections.push({
+        type: 'official',
+        title: 'Official Guidelines',
+        subtitle: `From ${orgs.join(', ')}`,
+        content: `**${sources.length} authoritative sources** provide guidance on this topic:\n\n${guidelineLinks}`,
+        sourceCount: sources.length,
+      })
     }
 
-    // Add literature references with links
+    // Section 2: Scientific Literature Summary
     if (integrated.literature.available && integrated.literature.sources) {
-      integrated.literature.sources.slice(0, 8).forEach(link => {
+      const sources = integrated.literature.sources
+      const totalCitations = sources.reduce((sum, s) => sum + (s.cited_by || 0), 0)
+
+      // Build references
+      sources.slice(0, 6).forEach(link => {
         allRefs.push({
           num: refNum++,
           title: link.title,
@@ -517,35 +542,68 @@ function App() {
           type: 'literature',
         })
       })
-    }
 
-    // Format references as markdown hyperlinks
-    if (allRefs.length > 0) {
-      const guidelineRefs = allRefs.filter(r => r.type === 'guideline')
-      const literatureRefs = allRefs.filter(r => r.type === 'literature')
-
-      let refsContent = ''
-
-      if (guidelineRefs.length > 0) {
-        refsContent += '### Official Guidelines\n\n'
-        guidelineRefs.forEach(r => {
-          refsContent += `${r.num}. [${r.title}](${r.url}) — *${r.source}*\n\n`
-        })
-      }
-
-      if (literatureRefs.length > 0) {
-        refsContent += '### Peer-Reviewed Literature\n\n'
-        literatureRefs.forEach(r => {
-          const citationInfo = r.citations > 0 ? ` (${r.citations} citations)` : ''
-          refsContent += `${r.num}. [${r.title}](${r.url})${citationInfo}\n\n`
-        })
-      }
+      const litLinks = allRefs.filter(r => r.type === 'literature').map(r => {
+        const cites = r.citations > 0 ? ` *(${r.citations} citations)*` : ''
+        return `${r.num}. [${r.title}](${r.url})${cites}`
+      }).join('\n\n')
 
       sections.push({
-        type: 'references',
-        title: 'References',
-        content: refsContent,
-        references: allRefs,
+        type: 'literature',
+        title: 'Scientific Literature',
+        subtitle: `${sources.length} studies, ${totalCitations} total citations`,
+        content: `**Peer-reviewed research** on this topic:\n\n${litLinks}`,
+        sourceCount: sources.length,
+      })
+    }
+
+    // Section 3: AI Analysis (the actual synthesis)
+    if (integrated.aiConsensus.available && aiContent) {
+      sections.push({
+        type: 'synthesis',
+        title: 'AI Expert Analysis',
+        subtitle: `Synthesis from ${integrated.aiConsensus.modelCount} AI models`,
+        content: aiContent,
+        modelCount: integrated.aiConsensus.modelCount,
+        models: integrated.aiConsensus.providers.map(p => p.name),
+      })
+    }
+
+    // Section 4: Consensus & Areas of Uncertainty
+    const hasMultipleSources = integrated.guidelines.available && integrated.literature.available
+    const hasAI = integrated.aiConsensus.available
+
+    if (hasMultipleSources || hasAI) {
+      let consensusContent = ''
+
+      // Analyze what we have
+      const guidelineCount = integrated.guidelines?.totalSources || 0
+      const literatureCount = integrated.literature?.totalPapers || 0
+      const aiCount = integrated.aiConsensus?.modelCount || 0
+
+      consensusContent += '### Source Agreement\n\n'
+
+      if (guidelineCount >= 3 && literatureCount >= 3) {
+        consensusContent += `- **Strong evidence base**: ${guidelineCount} official guidelines and ${literatureCount} peer-reviewed studies address this topic\n`
+      } else if (guidelineCount >= 1 && literatureCount >= 1) {
+        consensusContent += `- **Moderate evidence base**: ${guidelineCount} official source(s) and ${literatureCount} study/studies available\n`
+      } else {
+        consensusContent += `- **Limited evidence**: Fewer sources than typical for clinical decision-making\n`
+      }
+
+      if (aiCount >= 3) {
+        consensusContent += `- **AI consensus**: ${aiCount} AI models provided analysis, allowing cross-validation\n`
+      }
+
+      consensusContent += '\n### Considerations\n\n'
+      consensusContent += '- Evidence should be evaluated in clinical context\n'
+      consensusContent += '- Guidelines may vary by region/organization\n'
+      consensusContent += '- Recent publications may not yet be reflected in guidelines\n'
+
+      sections.push({
+        type: 'consensus',
+        title: 'Evidence Synthesis',
+        content: consensusContent,
       })
     }
 
@@ -553,6 +611,7 @@ function App() {
       headline: question,
       sections,
       confidence: integrated.confidence,
+      allRefs,
     }
   }
 
@@ -853,7 +912,12 @@ function App() {
                       {clinicianSummary.sections.map((section, i) => (
                         <div key={i} className={`clinician-section section-${section.type}`}>
                           <div className="clinician-section-header">
-                            <h4>{section.title}</h4>
+                            <div className="section-title-group">
+                              <h4>{section.title}</h4>
+                              {section.subtitle && (
+                                <span className="section-subtitle">{section.subtitle}</span>
+                              )}
+                            </div>
                             {section.models && (
                               <div className="model-badges">
                                 {section.models.map((m, j) => (
@@ -862,6 +926,9 @@ function App() {
                                   </span>
                                 ))}
                               </div>
+                            )}
+                            {section.sourceCount && (
+                              <span className="section-source-count">{section.sourceCount} sources</span>
                             )}
                           </div>
                           <div className="clinician-section-content">
@@ -1294,6 +1361,36 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
   const topCited = data.top_cited || []
   const links = data.links || []
 
+  // Generate summary paragraph for this evidence type
+  const generateSummary = () => {
+    if (links.length === 0) return null
+
+    const orgMap = {}
+    links.forEach(l => {
+      let org = 'Other'
+      if (l.url.includes('cdc.gov')) org = 'CDC'
+      else if (l.url.includes('who.int')) org = 'WHO'
+      else if (l.url.includes('fda.gov')) org = 'FDA'
+      else if (l.url.includes('nih.gov')) org = 'NIH'
+      else if (l.url.includes('heart.org')) org = 'AHA'
+      else if (l.url.includes('cancer.org')) org = 'ACS'
+      if (!orgMap[org]) orgMap[org] = 0
+      orgMap[org]++
+    })
+
+    const orgs = Object.keys(orgMap).filter(o => o !== 'Other')
+    const topics = links.slice(0, 3).map(l => l.title.split(' - ')[0].split('|')[0].trim().slice(0, 50))
+
+    if (type === 'guidelines') {
+      return `Found ${count} official sources${orgs.length > 0 ? ` from ${orgs.slice(0, 3).join(', ')}` : ''}. These authoritative sources provide evidence-based recommendations and clinical guidance on this health topic.`
+    } else {
+      const totalCites = links.reduce((s, l) => s + (l.cited_by || 0), 0)
+      return `Found ${count} peer-reviewed studies${totalCites > 0 ? ` with ${totalCites} combined citations` : ''}. This research provides scientific evidence and clinical insights on this topic.`
+    }
+  }
+
+  const summary = generateSummary()
+
   return (
     <div className="evidence-card-chorus glass-card">
       <div className="evidence-card-header-chorus" style={{ borderLeftColor: color }}>
@@ -1310,6 +1407,13 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
       </div>
 
       <div className="evidence-card-body">
+        {/* Summary paragraph */}
+        {summary && (
+          <div className="evidence-summary">
+            <p>{summary}</p>
+          </div>
+        )}
+
         {/* Source breakdown for guidelines */}
         {type === 'guidelines' && Object.keys(sourceTypes).length > 0 && (
           <div className="source-breakdown">
@@ -1324,7 +1428,7 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
         {/* Top cited for literature */}
         {type === 'literature' && topCited.length > 0 && (
           <div className="top-cited-chorus">
-            <h4>Most Cited Papers</h4>
+            <h4>Most Cited</h4>
             {topCited.slice(0, 3).map((paper, i) => (
               <a key={i} href={paper.url} target="_blank" rel="noopener noreferrer" className="cited-paper-link">
                 <span className="paper-title">{paper.title}</span>
@@ -1334,17 +1438,23 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
           </div>
         )}
 
-        {/* All sources - always visible and scrollable */}
+        {/* All sources - visible and scrollable, no snippets */}
         {links.length > 0 && (
           <div className="all-sources">
-            <h4>All Sources ({links.length})</h4>
+            <h4>Sources ({links.length})</h4>
             <div className="sources-scroll-container">
               {links.map((link, i) => (
-                <div key={i} className="source-item">
-                  <a href={link.url} target="_blank" rel="noopener noreferrer">{link.title}</a>
-                  {link.snippet && <p className="source-snippet">{link.snippet}</p>}
-                  {link.publication_info && <span className="publication-info">{link.publication_info}</span>}
-                  {link.cited_by > 0 && <span className="cite-count">{link.cited_by} citations</span>}
+                <div key={i} className="source-item-clean">
+                  <span className="source-num">{i + 1}.</span>
+                  <div className="source-info">
+                    <a href={link.url} target="_blank" rel="noopener noreferrer" className="source-title-link">
+                      {link.title}
+                    </a>
+                    <div className="source-meta">
+                      {link.publication_info && <span className="publication-info">{link.publication_info}</span>}
+                      {link.cited_by > 0 && <span className="cite-count">{link.cited_by} citations</span>}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -2134,6 +2244,21 @@ styleSheet.textContent = `
     border-left: 3px solid #14b8a6;
   }
 
+  .section-official {
+    border-left: 3px solid #14b8a6;
+    background: rgba(20, 184, 166, 0.05);
+  }
+
+  .section-literature {
+    border-left: 3px solid #0ea5e9;
+    background: rgba(14, 165, 233, 0.05);
+  }
+
+  .section-consensus {
+    border-left: 3px solid #f59e0b;
+    background: rgba(245, 158, 11, 0.05);
+  }
+
   .section-references {
     border-left: 3px solid #64748b;
     background: rgba(100, 116, 139, 0.05);
@@ -2142,6 +2267,88 @@ styleSheet.textContent = `
   .section-sources {
     border-left: 3px solid #0ea5e9;
     background: rgba(14, 165, 233, 0.05);
+  }
+
+  .section-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .section-subtitle {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    font-weight: 400;
+  }
+
+  .section-source-count {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    border-radius: 999px;
+    margin-left: auto;
+  }
+
+  /* Evidence card summary */
+  .evidence-summary {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    border-left: 2px solid rgba(6, 182, 212, 0.3);
+  }
+
+  .evidence-summary p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #d1d5db;
+  }
+
+  /* Clean source items (no snippets) */
+  .source-item-clean {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .source-item-clean:last-child {
+    border-bottom: none;
+  }
+
+  .source-num {
+    color: #64748b;
+    font-size: 0.85rem;
+    min-width: 1.5rem;
+  }
+
+  .source-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .source-title-link {
+    color: #06b6d4;
+    text-decoration: none;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    transition: color 0.2s ease;
+  }
+
+  .source-title-link:hover {
+    color: #22d3ee;
+    text-decoration: underline;
+  }
+
+  .source-meta {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.8rem;
+    color: #64748b;
   }
 
   .evidence-link {
