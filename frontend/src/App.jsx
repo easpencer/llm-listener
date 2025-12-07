@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
+import { StudyFAB, StudyModal } from './StudyMode'
+import { ViewResultsLink } from './ResultsDashboard'
 
 const PROVIDER_COLORS = {
   'OpenAI': '#10a37f',
@@ -21,6 +23,11 @@ function App() {
     // Load preference from localStorage, default to 'public_health'
     return localStorage.getItem('chorusMode') || 'public_health'
   })
+  const [viewMode, setViewMode] = useState(() => {
+    // Load view preference from localStorage, default to 'detailed'
+    return localStorage.getItem('chorusViewMode') || 'detailed'
+  })
+  const [studyModalOpen, setStudyModalOpen] = useState(false)
 
   useEffect(() => {
     fetch('/api/providers')
@@ -33,6 +40,11 @@ function App() {
     // Save preference to localStorage whenever it changes
     localStorage.setItem('chorusMode', mode)
   }, [mode])
+
+  useEffect(() => {
+    // Save view preference to localStorage whenever it changes
+    localStorage.setItem('chorusViewMode', viewMode)
+  }, [viewMode])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -168,6 +180,22 @@ function App() {
           </button>
         </div>
 
+        {/* View Mode Toggle */}
+        <div className="view-toggle">
+          <button
+            className={`view-btn ${viewMode === 'brief' ? 'active' : ''}`}
+            onClick={() => setViewMode('brief')}
+          >
+            Brief
+          </button>
+          <button
+            className={`view-btn ${viewMode === 'detailed' ? 'active' : ''}`}
+            onClick={() => setViewMode('detailed')}
+          >
+            Detailed
+          </button>
+        </div>
+
         <h1 className="title" style={{ background: modeColors.gradient, WebkitBackgroundClip: 'text', backgroundClip: 'text' }}>
           {mode === 'health_research' ? 'Health Research Assistant' : 'Chorus'}
         </h1>
@@ -238,8 +266,8 @@ function App() {
           </div>
         )}
 
-        {/* Individual AI Responses */}
-        {responses.length > 0 && (
+        {/* Individual AI Responses - only show in detailed view */}
+        {viewMode === 'detailed' && responses.length > 0 && (
           <section className="section">
             <div className="section-header">
               <h2 className="section-title">
@@ -279,8 +307,8 @@ function App() {
           </section>
         )}
 
-        {/* Analysis Cards */}
-        {regularSections.length > 0 && (
+        {/* Analysis Cards - only show in detailed view */}
+        {viewMode === 'detailed' && regularSections.length > 0 && (
           <section className="section">
             <div className="section-header">
               <h2 className="section-title">
@@ -310,7 +338,23 @@ function App() {
         <p>{mode === 'health_research'
           ? 'Compare AI responses on medical research questions'
           : 'Chorus helps public health officials understand AI narratives'}</p>
+        <ViewResultsLink />
       </footer>
+
+      {/* Study Participation */}
+      <StudyFAB onClick={() => setStudyModalOpen(true)} />
+      <StudyModal
+        isOpen={studyModalOpen}
+        onClose={() => setStudyModalOpen(false)}
+        onQuerySubmit={(query) => {
+          setQuestion(query)
+          // Auto-submit after short delay to let state update
+          setTimeout(() => {
+            document.querySelector('.submit-btn')?.click()
+          }, 100)
+        }}
+        setViewMode={setViewMode}
+      />
     </div>
   )
 }
@@ -427,6 +471,39 @@ styleSheet.textContent = `
     background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
     color: white;
     box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+  }
+
+  /* View Toggle - below mode toggle */
+  .view-toggle {
+    display: inline-flex;
+    gap: 0.5rem;
+    background: rgba(255,255,255,0.05);
+    border-radius: 0.5rem;
+    padding: 0.25rem;
+    border: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 1rem;
+  }
+
+  .view-btn {
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    border: none;
+    background: transparent;
+    color: #a1a1aa;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .view-btn:hover {
+    color: #d4d4d8;
+  }
+
+  .view-btn.active {
+    background: rgba(255,255,255,0.1);
+    color: white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
   }
 
   .title {
