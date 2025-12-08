@@ -201,6 +201,7 @@ class CompleteStudyResponse(BaseModel):
 
 class StudyResultsResponse(BaseModel):
     total_sessions: int
+    completed_responses: int  # From StudyCompletedResponse table
     by_tool_version: Dict[str, int]
     avg_sus_scores: Dict[str, float]
     preference_distribution: Dict[str, int]
@@ -528,24 +529,14 @@ async def search_evidence(request: EvidenceRequest):
 # Study System Endpoints
 
 def check_db_configured():
-    """Check if database is configured and raise error if not."""
-    if not DATABASE_URL:
-        raise HTTPException(
-            status_code=503,
-            detail="Database not configured. Set DATABASE_URL environment variable to enable study endpoints.",
-        )
+    """Check if database is configured - now always passes with SQLite fallback."""
+    pass  # Database is always configured (SQLite fallback if no DATABASE_URL)
 
 
 @app.post("/api/study/session", response_model=CreateSessionResponse)
 async def create_study_session(request: CreateSessionRequest, db: Session = Depends(get_db)):
     """Create a new study session."""
     check_db_configured()
-
-    if db is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Database not configured. Set DATABASE_URL environment variable.",
-        )
 
     # Generate unique session ID
     session_id = str(uuid.uuid4())
@@ -578,12 +569,6 @@ async def create_study_query(
 ):
     """Record a query made during study."""
     check_db_configured()
-
-    if db is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Database not configured. Set DATABASE_URL environment variable.",
-        )
 
     # Find session
     session = db.query(StudySession).filter(StudySession.session_id == session_id).first()
@@ -618,12 +603,6 @@ async def create_message_rating(
 ):
     """Record a message quality rating."""
     check_db_configured()
-
-    if db is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Database not configured. Set DATABASE_URL environment variable.",
-        )
 
     # Find session
     session = db.query(StudySession).filter(StudySession.session_id == session_id).first()
@@ -670,12 +649,6 @@ async def create_usability_rating(
 ):
     """Record SUS usability rating."""
     check_db_configured()
-
-    if db is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Database not configured. Set DATABASE_URL environment variable.",
-        )
 
     # Find session
     session = db.query(StudySession).filter(StudySession.session_id == session_id).first()
@@ -739,12 +712,6 @@ async def create_trust_rating(
     """Record trust rating."""
     check_db_configured()
 
-    if db is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Database not configured. Set DATABASE_URL environment variable.",
-        )
-
     # Find session
     session = db.query(StudySession).filter(StudySession.session_id == session_id).first()
     if not session:
@@ -777,12 +744,6 @@ async def complete_study_session(session_id: str, db: Session = Depends(get_db))
     """Mark session as completed."""
     check_db_configured()
 
-    if db is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Database not configured. Set DATABASE_URL environment variable.",
-        )
-
     # Find session
     session = db.query(StudySession).filter(StudySession.session_id == session_id).first()
     if not session:
@@ -803,12 +764,6 @@ async def complete_study_session(session_id: str, db: Session = Depends(get_db))
 async def save_complete_study(request: CompleteStudyRequest, db: Session = Depends(get_db)):
     """Save complete study response data."""
     check_db_configured()
-
-    if db is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Database not configured. Set DATABASE_URL environment variable.",
-        )
 
     # Check if already exists
     existing = db.query(StudyCompletedResponse).filter(
@@ -856,15 +811,13 @@ async def get_study_results(db: Session = Depends(get_db)):
     """Returns anonymized aggregated results."""
     check_db_configured()
 
-    if db is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Database not configured. Set DATABASE_URL environment variable.",
-        )
-
-    # Get all completed sessions
+    # Get all completed sessions (legacy path)
     sessions = db.query(StudySession).filter(StudySession.completed_at.isnot(None)).all()
     total_sessions = len(sessions)
+
+    # Get completed responses from new unified endpoint
+    completed_responses = db.query(StudyCompletedResponse).all()
+    completed_responses_count = len(completed_responses)
 
     # Count by tool version
     by_tool_version = {}
@@ -874,14 +827,24 @@ async def get_study_results(db: Session = Depends(get_db)):
 
     # Calculate average SUS scores by tool version
     avg_sus_scores = {}
-    usability_ratings = db.query(UsabilityRating).all()
     sus_by_version = {}
+
+    # From legacy UsabilityRating table
+    usability_ratings = db.query(UsabilityRating).all()
     for rating in usability_ratings:
         version = rating.tool_version
         if version not in sus_by_version:
             sus_by_version[version] = []
         if rating.sus_score is not None:
             sus_by_version[version].append(rating.sus_score)
+
+    # From completed responses (new format)
+    for response in completed_responses:
+        version = response.assigned_interface or "unknown"
+        if version not in sus_by_version:
+            sus_by_version[version] = []
+        if response.sus_score is not None:
+            sus_by_version[version].append(response.sus_score)
 
     for version, scores in sus_by_version.items():
         if scores:
@@ -924,6 +887,7 @@ async def get_study_results(db: Session = Depends(get_db)):
 
     return StudyResultsResponse(
         total_sessions=total_sessions,
+        completed_responses=completed_responses_count,
         by_tool_version=by_tool_version,
         avg_sus_scores=avg_sus_scores,
         preference_distribution=preference_distribution,
