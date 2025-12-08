@@ -1601,37 +1601,59 @@ function App() {
     )
   }
 
-  // Original Prism UI
-  const modeColors = {
-    primary: '#a855f7',
-    secondary: '#6366f1',
-    gradient: 'linear-gradient(135deg, #a855f7 0%, #6366f1 100%)',
-  }
-
+  // Modern Prism UI (matching Chorus style with purple/indigo theme)
   return (
-    <div className="app-container" data-mode={mode}>
-      <header className="header">
-        <div className="brand">
-          <div className="logo-container">
-            <PrismLogo size={56} />
-          </div>
-          <div className="brand-text">
-            <h1 className="title" style={{ background: modeColors.gradient, WebkitBackgroundClip: 'text', backgroundClip: 'text' }}>
-              {appConfig.app_name}
-            </h1>
-            <p className="subtitle">{appConfig.tagline}</p>
+    <div className="prism-app">
+      {/* Animated background */}
+      <div className="prism-bg">
+        <div className="prism-orb prism-orb-1"></div>
+        <div className="prism-orb prism-orb-2"></div>
+        <div className="prism-orb prism-orb-3"></div>
+      </div>
+
+      {/* Header */}
+      <header className="prism-header">
+        <div className="prism-brand">
+          <PrismLogo size={64} />
+          <div className="prism-brand-text">
+            <h1 className="prism-title">{appConfig.app_name}</h1>
+            <p className="prism-tagline">{appConfig.tagline}</p>
           </div>
         </div>
-
-        <div className="view-toggle">
+        <div className="prism-trust-badges">
+          <span className="trust-badge prism-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+            </svg>
+            Multi-AI Analysis
+          </span>
+          <span className="trust-badge prism-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            Public Health Ready
+          </span>
+          <span className="trust-badge prism-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            Messaging Safe
+          </span>
+        </div>
+        <div className="prism-view-toggle">
           <button
-            className={`view-btn ${viewMode === 'brief' ? 'active' : ''}`}
+            className={`prism-view-btn ${viewMode === 'brief' ? 'active' : ''}`}
             onClick={() => setViewMode('brief')}
           >
             Brief
           </button>
           <button
-            className={`view-btn ${viewMode === 'detailed' ? 'active' : ''}`}
+            className={`prism-view-btn ${viewMode === 'detailed' ? 'active' : ''}`}
             onClick={() => setViewMode('detailed')}
           >
             Detailed
@@ -1639,24 +1661,34 @@ function App() {
         </div>
       </header>
 
-      <main className="main">
-        <div className="input-section">
-          <form onSubmit={handleSubmit} className="form">
-            <label className="label">What question are people asking AI?</label>
+      <main className="prism-main">
+        <div className="prism-input-card">
+          <form onSubmit={handleSubmit} className="prism-form">
+            <label className="prism-label">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              What health question are people asking AI?
+            </label>
             <textarea
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder="Enter a health question the public might ask..."
-              className="textarea"
+              placeholder="Enter a health question the public is asking chatbots..."
+              className="prism-textarea"
               rows={2}
             />
-            <div className="form-footer">
-              <div className="provider-pills">
+            <div className="prism-form-footer">
+              <div className="prism-provider-pills">
                 {providers.map(p => (
                   <span
                     key={p}
-                    className="provider-pill"
-                    style={{ borderColor: PROVIDER_COLORS[p.charAt(0).toUpperCase() + p.slice(1)] || '#6b7280' }}
+                    className="prism-provider-pill"
+                    style={{
+                      borderColor: PROVIDER_COLORS[p.charAt(0).toUpperCase() + p.slice(1)] || '#6b7280',
+                      color: PROVIDER_COLORS[p.charAt(0).toUpperCase() + p.slice(1)] || '#6b7280'
+                    }}
                   >
                     {p}
                   </span>
@@ -1665,43 +1697,61 @@ function App() {
               <button
                 type="submit"
                 disabled={loading || !question.trim()}
-                className="submit-btn"
-                style={{ background: modeColors.gradient }}
+                className="prism-submit-btn"
               >
-                {loading ? 'Analyzing...' : 'Analyze'}
+                {loading ? (
+                  <>
+                    <div className="prism-btn-spinner"></div>
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                    </svg>
+                    Analyze AI Responses
+                  </>
+                )}
               </button>
             </div>
           </form>
 
-          <div className="examples">
-            <span className="examples-label">Try:</span>
-            {exampleQuestions.map((q, i) => (
-              <button key={i} onClick={() => setQuestion(q)} className="example-btn">
-                {q}
-              </button>
-            ))}
+          <div className="prism-examples">
+            <span className="prism-examples-label">Quick examples:</span>
+            <div className="prism-example-chips">
+              {exampleQuestions.map((q, i) => (
+                <button key={i} onClick={() => setQuestion(q)} className="prism-example-chip">
+                  {q}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        {error && <div className="error">{error}</div>}
+        {error && <div className="prism-error">{error}</div>}
 
         {loading && (
-          <div className="loading">
-            <div className="spinner" style={{ borderTopColor: modeColors.primary }}></div>
-            <p>Listening to {providers.length} AI voices...</p>
+          <div className="prism-loading">
+            <div className="prism-spinner"></div>
+            <p>Analyzing {providers.length} AI responses...</p>
+            <span className="prism-loading-sub">Identifying narratives and themes</span>
           </div>
         )}
 
         {viewMode === 'detailed' && responses.length > 0 && (
-          <section className="section">
-            <div className="section-header">
-              <h2 className="section-title">
-                <span className="section-icon">🤖</span>
-                What Each AI Says
+          <section className="prism-section">
+            <div className="prism-section-header">
+              <h2 className="prism-section-title">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 2a10 10 0 1 0 10 10H12V2z"/>
+                  <path d="M12 2a10 10 0 0 1 10 10"/>
+                  <circle cx="12" cy="12" r="6"/>
+                </svg>
+                Raw AI Responses
               </h2>
-              <span className="section-count">{responses.filter(r => r.success).length} responses</span>
+              <span className="prism-section-count">{responses.filter(r => r.success).length} models</span>
             </div>
-            <div className="responses-grid" data-count={responses.length}>
+            <div className="prism-responses-grid" data-count={responses.length}>
               {responses.map((r, i) => (
                 <ResponseCard key={i} response={r} />
               ))}
@@ -1710,15 +1760,17 @@ function App() {
         )}
 
         {highlightSection && (
-          <section className="section">
-            <div className="highlight-card">
-              <div className="highlight-header">
-                <div className="highlight-title-row">
-                  <span className="highlight-icon">💬</span>
-                  <h2 className="highlight-title">Ready-to-Use Public Health Message</h2>
+          <section className="prism-section prism-message-section">
+            <div className="prism-message-card">
+              <div className="prism-message-header">
+                <div className="prism-message-title-row">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  <h2 className="prism-message-title">Ready-to-Use Public Health Message</h2>
                 </div>
                 <button
-                  className="copy-btn"
+                  className="prism-copy-btn"
                   onClick={() => {
                     const messageMatch = highlightSection.content.match(/^\*\*(.+?)\*\*/s) || highlightSection.content.match(/^"(.+?)"/s)
                     const messageToCopy = messageMatch ? messageMatch[1] : highlightSection.content.split('\n\n')[0]
@@ -1727,10 +1779,25 @@ function App() {
                     setTimeout(() => setCopied(false), 2000)
                   }}
                 >
-                  {copied ? '✓ Copied!' : 'Copy Message'}
+                  {copied ? (
+                    <>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                      </svg>
+                      Copy Message
+                    </>
+                  )}
                 </button>
               </div>
-              <div className="highlight-content">
+              <div className="prism-message-content">
                 <ReactMarkdown>{highlightSection.content}</ReactMarkdown>
               </div>
             </div>
@@ -1738,14 +1805,18 @@ function App() {
         )}
 
         {viewMode === 'detailed' && regularSections.length > 0 && (
-          <section className="section">
-            <div className="section-header">
-              <h2 className="section-title">
-                <span className="section-icon">📊</span>
+          <section className="prism-section">
+            <div className="prism-section-header">
+              <h2 className="prism-section-title">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="20" x2="18" y2="10"/>
+                  <line x1="12" y1="20" x2="12" y2="4"/>
+                  <line x1="6" y1="20" x2="6" y2="14"/>
+                </svg>
                 Detailed Analysis
               </h2>
             </div>
-            <div className="analysis-grid" data-count={regularSections.length}>
+            <div className="prism-analysis-grid" data-count={regularSections.length}>
               {regularSections.map((section, i) => {
                 const meta = getSectionMeta(section.title)
                 return (
@@ -1763,9 +1834,11 @@ function App() {
         )}
       </main>
 
-      <footer className="footer">
-        <p>Prism helps public health officials understand AI narratives</p>
-        <ViewResultsLink />
+      <footer className="prism-footer">
+        <div className="prism-footer-content">
+          <p>Prism helps public health officials understand and respond to AI-generated health narratives</p>
+          <ViewResultsLink />
+        </div>
       </footer>
 
       {appConfig.show_study && <StudyFAB onClick={() => setStudyModalOpen(true)} />}
@@ -1776,7 +1849,7 @@ function App() {
           onQuerySubmit={(query) => {
             setQuestion(query)
             setTimeout(() => {
-              document.querySelector('.submit-btn')?.click()
+              document.querySelector('.prism-submit-btn')?.click()
             }, 100)
           }}
           setViewMode={setViewMode}
@@ -2015,6 +2088,519 @@ function AIResponseCard({ response }) {
 const styleSheet = document.createElement('style')
 styleSheet.textContent = `
   * { box-sizing: border-box; }
+
+  /* ===== PRISM STYLES ===== */
+  .prism-app {
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    color: #e2e8f0;
+  }
+
+  /* Prism Animated Background - Purple/Indigo theme */
+  .prism-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    background: linear-gradient(135deg, #0f0a1f 0%, #1a1033 50%, #0d0a1a 100%);
+    overflow: hidden;
+  }
+
+  .prism-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.4;
+    animation: prismFloat 20s ease-in-out infinite;
+  }
+
+  .prism-orb-1 {
+    width: 600px;
+    height: 600px;
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    top: -200px;
+    right: -200px;
+    animation-delay: 0s;
+  }
+
+  .prism-orb-2 {
+    width: 500px;
+    height: 500px;
+    background: linear-gradient(135deg, #a855f7, #9333ea);
+    bottom: -150px;
+    left: -150px;
+    animation-delay: -7s;
+  }
+
+  .prism-orb-3 {
+    width: 300px;
+    height: 300px;
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation-delay: -14s;
+  }
+
+  @keyframes prismFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(30px, -30px) scale(1.05); }
+    50% { transform: translate(-20px, 20px) scale(0.95); }
+    75% { transform: translate(20px, 30px) scale(1.02); }
+  }
+
+  /* Prism Header */
+  .prism-header {
+    padding: 1.5rem 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: rgba(139, 92, 246, 0.05);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+  }
+
+  .prism-brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .prism-brand-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .prism-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #a855f7 0%, #8b5cf6 50%, #6366f1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+
+  .prism-tagline {
+    color: #94a3b8;
+    font-size: 0.875rem;
+    margin: 0;
+    margin-top: 0.25rem;
+  }
+
+  .prism-trust-badges {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .prism-badge {
+    background: rgba(139, 92, 246, 0.15) !important;
+    border-color: rgba(139, 92, 246, 0.3) !important;
+    color: #c4b5fd !important;
+  }
+
+  .prism-view-toggle {
+    display: flex;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 4px;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+  }
+
+  .prism-view-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .prism-view-btn:hover {
+    color: #c4b5fd;
+  }
+
+  .prism-view-btn.active {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: white;
+  }
+
+  /* Prism Main Content */
+  .prism-main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  /* Prism Input Card */
+  .prism-input-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(139, 92, 246, 0.15);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .prism-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .prism-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #c4b5fd;
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+
+  .prism-label svg {
+    stroke: #a855f7;
+  }
+
+  .prism-textarea {
+    width: 100%;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 12px;
+    color: #e2e8f0;
+    font-size: 1rem;
+    resize: vertical;
+    min-height: 80px;
+    transition: all 0.2s;
+  }
+
+  .prism-textarea:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+  }
+
+  .prism-textarea::placeholder {
+    color: #64748b;
+  }
+
+  .prism-form-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .prism-provider-pills {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .prism-provider-pill {
+    padding: 0.25rem 0.75rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+
+  .prism-submit-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .prism-submit-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+  }
+
+  .prism-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .prism-btn-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  /* Prism Examples */
+  .prism-examples {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(139, 92, 246, 0.1);
+  }
+
+  .prism-examples-label {
+    color: #94a3b8;
+    font-size: 0.875rem;
+    margin-right: 0.75rem;
+  }
+
+  .prism-example-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .prism-example-chip {
+    padding: 0.5rem 1rem;
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 20px;
+    color: #c4b5fd;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .prism-example-chip:hover {
+    background: rgba(139, 92, 246, 0.2);
+    border-color: rgba(139, 92, 246, 0.4);
+  }
+
+  /* Prism Error */
+  .prism-error {
+    padding: 1rem;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 12px;
+    color: #fca5a5;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Prism Loading */
+  .prism-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    text-align: center;
+  }
+
+  .prism-spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid rgba(139, 92, 246, 0.2);
+    border-top-color: #8b5cf6;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 1rem;
+  }
+
+  .prism-loading p {
+    color: #c4b5fd;
+    font-size: 1.1rem;
+    margin: 0;
+  }
+
+  .prism-loading-sub {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+  }
+
+  /* Prism Sections */
+  .prism-section {
+    margin-bottom: 2rem;
+  }
+
+  .prism-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .prism-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #e2e8f0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .prism-section-title svg {
+    stroke: #a855f7;
+  }
+
+  .prism-section-count {
+    padding: 0.25rem 0.75rem;
+    background: rgba(139, 92, 246, 0.15);
+    border-radius: 20px;
+    color: #c4b5fd;
+    font-size: 0.875rem;
+  }
+
+  .prism-responses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+  }
+
+  .prism-analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1rem;
+  }
+
+  /* Prism Message Card */
+  .prism-message-section {
+    margin-top: 1.5rem;
+  }
+
+  .prism-message-card {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(139, 92, 246, 0.3);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .prism-message-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: rgba(139, 92, 246, 0.1);
+    border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+  }
+
+  .prism-message-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .prism-message-title-row svg {
+    stroke: #a855f7;
+  }
+
+  .prism-message-title {
+    color: #e2e8f0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .prism-copy-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(139, 92, 246, 0.2);
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    border-radius: 8px;
+    color: #c4b5fd;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .prism-copy-btn:hover {
+    background: rgba(139, 92, 246, 0.3);
+  }
+
+  .prism-message-content {
+    padding: 1.5rem;
+    color: #e2e8f0;
+    line-height: 1.7;
+  }
+
+  .prism-message-content p {
+    margin: 0 0 1rem 0;
+  }
+
+  .prism-message-content p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Prism Footer */
+  .prism-footer {
+    padding: 2rem;
+    text-align: center;
+    border-top: 1px solid rgba(139, 92, 246, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .prism-footer-content {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .prism-footer p {
+    color: #94a3b8;
+    font-size: 0.875rem;
+    margin: 0 0 1rem 0;
+  }
+
+  /* Prism Mobile Responsive */
+  @media (max-width: 768px) {
+    .prism-header {
+      padding: 1rem;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .prism-trust-badges {
+      display: none;
+    }
+
+    .prism-main {
+      padding: 1rem;
+    }
+
+    .prism-input-card {
+      padding: 1rem;
+    }
+
+    .prism-form-footer {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .prism-submit-btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .prism-responses-grid,
+    .prism-analysis-grid {
+      grid-template-columns: 1fr;
+    }
+  }
 
   /* ===== CHORUS STYLES ===== */
   .chorus-app {
