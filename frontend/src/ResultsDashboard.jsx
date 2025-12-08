@@ -167,10 +167,20 @@ export default function ResultsDashboard() {
         <SUSSection susData={results.sus_scores} />
       </section>
 
-      {/* Message Preferences */}
+      {/* Source Preferences (un-blinded) */}
+      {results.source_preferences && (
+        <section className="results-section">
+          <h2 className="results-section-title">Message Source Preferences (Un-blinded)</h2>
+          <p className="results-section-desc">Preferences adjusted for randomization order</p>
+          <SourcePreferencesSection data={results.source_preferences} />
+        </section>
+      )}
+
+      {/* Message Preferences (blinded A/B) */}
       {results.message_preferences && (
         <section className="results-section">
-          <h2 className="results-section-title">Message Preference Distribution</h2>
+          <h2 className="results-section-title">Blinded A/B Preference Distribution</h2>
+          <p className="results-section-desc">Raw preferences before accounting for randomization</p>
           <MessagePreferenceChart data={results.message_preferences} />
         </section>
       )}
@@ -214,6 +224,8 @@ function SUSSection({ susData }) {
   if (!susData) return <p className="results-no-data">No SUS data available yet</p>
 
   const overallScore = susData.overall_avg_score
+  const overallStd = susData.overall_std_dev || 0
+  const n = susData.n || 0
   const overallInterpretation = getSUSInterpretation(overallScore)
 
   return (
@@ -224,6 +236,9 @@ function SUSSection({ susData }) {
             {overallScore.toFixed(1)}
           </div>
           <div className="results-sus-score-label">Overall SUS Score</div>
+          <div className="results-sus-stats">
+            SD: {overallStd.toFixed(1)} | n={n}
+          </div>
           <div className="results-sus-interpretation" style={{ background: `${overallInterpretation.color}20`, color: overallInterpretation.color }}>
             {overallInterpretation.label}
           </div>
@@ -261,12 +276,14 @@ function SUSSection({ susData }) {
             <SUSBar
               label="Detailed View"
               score={susData.by_version.detailed?.avg_score || 0}
+              stdDev={susData.by_version.detailed?.std_dev}
               count={susData.by_version.detailed?.count || 0}
               color="#8b5cf6"
             />
             <SUSBar
               label="Brief View"
               score={susData.by_version.brief?.avg_score || 0}
+              stdDev={susData.by_version.brief?.std_dev}
               count={susData.by_version.brief?.count || 0}
               color="#6366f1"
             />
@@ -278,7 +295,7 @@ function SUSSection({ susData }) {
 }
 
 // SUS Bar Component
-function SUSBar({ label, score, count, color }) {
+function SUSBar({ label, score, count, stdDev, color }) {
   const interpretation = getSUSInterpretation(score)
 
   return (
@@ -286,7 +303,7 @@ function SUSBar({ label, score, count, color }) {
       <div className="results-sus-bar-header">
         <span className="results-sus-bar-label">{label}</span>
         <span className="results-sus-bar-score" style={{ color }}>
-          {score.toFixed(1)} <span className="results-sus-bar-count">({count} users)</span>
+          {score.toFixed(1)} <span className="results-sus-bar-count">(SD: {(stdDev || 0).toFixed(1)}, n={count})</span>
         </span>
       </div>
       <div className="results-sus-bar-bg">
@@ -304,7 +321,7 @@ function SUSBar({ label, score, count, color }) {
   )
 }
 
-// Message Preference Chart Component
+// Message Preference Chart Component (blinded A/B)
 function MessagePreferenceChart({ data }) {
   if (!data || Object.keys(data).length === 0) {
     return <p className="results-no-data">No message preference data available yet</p>
@@ -340,6 +357,77 @@ function MessagePreferenceChart({ data }) {
           </div>
         )
       })}
+    </div>
+  )
+}
+
+// Source Preferences Section (un-blinded results accounting for randomization)
+function SourcePreferencesSection({ data }) {
+  if (!data) return <p className="results-no-data">No source preference data available yet</p>
+
+  const avgPref = data.avg_chorus_preference || 0
+  const stdDev = data.std_dev || 0
+  const n = data.n || 0
+  const preferChorus = data.prefer_chorus_count || 0
+  const preferCdc = data.prefer_cdc_count || 0
+  const noPref = data.no_preference_count || 0
+  const chorusPct = data.prefer_chorus_pct || 0
+  const cdcPct = data.prefer_cdc_pct || 0
+
+  // Calculate the visual indicator position (-2 to +2 scale mapped to 0-100%)
+  const indicatorPosition = ((avgPref + 2) / 4) * 100
+
+  return (
+    <div className="results-source-pref-container">
+      <div className="results-source-pref-summary">
+        <div className="results-source-pref-stat">
+          <div className="results-source-pref-value" style={{ color: avgPref > 0 ? '#10b981' : avgPref < 0 ? '#ef4444' : '#a1a1aa' }}>
+            {avgPref > 0 ? '+' : ''}{avgPref.toFixed(2)}
+          </div>
+          <div className="results-source-pref-label">Average Preference Score</div>
+          <div className="results-source-pref-subtext">
+            (SD: {stdDev.toFixed(2)}, n={n})
+          </div>
+          <div className="results-source-pref-interpretation">
+            {avgPref > 0.5 ? 'Favors Chorus' : avgPref < -0.5 ? 'Favors CDC' : 'No clear preference'}
+          </div>
+        </div>
+      </div>
+
+      <div className="results-source-pref-scale">
+        <div className="results-source-pref-scale-labels">
+          <span style={{ color: '#ef4444' }}>Prefer CDC (-2)</span>
+          <span style={{ color: '#a1a1aa' }}>Neutral (0)</span>
+          <span style={{ color: '#10b981' }}>Prefer Chorus (+2)</span>
+        </div>
+        <div className="results-source-pref-scale-bar">
+          <div
+            className="results-source-pref-indicator"
+            style={{ left: `${indicatorPosition}%` }}
+          ></div>
+        </div>
+      </div>
+
+      <div className="results-source-pref-counts">
+        <div className="results-source-pref-count-item">
+          <span className="results-source-pref-count-label">Prefer Chorus</span>
+          <span className="results-source-pref-count-value" style={{ color: '#10b981' }}>
+            {preferChorus} ({chorusPct.toFixed(0)}%)
+          </span>
+        </div>
+        <div className="results-source-pref-count-item">
+          <span className="results-source-pref-count-label">No Preference</span>
+          <span className="results-source-pref-count-value" style={{ color: '#a1a1aa' }}>
+            {noPref} ({n > 0 ? ((noPref / n) * 100).toFixed(0) : 0}%)
+          </span>
+        </div>
+        <div className="results-source-pref-count-item">
+          <span className="results-source-pref-count-label">Prefer CDC</span>
+          <span className="results-source-pref-count-value" style={{ color: '#ef4444' }}>
+            {preferCdc} ({cdcPct.toFixed(0)}%)
+          </span>
+        </div>
+      </div>
     </div>
   )
 }
@@ -670,6 +758,110 @@ resultsStyles.textContent = `
     padding: 1rem;
     color: #71717a;
     font-size: 0.9rem;
+  }
+
+  .results-section-desc {
+    color: #71717a;
+    font-size: 0.85rem;
+    margin-top: -1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .results-sus-stats {
+    font-size: 0.85rem;
+    color: #71717a;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Source Preferences */
+  .results-source-pref-container {
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .results-source-pref-summary {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .results-source-pref-value {
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .results-source-pref-label {
+    font-size: 0.9rem;
+    color: #a1a1aa;
+    margin-top: 0.5rem;
+  }
+
+  .results-source-pref-subtext {
+    font-size: 0.85rem;
+    color: #71717a;
+    margin-top: 0.25rem;
+  }
+
+  .results-source-pref-interpretation {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-top: 0.75rem;
+  }
+
+  .results-source-pref-scale {
+    margin-bottom: 2rem;
+  }
+
+  .results-source-pref-scale-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .results-source-pref-scale-bar {
+    height: 24px;
+    background: linear-gradient(90deg, #ef4444 0%, #a1a1aa 50%, #10b981 100%);
+    border-radius: 2rem;
+    position: relative;
+  }
+
+  .results-source-pref-indicator {
+    position: absolute;
+    top: -4px;
+    width: 4px;
+    height: 32px;
+    background: white;
+    border-radius: 2px;
+    transform: translateX(-50%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .results-source-pref-counts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+
+  .results-source-pref-count-item {
+    text-align: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 0.5rem;
+  }
+
+  .results-source-pref-count-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #a1a1aa;
+    margin-bottom: 0.5rem;
+  }
+
+  .results-source-pref-count-value {
+    font-size: 1.25rem;
+    font-weight: 600;
   }
 
   /* Stats Grid */

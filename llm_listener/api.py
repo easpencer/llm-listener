@@ -29,6 +29,19 @@ from .database import (
     DATABASE_URL,
 )
 
+# Authentication imports
+from .auth.routes import router as auth_router
+from .auth.dependencies import (
+    get_current_user,
+    require_auth,
+    require_permission,
+    get_authenticated_user,
+    AuthenticatedUser,
+    get_auth_settings,
+)
+from .auth.jwt_utils import UserInfo
+from .auth.rbac import has_permission, get_user_permissions
+
 
 class QueryRequest(BaseModel):
     question: str
@@ -200,12 +213,16 @@ class CompleteStudyResponse(BaseModel):
 
 
 class StudyResultsResponse(BaseModel):
-    total_sessions: int
-    completed_responses: int  # From StudyCompletedResponse table
+    """Response model matching the frontend ResultsDashboard expectations."""
+    total_participants: int
     by_tool_version: Dict[str, int]
-    avg_sus_scores: Dict[str, float]
-    preference_distribution: Dict[str, int]
-    trust_metrics: Dict[str, float]
+    avg_completion_time: Optional[float] = None
+    completion_rate: float = 0.0
+    sus_scores: Optional[Dict[str, Any]] = None
+    message_preferences: Optional[Dict[str, int]] = None
+    source_preferences: Optional[Dict[str, Any]] = None  # Un-blinded preferences by actual source
+    trust_metrics: Optional[Dict[str, Any]] = None
+    demographics: Optional[Dict[str, Any]] = None
 
 
 class EvidenceRequest(BaseModel):
@@ -233,13 +250,30 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Get auth settings for CORS configuration
+_auth_settings = get_auth_settings()
+
+# Configure CORS - in production, restrict to specific origins
+_cors_origins = ["*"]
+if _auth_settings.auth_required and _auth_settings.app_url:
+    # When auth is required, restrict CORS to known origins
+    _cors_origins = [
+        _auth_settings.app_url,
+        _auth_settings.api_url,
+        "https://prism.resilienthub.org",
+        "https://chorus.resilienthub.org",
+    ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include authentication router
+app.include_router(auth_router)
 
 
 @app.get("/api/providers", response_model=ProvidersResponse)
@@ -806,92 +840,169 @@ async def save_complete_study(request: CompleteStudyRequest, db: Session = Depen
     return CompleteStudyResponse(session_id=request.session_id, saved=True)
 
 
+def calculate_std(values: list) -> float:
+    """Calculate sample standard deviation."""
+    if len(values) < 2:
+        return 0.0
+    mean = sum(values) / len(values)
+    variance = sum((x - mean) ** 2 for x in values) / (len(values) - 1)
+    return variance ** 0.5
+
+
 @app.get("/api/study/results", response_model=StudyResultsResponse)
 async def get_study_results(db: Session = Depends(get_db)):
-    """Returns anonymized aggregated results."""
+    """Returns anonymized aggregated results matching frontend dashboard expectations."""
     check_db_configured()
 
-    # Get all completed sessions (legacy path)
-    sessions = db.query(StudySession).filter(StudySession.completed_at.isnot(None)).all()
-    total_sessions = len(sessions)
-
-    # Get completed responses from new unified endpoint
+    # Get completed responses from the unified endpoint (primary data source)
     completed_responses = db.query(StudyCompletedResponse).all()
-    completed_responses_count = len(completed_responses)
+    total_participants = len(completed_responses)
 
-    # Count by tool version
-    by_tool_version = {}
-    for session in sessions:
-        version = session.tool_version
-        by_tool_version[version] = by_tool_version.get(version, 0) + 1
+    # Count by tool version (interface assigned)
+    by_tool_version = {"detailed": 0, "brief": 0}
+    for response in completed_responses:
+        version = response.assigned_interface or "unknown"
+        if version in by_tool_version:
+            by_tool_version[version] += 1
 
-    # Calculate average SUS scores by tool version
-    avg_sus_scores = {}
+    # Calculate SUS scores with proper statistics (including standard deviation)
+    sus_scores = None
     sus_by_version = {}
+    all_sus_scores = []
 
-    # From legacy UsabilityRating table
-    usability_ratings = db.query(UsabilityRating).all()
-    for rating in usability_ratings:
-        version = rating.tool_version
-        if version not in sus_by_version:
-            sus_by_version[version] = []
-        if rating.sus_score is not None:
-            sus_by_version[version].append(rating.sus_score)
-
-    # From completed responses (new format)
     for response in completed_responses:
         version = response.assigned_interface or "unknown"
         if version not in sus_by_version:
             sus_by_version[version] = []
         if response.sus_score is not None:
             sus_by_version[version].append(response.sus_score)
+            all_sus_scores.append(response.sus_score)
 
-    for version, scores in sus_by_version.items():
-        if scores:
-            avg_sus_scores[version] = sum(scores) / len(scores)
+    if all_sus_scores:
+        overall_avg = sum(all_sus_scores) / len(all_sus_scores)
+        overall_std = calculate_std(all_sus_scores)
+        by_version_data = {}
+        for version, scores in sus_by_version.items():
+            if scores:
+                by_version_data[version] = {
+                    "avg_score": sum(scores) / len(scores),
+                    "std_dev": calculate_std(scores),
+                    "count": len(scores),
+                    "min": min(scores),
+                    "max": max(scores)
+                }
+        sus_scores = {
+            "overall_avg_score": overall_avg,
+            "overall_std_dev": overall_std,
+            "n": len(all_sus_scores),
+            "by_version": by_version_data
+        }
 
-    # Calculate preference distribution (Message Ratings)
-    preference_distribution = {
-        "strongly_a": 0,
-        "prefer_a": 0,
-        "neutral": 0,
-        "prefer_b": 0,
-        "strongly_b": 0,
-    }
-    message_ratings = db.query(MessageRating).all()
-    for rating in message_ratings:
-        if rating.preference is not None:
-            if rating.preference <= -2:
-                preference_distribution["strongly_a"] += 1
-            elif rating.preference == -1:
-                preference_distribution["prefer_a"] += 1
-            elif rating.preference == 0:
-                preference_distribution["neutral"] += 1
-            elif rating.preference == 1:
-                preference_distribution["prefer_b"] += 1
-            else:  # >= 2
-                preference_distribution["strongly_b"] += 1
+    # Aggregate demographics from completed responses
+    demographics = {"by_role": {}, "by_experience": {}, "by_org_type": {}}
+    for response in completed_responses:
+        if response.demographics:
+            demo = response.demographics
+            # Role
+            role = demo.get("role", "unknown")
+            demographics["by_role"][role] = demographics["by_role"].get(role, 0) + 1
+            # Experience
+            exp = demo.get("experience", "unknown")
+            demographics["by_experience"][exp] = demographics["by_experience"].get(exp, 0) + 1
+            # Org type
+            org = demo.get("orgType", "unknown")
+            demographics["by_org_type"][org] = demographics["by_org_type"].get(org, 0) + 1
 
-    # Calculate average trust metrics
-    trust_metrics = {}
+    # Message preferences from quality_responses (A/B comparison preferences) - blinded
+    message_preferences = {"-2": 0, "-1": 0, "0": 0, "1": 0, "2": 0}
+    # Source preferences - un-blinded using message_orders to show actual source preferences
+    # Tracks preference scores converted to favor chorus (positive) or cdc (negative)
+    chorus_preference_scores = []
+
+    for response in completed_responses:
+        if response.quality_responses and response.message_orders:
+            for case_num, case_data in response.quality_responses.items():
+                pref = case_data.get("preference")
+                if pref is not None:
+                    # Record blinded preference
+                    pref_key = str(int(pref))
+                    if pref_key in message_preferences:
+                        message_preferences[pref_key] += 1
+
+                    # Un-blind using message_orders
+                    # message_orders[case_num] = ['chorus', 'cdc'] means A=chorus, B=cdc
+                    # preference: -2=strongly prefer A, +2=strongly prefer B
+                    order = response.message_orders.get(str(case_num)) or response.message_orders.get(int(case_num))
+                    if order and len(order) >= 2:
+                        a_source = order[0]  # What was shown as A
+                        # Convert to chorus preference score:
+                        # If A=chorus: preference of -2 (strongly prefer A) means +2 for chorus
+                        # If A=cdc: preference of -2 (strongly prefer A) means -2 for chorus
+                        if a_source == 'chorus':
+                            chorus_pref = -pref  # Negate because -2=prefer A becomes +2=prefer chorus
+                        else:
+                            chorus_pref = pref  # +2=prefer B=chorus
+                        chorus_preference_scores.append(chorus_pref)
+
+    # Calculate source preference statistics
+    source_preferences = None
+    if chorus_preference_scores:
+        n = len(chorus_preference_scores)
+        avg_chorus_pref = sum(chorus_preference_scores) / n
+        std_chorus_pref = calculate_std(chorus_preference_scores)
+        # Count by direction
+        prefer_chorus = sum(1 for p in chorus_preference_scores if p > 0)
+        prefer_cdc = sum(1 for p in chorus_preference_scores if p < 0)
+        no_preference = sum(1 for p in chorus_preference_scores if p == 0)
+        source_preferences = {
+            "avg_chorus_preference": avg_chorus_pref,  # Positive = prefer chorus, negative = prefer CDC
+            "std_dev": std_chorus_pref,
+            "n": n,
+            "prefer_chorus_count": prefer_chorus,
+            "prefer_cdc_count": prefer_cdc,
+            "no_preference_count": no_preference,
+            "prefer_chorus_pct": (prefer_chorus / n * 100) if n > 0 else 0,
+            "prefer_cdc_pct": (prefer_cdc / n * 100) if n > 0 else 0,
+        }
+
+    # Trust metrics structure expected by dashboard
+    trust_metrics = None
     trust_ratings = db.query(TrustRating).all()
     if trust_ratings:
-        trust_metrics["avg_trust_accuracy"] = sum(r.trust_accuracy for r in trust_ratings) / len(trust_ratings)
-        trust_metrics["avg_trust_reliability"] = sum(r.trust_reliability for r in trust_ratings) / len(trust_ratings)
-        trust_metrics["avg_trust_unbiased"] = sum(r.trust_unbiased for r in trust_ratings) / len(trust_ratings)
-        trust_metrics["avg_trust_comprehensive"] = sum(r.trust_comprehensive for r in trust_ratings) / len(trust_ratings)
-        trust_metrics["avg_would_use_routine"] = sum(r.would_use_routine for r in trust_ratings) / len(trust_ratings)
-        trust_metrics["avg_would_use_urgent"] = sum(r.would_use_urgent for r in trust_ratings) / len(trust_ratings)
-        trust_metrics["avg_would_recommend"] = sum(r.would_recommend for r in trust_ratings) / len(trust_ratings)
-        trust_metrics["avg_prefer_over_search"] = sum(r.prefer_over_search for r in trust_ratings) / len(trust_ratings)
+        count = len(trust_ratings)
+        trust_metrics = {
+            "trust_accuracy": {
+                "avg_score": sum(r.trust_accuracy or 0 for r in trust_ratings) / count,
+                "count": count
+            },
+            "trust_reliability": {
+                "avg_score": sum(r.trust_reliability or 0 for r in trust_ratings) / count,
+                "count": count
+            },
+            "trust_transparency": {
+                "avg_score": sum(r.trust_unbiased or 0 for r in trust_ratings) / count,
+                "count": count
+            },
+            "trust_usefulness": {
+                "avg_score": sum(r.trust_comprehensive or 0 for r in trust_ratings) / count,
+                "count": count
+            },
+            "would_use": {
+                "avg_score": sum(r.would_use_routine or 0 for r in trust_ratings) / count,
+                "count": count
+            }
+        }
 
     return StudyResultsResponse(
-        total_sessions=total_sessions,
-        completed_responses=completed_responses_count,
+        total_participants=total_participants,
         by_tool_version=by_tool_version,
-        avg_sus_scores=avg_sus_scores,
-        preference_distribution=preference_distribution,
+        avg_completion_time=None,  # Not tracked in current schema
+        completion_rate=1.0 if total_participants > 0 else 0.0,
+        sus_scores=sus_scores,
+        message_preferences=message_preferences if any(v > 0 for v in message_preferences.values()) else None,
+        source_preferences=source_preferences,
         trust_metrics=trust_metrics,
+        demographics=demographics if total_participants > 0 else None,
     )
 
 
