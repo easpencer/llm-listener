@@ -17,3 +17,229 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+/* ==========================================
+   Evidence Confidence Panel Styles
+   ========================================== */
+
+.evidence-confidence-panel {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  margin-top: 16px;
+}
+
+.evidence-confidence-panel.confidence-level-high {
+  border-color: rgba(16, 185, 129, 0.3);
+  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.1);
+}
+
+.evidence-confidence-panel.confidence-level-moderate {
+  border-color: rgba(245, 158, 11, 0.3);
+  box-shadow: 0 8px 32px rgba(245, 158, 11, 0.1);
+}
+
+.evidence-confidence-panel.confidence-level-limited {
+  border-color: rgba(239, 68, 68, 0.3);
+  box-shadow: 0 8px 32px rgba(239, 68, 68, 0.1);
+}
+
+.confidence-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.confidence-header h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.confidence-level-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.confidence-main {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 640px) {
+  .confidence-main {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* Radial Gauge */
+.confidence-gauge {
+  display: flex;
+  justify-content: center;
+}
+
+.gauge-svg {
+  width: 120px;
+  height: 120px;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+}
+
+.gauge-score {
+  font-size: 28px;
+  font-weight: 700;
+  fill: #f1f5f9;
+}
+
+.gauge-label {
+  font-size: 12px;
+  fill: #94a3b8;
+}
+
+/* Breakdown Bars */
+.confidence-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.breakdown-item {
+  background: rgba(30, 41, 59, 0.5);
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  transition: all 0.2s ease;
+}
+
+.breakdown-item:hover {
+  border-color: rgba(148, 163, 184, 0.25);
+  background: rgba(30, 41, 59, 0.7);
+}
+
+.breakdown-item.breakdown-bonus {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(30, 41, 59, 0.5) 100%);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.breakdown-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.breakdown-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.breakdown-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.breakdown-name {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #e2e8f0;
+  flex: 1;
+}
+
+.breakdown-score {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  font-family: 'SF Mono', 'Monaco', monospace;
+}
+
+.breakdown-bar {
+  height: 6px;
+  background: rgba(71, 85, 105, 0.4);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.breakdown-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.breakdown-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.breakdown-detail {
+  display: block;
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* Compact Mode */
+.confidence-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  background: rgba(30, 41, 59, 0.7);
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.confidence-mini-gauge {
+  position: relative;
+  width: 32px;
+  height: 32px;
+}
+
+.confidence-ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.confidence-mini-score {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 10px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.confidence-mini-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
