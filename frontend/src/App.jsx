@@ -2001,16 +2001,71 @@ function App() {
         intro += parts.join(', ') + '.*\n\n'
       }
 
-      // Create brief version (first 2 paragraphs as bullet points)
+      // Create brief version - short summary with key points
       const briefPoints = paragraphs.slice(0, 2).map(p => {
-        // Extract first sentence or truncate
         const firstSentence = p.split(/[.!?](?:\s|$)/)[0]
         return `- ${firstSentence.trim()}`
       }).join('\n')
-      const briefContent = intro + briefPoints + (paragraphs.length > 2 ? '\n\n*Click "Show More" for complete analysis...*' : '')
+      const briefContent = intro + briefPoints + '\n\n*Click "More" for detailed analysis including individual AI perspectives and evidence sources...*'
 
-      // Detailed version includes all content with expanded prose
-      const detailedContent = intro + paragraphs.join('\n\n')
+      // Detailed version - comprehensive deep dive
+      let detailedContent = intro + '### Summary\n\n' + paragraphs.join('\n\n')
+
+      // Add individual AI model perspectives
+      if (integrated.aiConsensus.providers && integrated.aiConsensus.providers.length > 1) {
+        detailedContent += '\n\n---\n\n### What Individual AI Systems Said\n\n'
+        integrated.aiConsensus.providers.forEach(provider => {
+          const providerContent = provider.content || ''
+          // Extract first 2-3 sentences from each provider
+          const sentences = providerContent.split(/[.!?](?:\s|$)/).filter(s => s.trim()).slice(0, 3)
+          if (sentences.length > 0) {
+            detailedContent += `**${provider.name}** (${provider.model || 'unknown model'}):\n`
+            detailedContent += sentences.map(s => `> ${s.trim()}`).join('. ') + '.\n\n'
+          }
+        })
+      }
+
+      // Add guideline evidence snippets
+      if (integrated.guidelines.available && integrated.guidelines.keyPoints?.length > 0) {
+        detailedContent += '\n---\n\n### Evidence from Official Guidelines\n\n'
+        integrated.guidelines.keyPoints.slice(0, 3).forEach(point => {
+          if (point.text) {
+            detailedContent += `**${point.source}:**\n> "${point.text.slice(0, 300)}${point.text.length > 300 ? '...' : ''}"\n\n`
+          }
+        })
+      }
+
+      // Add research findings
+      if (integrated.literature.available && integrated.literature.researchFindings?.length > 0) {
+        detailedContent += '\n---\n\n### Research Findings\n\n'
+        integrated.literature.researchFindings.slice(0, 3).forEach(finding => {
+          if (finding.text) {
+            const citeInfo = finding.citations > 0 ? ` *(${finding.citations} citations)*` : ''
+            detailedContent += `**${finding.title?.slice(0, 60) || 'Study'}**${citeInfo}:\n> "${finding.text.slice(0, 250)}${finding.text.length > 250 ? '...' : ''}"\n\n`
+          }
+        })
+      }
+
+      // Add evidence quality notes
+      if (integrated.confidence) {
+        detailedContent += '\n---\n\n### Evidence Quality Assessment\n\n'
+        const conf = integrated.confidence
+        detailedContent += `- **Evidence Grade:** ${conf.quality || 'D'} `
+        if (conf.quality === 'A') detailedContent += '(High quality - systematic reviews/RCTs with official guidelines)\n'
+        else if (conf.quality === 'B') detailedContent += '(Good quality - solid evidence with some limitations)\n'
+        else if (conf.quality === 'C') detailedContent += '(Moderate - some evidence but not robust)\n'
+        else detailedContent += '(Limited - primarily AI consensus without strong independent evidence)\n'
+
+        detailedContent += `- **Sources Reviewed:** ${guidelineCount} official guidelines, ${literatureCount} research papers, ${aiCount} AI systems\n`
+
+        if (conf.evidenceDepth) {
+          const depth = conf.evidenceDepth
+          if (depth.studyDesign?.hasRCT) detailedContent += '- **Study Design:** Includes randomized controlled trial evidence\n'
+          if (depth.systematicReview?.hasMeta) detailedContent += '- **Meta-Analysis:** Systematic review with meta-analysis available\n'
+          if (depth.sampleSize?.hasLargeSample) detailedContent += '- **Sample Size:** Large-scale studies (1000+ participants) referenced\n'
+          if (depth.replication?.status === 'replicated') detailedContent += '- **Replication:** Findings have been replicated across studies\n'
+        }
+      }
 
       sections.push({
         type: 'synthesis',
@@ -2018,10 +2073,10 @@ function App() {
         title: 'What You Should Know',
         briefContent,
         detailedContent,
-        content: detailedContent, // Default fallback
+        content: detailedContent,
         modelCount: aiCount,
         isPrimary: true,
-        hasExpandedContent: paragraphs.length > 2,
+        hasExpandedContent: true,
       })
     }
 
