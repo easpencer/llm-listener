@@ -2011,13 +2011,13 @@ function App() {
       // Detailed version - comprehensive deep dive
       let detailedContent = intro + '### Summary\n\n' + paragraphs.join('\n\n')
 
-      // Add individual AI model perspectives
-      if (integrated.aiConsensus.providers && integrated.aiConsensus.providers.length > 1) {
+      // Add individual AI model perspectives (always show if we have providers)
+      if (integrated.aiConsensus.providers && integrated.aiConsensus.providers.length > 0) {
         detailedContent += '\n\n---\n\n### What Individual AI Systems Said\n\n'
         integrated.aiConsensus.providers.forEach(provider => {
           const providerContent = provider.content || ''
-          // Extract first 2-3 sentences from each provider
-          const sentences = providerContent.split(/[.!?](?:\s|$)/).filter(s => s.trim()).slice(0, 3)
+          // Extract first 3-4 sentences from each provider for more detail
+          const sentences = providerContent.split(/[.!?](?:\s|$)/).filter(s => s.trim()).slice(0, 4)
           if (sentences.length > 0) {
             detailedContent += `**${provider.name}** (${provider.model || 'unknown model'}):\n`
             detailedContent += sentences.map(s => `> ${s.trim()}`).join('. ') + '.\n\n'
