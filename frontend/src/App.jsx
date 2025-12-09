@@ -283,6 +283,7 @@ function App() {
   const [clarifyConvo, setClarifyConvo] = useState([]) // Conversational clarification: [{role: 'ai'|'user', text: string}]
   const [clarifyInput, setClarifyInput] = useState('') // Current clarification input
   const [clarifyReady, setClarifyReady] = useState(false) // Whether the refined question is ready
+  const [showEvidenceInfo, setShowEvidenceInfo] = useState(false) // Evidence scoring info modal
   const resultsRef = useRef(null)
   const followUpRef = useRef(null)
   const clarifyRef = useRef(null)
@@ -1494,9 +1495,17 @@ function App() {
                         <span className="summary-subtitle">Easy to understand</span>
                       </div>
                       {patientSummary.confidence && (
-                        <div className={`confidence-badge confidence-${patientSummary.confidence.level}`}>
-                          {patientSummary.confidence.level === 'high' ? 'High Confidence' :
-                           patientSummary.confidence.level === 'moderate' ? 'Moderate Confidence' : 'Limited Data'}
+                        <div className="evidence-header-group">
+                          <EvidenceProfilePanel confidence={patientSummary.confidence} compact={true} />
+                          <button
+                            className="evidence-info-btn"
+                            onClick={() => setShowEvidenceInfo(true)}
+                            title="What does this mean?"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+                            </svg>
+                          </button>
                         </div>
                       )}
                     </div>
@@ -1544,8 +1553,17 @@ function App() {
                         <span className="summary-subtitle">For healthcare professionals</span>
                       </div>
                       {clinicianSummary.confidence && (
-                        <div className={`confidence-badge confidence-${clinicianSummary.confidence.level}`}>
-                          {clinicianSummary.confidence.score}% confidence
+                        <div className="evidence-header-group">
+                          <EvidenceProfilePanel confidence={clinicianSummary.confidence} compact={true} />
+                          <button
+                            className="evidence-info-btn"
+                            onClick={() => setShowEvidenceInfo(true)}
+                            title="What does this mean?"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+                            </svg>
+                          </button>
                         </div>
                       )}
                     </div>
@@ -2094,6 +2112,102 @@ function App() {
           }}
           setViewMode={setViewMode}
         />
+      )}
+
+      {/* Evidence Profile Info Modal */}
+      {showEvidenceInfo && (
+        <div className="evidence-info-modal-overlay" onClick={() => setShowEvidenceInfo(false)}>
+          <div className="evidence-info-modal" onClick={e => e.stopPropagation()}>
+            <button className="modal-close-btn" onClick={() => setShowEvidenceInfo(false)}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+            <h2>Understanding Evidence Scores</h2>
+            <p className="modal-intro">
+              We use a multi-dimensional scoring system based on GRADE (Grading of Recommendations,
+              Assessment, Development and Evaluations) - the same framework used by WHO and Cochrane.
+            </p>
+
+            <div className="evidence-explainer">
+              <div className="explainer-section">
+                <h3>Evidence Quality (A-D)</h3>
+                <p>How strong is the underlying evidence?</p>
+                <div className="grade-list">
+                  <div className="grade-item">
+                    <span className="grade-letter grade-a">A</span>
+                    <div>
+                      <strong>High Quality</strong>
+                      <p>Multiple official guidelines (CDC, WHO, FDA) backed by large randomized controlled trials. Example: "Vaccines prevent measles"</p>
+                    </div>
+                  </div>
+                  <div className="grade-item">
+                    <span className="grade-letter grade-b">B</span>
+                    <div>
+                      <strong>Moderate Quality</strong>
+                      <p>Some official guidelines OR substantial peer-reviewed literature (10+ papers). Example: "Mediterranean diet reduces heart disease risk"</p>
+                    </div>
+                  </div>
+                  <div className="grade-item">
+                    <span className="grade-letter grade-c">C</span>
+                    <div>
+                      <strong>Low Quality</strong>
+                      <p>Limited studies, emerging research, or preliminary findings. Example: "Certain supplements may help with X"</p>
+                    </div>
+                  </div>
+                  <div className="grade-item">
+                    <span className="grade-letter grade-d">D</span>
+                    <div>
+                      <strong>Very Low</strong>
+                      <p>Anecdotal evidence, AI synthesis only, or contradictory findings. Use with caution.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="explainer-section">
+                <h3>Retrieval Confidence (I-III)</h3>
+                <p>How well did we find relevant sources?</p>
+                <div className="retrieval-list">
+                  <div className="retrieval-item">
+                    <span className="retrieval-num retrieval-i">I</span>
+                    <span>Strong - Multiple source types found (guidelines + literature + AI consensus)</span>
+                  </div>
+                  <div className="retrieval-item">
+                    <span className="retrieval-num retrieval-ii">II</span>
+                    <span>Moderate - Two source types found</span>
+                  </div>
+                  <div className="retrieval-item">
+                    <span className="retrieval-num retrieval-iii">III</span>
+                    <span>Limited - Few sources available for this topic</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="explainer-section">
+                <h3>Agreement Percentage</h3>
+                <p>How much do the sources agree with each other?</p>
+                <ul>
+                  <li><strong>85%+</strong>: Strong consensus across all sources</li>
+                  <li><strong>65-84%</strong>: Moderate agreement with some variation</li>
+                  <li><strong>45-64%</strong>: Mixed findings - interpret carefully</li>
+                  <li><strong>&lt;45%</strong>: Significant disagreement or limited data</li>
+                </ul>
+                <p className="note">Note: We cap agreement at 95% - true 100% confidence requires established medical fact with decades of evidence.</p>
+              </div>
+
+              <div className="explainer-section">
+                <h3>Reading the Code: C·II·55%</h3>
+                <p>
+                  This example means: <strong>Low quality evidence</strong> (C) with
+                  <strong> moderate retrieval</strong> (II) and <strong>55% agreement</strong> between sources.
+                  This is typical for emerging research topics where studies exist but haven't yet
+                  reached official guideline status.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
