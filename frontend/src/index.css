@@ -1166,6 +1166,123 @@ body {
 }
 
 /* ==========================================
+   Section-Type Specific Subcard Styles
+   (Color-coded by section type for visual hierarchy)
+   ========================================== */
+
+/* Consensus - Green accent (most important/reliable) */
+.summary-section.section-consensus {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(15, 23, 42, 0.4) 100%);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.summary-section.section-consensus .section-header-inline {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 23, 42, 0.5) 100%);
+  border-bottom-color: rgba(16, 185, 129, 0.15);
+}
+
+.summary-section.section-consensus:hover {
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
+}
+
+/* Official Guidance - Blue accent (authoritative) */
+.summary-section.section-official-guidance {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(15, 23, 42, 0.4) 100%);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.summary-section.section-official-guidance .section-header-inline {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(15, 23, 42, 0.5) 100%);
+  border-bottom-color: rgba(59, 130, 246, 0.15);
+}
+
+.summary-section.section-official-guidance:hover {
+  border-color: rgba(59, 130, 246, 0.35);
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+}
+
+/* Scientific Evidence - Purple accent (research-based) */
+.summary-section.section-scientific-evidence {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(15, 23, 42, 0.4) 100%);
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+.summary-section.section-scientific-evidence .section-header-inline {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(15, 23, 42, 0.5) 100%);
+  border-bottom-color: rgba(139, 92, 246, 0.15);
+}
+
+.summary-section.section-scientific-evidence:hover {
+  border-color: rgba(139, 92, 246, 0.35);
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.15);
+}
+
+/* AI Model Perspectives - Orange accent (AI-generated) */
+.summary-section.section-ai-model-perspectives {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(15, 23, 42, 0.4) 100%);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.summary-section.section-ai-model-perspectives .section-header-inline {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(15, 23, 42, 0.5) 100%);
+  border-bottom-color: rgba(245, 158, 11, 0.15);
+}
+
+.summary-section.section-ai-model-perspectives:hover {
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.15);
+}
+
+/* Discordance - Red accent (areas of disagreement) */
+.summary-section.section-discordance {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(15, 23, 42, 0.4) 100%);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.summary-section.section-discordance .section-header-inline {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(15, 23, 42, 0.5) 100%);
+  border-bottom-color: rgba(239, 68, 68, 0.15);
+}
+
+.summary-section.section-discordance:hover {
+  border-color: rgba(239, 68, 68, 0.35);
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15);
+}
+
+/* Bottom Line - Teal accent (actionable summary) */
+.summary-section.section-bottom-line {
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.08) 0%, rgba(15, 23, 42, 0.4) 100%);
+  border-color: rgba(20, 184, 166, 0.2);
+}
+
+.summary-section.section-bottom-line .section-header-inline {
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.12) 0%, rgba(15, 23, 42, 0.5) 100%);
+  border-bottom-color: rgba(20, 184, 166, 0.15);
+}
+
+.summary-section.section-bottom-line:hover {
+  border-color: rgba(20, 184, 166, 0.35);
+  box-shadow: 0 4px 20px rgba(20, 184, 166, 0.15);
+}
+
+/* Evidence Quality - Slate accent (metadata) */
+.summary-section.section-evidence-quality {
+  background: linear-gradient(135deg, rgba(100, 116, 139, 0.08) 0%, rgba(15, 23, 42, 0.4) 100%);
+  border-color: rgba(100, 116, 139, 0.2);
+}
+
+.summary-section.section-evidence-quality .section-header-inline {
+  background: linear-gradient(135deg, rgba(100, 116, 139, 0.12) 0%, rgba(15, 23, 42, 0.5) 100%);
+  border-bottom-color: rgba(100, 116, 139, 0.15);
+}
+
+.summary-section.section-evidence-quality:hover {
+  border-color: rgba(100, 116, 139, 0.35);
+  box-shadow: 0 4px 20px rgba(100, 116, 139, 0.15);
+}
+
+/* ==========================================
    Clinician Summary Styles (Technical, Dense)
    ========================================== */
 
