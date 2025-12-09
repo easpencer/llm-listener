@@ -3,7 +3,7 @@
 import os
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, JSON, Float, Boolean, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, JSON, Float, Boolean, ForeignKey, CheckConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
@@ -98,6 +98,21 @@ class StudyQuery(Base):
 class MessageRating(Base):
     """Expert rating of message quality (Study 2)."""
     __tablename__ = "message_ratings"
+    __table_args__ = (
+        CheckConstraint('a_clarity >= 1 AND a_clarity <= 5', name='check_a_clarity_range'),
+        CheckConstraint('a_accuracy >= 1 AND a_accuracy <= 5', name='check_a_accuracy_range'),
+        CheckConstraint('a_actionability >= 1 AND a_actionability <= 5', name='check_a_actionability_range'),
+        CheckConstraint('a_cultural_sensitivity >= 1 AND a_cultural_sensitivity <= 5', name='check_a_cultural_sensitivity_range'),
+        CheckConstraint('a_persuasiveness >= 1 AND a_persuasiveness <= 5', name='check_a_persuasiveness_range'),
+        CheckConstraint('a_addresses_concerns >= 1 AND a_addresses_concerns <= 5', name='check_a_addresses_concerns_range'),
+        CheckConstraint('b_clarity >= 1 AND b_clarity <= 5', name='check_b_clarity_range'),
+        CheckConstraint('b_accuracy >= 1 AND b_accuracy <= 5', name='check_b_accuracy_range'),
+        CheckConstraint('b_actionability >= 1 AND b_actionability <= 5', name='check_b_actionability_range'),
+        CheckConstraint('b_cultural_sensitivity >= 1 AND b_cultural_sensitivity <= 5', name='check_b_cultural_sensitivity_range'),
+        CheckConstraint('b_persuasiveness >= 1 AND b_persuasiveness <= 5', name='check_b_persuasiveness_range'),
+        CheckConstraint('b_addresses_concerns >= 1 AND b_addresses_concerns <= 5', name='check_b_addresses_concerns_range'),
+        CheckConstraint('preference >= -2 AND preference <= 2', name='check_preference_range'),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     session_id = Column(Integer, ForeignKey("study_sessions.id"))
@@ -181,6 +196,19 @@ class ContentAccuracyRating(Base):
 class UsabilityRating(Base):
     """System Usability Scale (SUS) and task completion (Study 3)."""
     __tablename__ = "usability_ratings"
+    __table_args__ = (
+        CheckConstraint('sus_1_use_frequently >= 1 AND sus_1_use_frequently <= 5', name='check_sus_1_range'),
+        CheckConstraint('sus_2_unnecessarily_complex >= 1 AND sus_2_unnecessarily_complex <= 5', name='check_sus_2_range'),
+        CheckConstraint('sus_3_easy_to_use >= 1 AND sus_3_easy_to_use <= 5', name='check_sus_3_range'),
+        CheckConstraint('sus_4_need_tech_support >= 1 AND sus_4_need_tech_support <= 5', name='check_sus_4_range'),
+        CheckConstraint('sus_5_well_integrated >= 1 AND sus_5_well_integrated <= 5', name='check_sus_5_range'),
+        CheckConstraint('sus_6_too_much_inconsistency >= 1 AND sus_6_too_much_inconsistency <= 5', name='check_sus_6_range'),
+        CheckConstraint('sus_7_learn_quickly >= 1 AND sus_7_learn_quickly <= 5', name='check_sus_7_range'),
+        CheckConstraint('sus_8_cumbersome >= 1 AND sus_8_cumbersome <= 5', name='check_sus_8_range'),
+        CheckConstraint('sus_9_confident >= 1 AND sus_9_confident <= 5', name='check_sus_9_range'),
+        CheckConstraint('sus_10_learn_before_use >= 1 AND sus_10_learn_before_use <= 5', name='check_sus_10_range'),
+        CheckConstraint('sus_score >= 0 AND sus_score <= 100', name='check_sus_score_range'),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     session_id = Column(Integer, ForeignKey("study_sessions.id"))
@@ -219,6 +247,16 @@ class UsabilityRating(Base):
 class TrustRating(Base):
     """Trust and adoption likelihood (Study 4)."""
     __tablename__ = "trust_ratings"
+    __table_args__ = (
+        CheckConstraint('trust_accuracy >= 1 AND trust_accuracy <= 7', name='check_trust_accuracy_range'),
+        CheckConstraint('trust_reliability >= 1 AND trust_reliability <= 7', name='check_trust_reliability_range'),
+        CheckConstraint('trust_unbiased >= 1 AND trust_unbiased <= 7', name='check_trust_unbiased_range'),
+        CheckConstraint('trust_comprehensive >= 1 AND trust_comprehensive <= 7', name='check_trust_comprehensive_range'),
+        CheckConstraint('would_use_routine >= 1 AND would_use_routine <= 7', name='check_would_use_routine_range'),
+        CheckConstraint('would_use_urgent >= 1 AND would_use_urgent <= 7', name='check_would_use_urgent_range'),
+        CheckConstraint('would_recommend >= 1 AND would_recommend <= 7', name='check_would_recommend_range'),
+        CheckConstraint('prefer_over_search >= 1 AND prefer_over_search <= 7', name='check_prefer_over_search_range'),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     session_id = Column(Integer, ForeignKey("study_sessions.id"))
@@ -247,6 +285,11 @@ class TrustRating(Base):
 class StudyCompletedResponse(Base):
     """Complete study response data - stores all phases as JSON."""
     __tablename__ = "study_completed_responses"
+    __table_args__ = (
+        CheckConstraint('sus_score >= 0 AND sus_score <= 100', name='check_study_completed_sus_score_range'),
+        CheckConstraint("assigned_interface IN ('brief', 'detailed')", name='check_assigned_interface_values'),
+        CheckConstraint("assigned_message IN ('chorus', 'cdc')", name='check_assigned_message_values'),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     session_id = Column(String(64), unique=True, index=True)  # UUID from frontend

@@ -101,6 +101,7 @@ export function StudyModal({ isOpen, onClose, onQuerySubmit, setViewMode }) {
   const [accuracyResponses, setAccuracyResponses] = useState({})
   const [chorusResponses, setChorusResponses] = useState(null)
   const [loadingChorus, setLoadingChorus] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
 
   // Phase 2: Message Quality
   const [currentQualityCase, setCurrentQualityCase] = useState(0)
@@ -130,6 +131,7 @@ export function StudyModal({ isOpen, onClose, onQuerySubmit, setViewMode }) {
     setCurrentAccuracyCase(0)
     setAccuracyResponses({})
     setChorusResponses(null)
+    setRetryCount(0)
     setCurrentQualityCase(0)
     setQualityResponses({})
     setMessageOrders({})
@@ -183,29 +185,76 @@ export function StudyModal({ isOpen, onClose, onQuerySubmit, setViewMode }) {
   // Fetch Chorus response for a case (uses pre-generated if available)
   const fetchChorusResponse = async (query) => {
     setLoadingChorus(true)
+    setRetryCount(0) // Reset retry count on new fetch
+
+    // Set up timeout for loading state
+    const loadingTimeout = setTimeout(() => {
+      if (loadingChorus) {
+        setLoadingChorus(false)
+        setChorusResponses({
+          error: 'Request timed out after 45 seconds. The server may be overloaded or unavailable.',
+          errorType: 'timeout'
+        })
+      }
+    }, 45000) // 45 seconds
 
     try {
       // Try pre-generated responses first
       const pregenerated = await getPregenerated(query)
       if (pregenerated) {
         console.log('Using pre-generated response for:', query.substring(0, 30) + '...')
+        clearTimeout(loadingTimeout)
         setChorusResponses(pregenerated)
         setLoadingChorus(false)
         return
       }
 
-      // Fall back to live API
+      // Fall back to live API with timeout
+      const controller = new AbortController()
+      const fetchTimeout = setTimeout(() => controller.abort(), 30000) // 30 seconds
+
       const res = await fetch('/api/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: query, include_synthesis: true, mode: 'public_health' })
+        body: JSON.stringify({ question: query, include_synthesis: true, mode: 'public_health' }),
+        signal: controller.signal
       })
-      if (!res.ok) throw new Error('Failed to fetch')
+
+      clearTimeout(fetchTimeout)
+
+      if (!res.ok) {
+        const errorType = res.status >= 500 ? 'server' : res.status === 404 ? 'notfound' : 'client'
+        throw new Error(`Server returned ${res.status}`, { cause: errorType })
+      }
+
       const data = await res.json()
+      clearTimeout(loadingTimeout)
       setChorusResponses(data)
     } catch (err) {
+      clearTimeout(loadingTimeout)
       console.error('Error fetching Chorus response:', err)
-      setChorusResponses({ error: 'Failed to load AI responses' })
+
+      let errorMessage = 'Failed to load AI responses. '
+      let errorType = 'unknown'
+
+      if (err.name === 'AbortError') {
+        errorMessage = 'Request timed out after 30 seconds. The server may be busy processing your request.'
+        errorType = 'timeout'
+      } else if (!navigator.onLine) {
+        errorMessage = 'No internet connection detected. Please check your network and try again.'
+        errorType = 'network'
+      } else if (err.message.includes('500')) {
+        errorMessage = 'Server error occurred. The service may be temporarily unavailable.'
+        errorType = 'server'
+      } else if (err.message.includes('404')) {
+        errorMessage = 'API endpoint not found. Please contact support.'
+        errorType = 'notfound'
+      } else {
+        errorMessage = 'An unexpected error occurred. Please try again.'
+        errorType = 'unknown'
+      }
+
+      setChorusResponses({ error: errorMessage, errorType })
     } finally {
       setLoadingChorus(false)
     }
@@ -409,13 +458,32 @@ export function StudyModal({ isOpen, onClose, onQuerySubmit, setViewMode }) {
               </div>
 
               <div className="form-group">
-                <label>Area of expertise (if applicable)</label>
-                <input
-                  type="text"
+                <label>Primary area of expertise (if applicable)</label>
+                <select
                   value={demographics.expertiseArea}
                   onChange={(e) => setDemographics(d => ({ ...d, expertiseArea: e.target.value }))}
-                  placeholder="e.g., Infectious Disease, Health Communication, Epidemiology"
-                />
+                >
+                  <option value="">Select area...</option>
+                  <option value="infectious_disease">Infectious Disease</option>
+                  <option value="epidemiology">Epidemiology</option>
+                  <option value="public_health_policy">Public Health Policy</option>
+                  <option value="health_communication">Health Communication</option>
+                  <option value="clinical_medicine">Clinical Medicine</option>
+                  <option value="nursing">Nursing</option>
+                  <option value="pharmacy">Pharmacy</option>
+                  <option value="behavioral_health">Behavioral Health</option>
+                  <option value="environmental_health">Environmental Health</option>
+                  <option value="health_informatics">Health Informatics</option>
+                  <option value="biostatistics">Biostatistics</option>
+                  <option value="health_education">Health Education</option>
+                  <option value="maternal_child_health">Maternal & Child Health</option>
+                  <option value="chronic_disease">Chronic Disease Prevention</option>
+                  <option value="emergency_preparedness">Emergency Preparedness</option>
+                  <option value="global_health">Global Health</option>
+                  <option value="nutrition">Nutrition</option>
+                  <option value="other">Other</option>
+                  <option value="none">Not applicable</option>
+                </select>
               </div>
             </div>
 
@@ -443,6 +511,8 @@ export function StudyModal({ isOpen, onClose, onQuerySubmit, setViewMode }) {
             chorusResponses={chorusResponses}
             loadingChorus={loadingChorus}
             fetchChorusResponse={fetchChorusResponse}
+            retryCount={retryCount}
+            setRetryCount={setRetryCount}
             onComplete={() => {
               setCurrentQualityCase(0)
               fetchChorusResponse(STUDY_CASES[assignedCases[0]].query)
@@ -529,7 +599,9 @@ export function StudyModal({ isOpen, onClose, onQuerySubmit, setViewMode }) {
 }
 
 // Phase 1: Content Accuracy
-function ContentAccuracyPhase({ assignedCases, currentCase, setCurrentCase, responses, setResponses, chorusResponses, loadingChorus, fetchChorusResponse, onComplete }) {
+function ContentAccuracyPhase({ assignedCases, currentCase, setCurrentCase, responses, setResponses, chorusResponses, loadingChorus, fetchChorusResponse, retryCount, setRetryCount, onComplete }) {
+  const MAX_RETRIES = 3
+
   // Use assigned case index to get actual case data
   const actualCaseIndex = assignedCases[currentCase]
   const caseData = STUDY_CASES[actualCaseIndex]
@@ -557,10 +629,22 @@ function ContentAccuracyPhase({ assignedCases, currentCase, setCurrentCase, resp
     )
   }
 
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1)
+    fetchChorusResponse(caseData.query)
+  }
+
+  const handleSkip = () => {
+    if (window.confirm('Skip this case? You will not be able to return to it.')) {
+      nextCase()
+    }
+  }
+
   const nextCase = () => {
     if (currentCase < assignedCases.length - 1) {
       const next = currentCase + 1
       setCurrentCase(next)
+      setRetryCount(0) // Reset retry count for new case
       fetchChorusResponse(STUDY_CASES[assignedCases[next]].query)
     } else {
       onComplete()
@@ -586,11 +670,35 @@ function ContentAccuracyPhase({ assignedCases, currentCase, setCurrentCase, resp
         <div className="loading-state">
           <div className="spinner"></div>
           <p>Loading AI responses...</p>
+          <p className="loading-hint">This may take up to 30 seconds...</p>
         </div>
       ) : chorusResponses?.error ? (
         <div className="error-state">
-          <p>{chorusResponses.error}</p>
-          <button onClick={() => fetchChorusResponse(caseData.query)}>Retry</button>
+          <div className="error-icon">⚠</div>
+          <h3>Unable to Load Responses</h3>
+          <p className="error-message">{chorusResponses.error}</p>
+          {retryCount > 0 && (
+            <p className="retry-info">Retry attempt {retryCount} of {MAX_RETRIES}</p>
+          )}
+          <div className="error-actions">
+            {retryCount < MAX_RETRIES ? (
+              <button className="study-btn primary" onClick={handleRetry}>
+                Retry {retryCount > 0 ? `(${retryCount}/${MAX_RETRIES})` : ''}
+              </button>
+            ) : (
+              <div className="max-retries-message">
+                <p>Maximum retry attempts reached.</p>
+                <button className="study-btn secondary" onClick={handleSkip}>
+                  Skip to Next Case
+                </button>
+              </div>
+            )}
+          </div>
+          {retryCount < MAX_RETRIES && retryCount > 0 && (
+            <button className="study-btn secondary skip-btn" onClick={handleSkip}>
+              Skip to Next Case
+            </button>
+          )}
         </div>
       ) : chorusResponses?.responses && (
         <div className="responses-to-rate">
@@ -661,18 +769,60 @@ function MessageQualityPhase({ assignedCases, currentCase, setCurrentCase, respo
   const caseResponses = responses[currentCase] || {}
   const messageOrder = messageOrders[currentCase] || ['chorus', 'cdc']
 
-  // Extract Chorus message from synthesis
+  // Extract Chorus message from synthesis with robust fallbacks
   const getChorusMessage = () => {
-    if (!chorusResponses?.synthesis?.content) return null
-    const content = chorusResponses.synthesis.content
-    const messageMatch = content.match(/## Recommended Public Health Message\n([\s\S]*?)(?=\n##|$)/)
-    return messageMatch ? messageMatch[1].trim() : content.substring(0, 500)
+    // First, try to extract from synthesis
+    if (chorusResponses?.synthesis?.content) {
+      const content = chorusResponses.synthesis.content
+
+      // Try multiple regex patterns to find the message section
+      const patterns = [
+        /## Recommended Public Health Message\n([\s\S]*?)(?=\n##|$)/,
+        /##\s*Recommended Public Health Message\s*\n([\s\S]*?)(?=\n##|$)/,
+        /Public Health Message:?\s*\n([\s\S]*?)(?=\n##|$)/i,
+        /Message:?\s*\n([\s\S]*?)(?=\n##|$)/i
+      ]
+
+      for (const pattern of patterns) {
+        const match = content.match(pattern)
+        if (match && match[1].trim().length > 20) {
+          return match[1].trim()
+        }
+      }
+
+      // If no pattern matches but content exists, try to extract meaningful text
+      // Remove headers and metadata, look for substantial paragraphs
+      const cleanedContent = content
+        .replace(/^##[^\n]*\n/gm, '') // Remove markdown headers
+        .replace(/^\*[^\n]*\n/gm, '')  // Remove italic lines
+        .replace(/^-{3,}\n/gm, '')      // Remove separators
+        .trim()
+
+      if (cleanedContent.length > 50) {
+        // Take first 500 chars of meaningful content
+        return cleanedContent.substring(0, 500)
+      }
+    }
+
+    // Fallback: Try to use the first successful individual response
+    if (chorusResponses?.responses) {
+      const successfulResponses = chorusResponses.responses.filter(r => r.success && r.content)
+      if (successfulResponses.length > 0) {
+        const firstResponse = successfulResponses[0]
+        const content = firstResponse.content.substring(0, 500)
+        return `${content}${content.length >= 500 ? '...' : ''}\n\n*(Fallback: showing ${firstResponse.provider_name} response)*`
+      }
+    }
+
+    // If all else fails, return a clear error message
+    return "Message could not be loaded. The AI synthesis may be incomplete or in an unexpected format."
   }
 
   const getMessage = (label) => {
     const type = messageOrder[label === 'A' ? 0 : 1]
     if (type === 'chorus') {
-      return { content: getChorusMessage() || 'Loading...', type: 'chorus' }
+      const chorusMessage = getChorusMessage()
+      return { content: chorusMessage, type: 'chorus' }
     }
     return { content: caseData.cdc_message, type: 'cdc' }
   }
@@ -1387,6 +1537,79 @@ const studyStyles = `
 
   @keyframes spin {
     to { transform: rotate(360deg); }
+  }
+
+  .loading-hint {
+    color: #71717a;
+    font-size: 0.85rem;
+    margin-top: 8px;
+  }
+
+  /* Error State */
+  .error-state {
+    text-align: center;
+    padding: 40px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 12px;
+    margin: 20px 0;
+  }
+
+  .error-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(239, 68, 68, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: #ef4444;
+    margin: 0 auto 16px;
+  }
+
+  .error-state h3 {
+    color: #fca5a5;
+    font-size: 1.2rem;
+    margin-bottom: 12px;
+  }
+
+  .error-message {
+    color: #fecaca;
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+
+  .retry-info {
+    color: #f59e0b;
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+    font-weight: 500;
+  }
+
+  .error-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .max-retries-message {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .max-retries-message p {
+    color: #fca5a5;
+    font-weight: 500;
+  }
+
+  .skip-btn {
+    margin-top: 8px;
   }
 
   /* Response Rating Cards */

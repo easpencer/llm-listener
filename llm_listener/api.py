@@ -6,11 +6,11 @@ from contextlib import asynccontextmanager
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator, model_validator, ValidationError
 from sqlalchemy.orm import Session
 
 from .core import Settings, LLMOrchestrator, ResponseReconciler
@@ -41,6 +41,40 @@ from .auth.dependencies import (
 )
 from .auth.jwt_utils import UserInfo
 from .auth.rbac import has_permission, get_user_permissions
+
+# Rate limiting imports
+from collections import defaultdict
+import time
+
+
+class RateLimiter:
+    def __init__(self, max_requests: int = 10, window_seconds: int = 60):
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self.requests = defaultdict(list)
+
+    def is_allowed(self, key: str) -> bool:
+        now = time.time()
+        # Clean old requests
+        self.requests[key] = [t for t in self.requests[key] if now - t < self.window_seconds]
+        # Check limit
+        if len(self.requests[key]) >= self.max_requests:
+            return False
+        self.requests[key].append(now)
+        return True
+
+
+# Rate limiters for different endpoints
+session_limiter = RateLimiter(max_requests=5, window_seconds=60)  # 5 sessions per minute per IP
+study_complete_limiter = RateLimiter(max_requests=3, window_seconds=300)  # 3 completions per 5 min per IP
+
+
+def get_client_ip(request: Request) -> str:
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
 
 
 class QueryRequest(BaseModel):
@@ -206,10 +240,80 @@ class CompleteStudyRequest(BaseModel):
     effectiveness_responses: Dict[str, Any]
     assigned_cases: Optional[List[int]] = None
 
+    @field_validator('sus_score')
+    @classmethod
+    def validate_sus_score(cls, v: float) -> float:
+        """Validate SUS score is between 0 and 100."""
+        if not 0 <= v <= 100:
+            raise ValueError(f'SUS score must be between 0 and 100, got {v}')
+        return v
+
+    @field_validator('sus_responses')
+    @classmethod
+    def validate_sus_responses(cls, v: List[int]) -> List[int]:
+        """Validate SUS responses has exactly 10 items with values 1-5."""
+        if len(v) != 10:
+            raise ValueError(f'SUS responses must have exactly 10 items, got {len(v)}')
+        for i, response in enumerate(v, 1):
+            if not 1 <= response <= 5:
+                raise ValueError(f'SUS response {i} must be between 1 and 5, got {response}')
+        return v
+
+    @field_validator('assigned_interface')
+    @classmethod
+    def validate_assigned_interface(cls, v: str) -> str:
+        """Validate assigned_interface is either 'brief' or 'detailed'."""
+        if v not in ['brief', 'detailed']:
+            raise ValueError(f'assigned_interface must be "brief" or "detailed", got "{v}"')
+        return v
+
+    @field_validator('assigned_message')
+    @classmethod
+    def validate_assigned_message(cls, v: str) -> str:
+        """Validate assigned_message is either 'chorus' or 'cdc'."""
+        if v not in ['chorus', 'cdc']:
+            raise ValueError(f'assigned_message must be "chorus" or "cdc", got "{v}"')
+        return v
+
+    @model_validator(mode='after')
+    def validate_sus_score_calculation(self) -> 'CompleteStudyRequest':
+        """Validate that the sus_score matches the calculated score from sus_responses."""
+        if len(self.sus_responses) != 10:
+            # This should have been caught by field validator, but just in case
+            return self
+
+        # Calculate SUS score using the standard formula
+        # Odd questions (1,3,5,7,9): subtract 1 from score
+        # Even questions (2,4,6,8,10): subtract score from 5
+        # Sum all and multiply by 2.5
+        odd_sum = sum(self.sus_responses[i] - 1 for i in [0, 2, 4, 6, 8])
+        even_sum = sum(5 - self.sus_responses[i] for i in [1, 3, 5, 7, 9])
+        calculated_score = (odd_sum + even_sum) * 2.5
+
+        # Allow small floating point differences (tolerance of 0.1)
+        if abs(self.sus_score - calculated_score) > 0.1:
+            raise ValueError(
+                f'SUS score mismatch: provided {self.sus_score} but calculated {calculated_score} '
+                f'from responses {self.sus_responses}'
+            )
+
+        return self
+
 
 class CompleteStudyResponse(BaseModel):
     session_id: str
     saved: bool
+
+
+class WithdrawDataRequest(BaseModel):
+    session_id: str
+    confirm: bool = False  # Must be explicitly set to true
+
+
+class WithdrawDataResponse(BaseModel):
+    session_id: str
+    withdrawn: bool
+    message: str
 
 
 class StudyResultsResponse(BaseModel):
@@ -568,9 +672,18 @@ def check_db_configured():
 
 
 @app.post("/api/study/session", response_model=CreateSessionResponse)
-async def create_study_session(request: CreateSessionRequest, db: Session = Depends(get_db)):
+async def create_study_session(
+    request: CreateSessionRequest,
+    http_request: Request,
+    db: Session = Depends(get_db)
+):
     """Create a new study session."""
     check_db_configured()
+
+    # Rate limiting
+    client_ip = get_client_ip(http_request)
+    if not session_limiter.is_allowed(client_ip):
+        raise HTTPException(status_code=429, detail="Too many requests. Please wait before trying again.")
 
     # Generate unique session ID
     session_id = str(uuid.uuid4())
@@ -795,9 +908,18 @@ async def complete_study_session(session_id: str, db: Session = Depends(get_db))
 
 
 @app.post("/api/study/complete", response_model=CompleteStudyResponse)
-async def save_complete_study(request: CompleteStudyRequest, db: Session = Depends(get_db)):
+async def save_complete_study(
+    request: CompleteStudyRequest,
+    http_request: Request,
+    db: Session = Depends(get_db)
+):
     """Save complete study response data."""
     check_db_configured()
+
+    # Rate limiting
+    client_ip = get_client_ip(http_request)
+    if not study_complete_limiter.is_allowed(client_ip):
+        raise HTTPException(status_code=429, detail="Too many requests. Please wait before trying again.")
 
     # Check if already exists
     existing = db.query(StudyCompletedResponse).filter(
@@ -805,39 +927,70 @@ async def save_complete_study(request: CompleteStudyRequest, db: Session = Depen
     ).first()
 
     if existing:
-        # Update existing record
-        existing.demographics = request.demographics
-        existing.accuracy_responses = request.accuracy_responses
-        existing.quality_responses = request.quality_responses
-        existing.message_orders = request.message_orders
-        existing.assigned_interface = request.assigned_interface
-        existing.task_results = request.task_results
-        existing.sus_responses = request.sus_responses
-        existing.sus_score = request.sus_score
-        existing.assigned_message = request.assigned_message
-        existing.effectiveness_responses = request.effectiveness_responses
-        existing.assigned_cases = request.assigned_cases
-    else:
-        # Create new record
-        response = StudyCompletedResponse(
-            session_id=request.session_id,
-            demographics=request.demographics,
-            accuracy_responses=request.accuracy_responses,
-            quality_responses=request.quality_responses,
-            message_orders=request.message_orders,
-            assigned_interface=request.assigned_interface,
-            task_results=request.task_results,
-            sus_responses=request.sus_responses,
-            sus_score=request.sus_score,
-            assigned_message=request.assigned_message,
-            effectiveness_responses=request.effectiveness_responses,
-            assigned_cases=request.assigned_cases,
+        # Reject duplicate submissions
+        raise HTTPException(
+            status_code=409,
+            detail="Study already submitted for this session"
         )
-        db.add(response)
+
+    # Create new record
+    response = StudyCompletedResponse(
+        session_id=request.session_id,
+        demographics=request.demographics,
+        accuracy_responses=request.accuracy_responses,
+        quality_responses=request.quality_responses,
+        message_orders=request.message_orders,
+        assigned_interface=request.assigned_interface,
+        task_results=request.task_results,
+        sus_responses=request.sus_responses,
+        sus_score=request.sus_score,
+        assigned_message=request.assigned_message,
+        effectiveness_responses=request.effectiveness_responses,
+        assigned_cases=request.assigned_cases,
+    )
+    db.add(response)
 
     db.commit()
 
     return CompleteStudyResponse(session_id=request.session_id, saved=True)
+
+
+@app.delete("/api/study/withdraw", response_model=WithdrawDataResponse)
+async def withdraw_study_data(request: WithdrawDataRequest, db: Session = Depends(get_db)):
+    """Allow participants to withdraw their study data."""
+    if not request.confirm:
+        raise HTTPException(
+            status_code=400,
+            detail="Must confirm withdrawal by setting confirm=true"
+        )
+
+    # Delete from StudyCompletedResponse
+    completed = db.query(StudyCompletedResponse).filter(
+        StudyCompletedResponse.session_id == request.session_id
+    ).first()
+
+    if not completed:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    # Delete the record
+    db.delete(completed)
+    db.commit()
+
+    return WithdrawDataResponse(
+        session_id=request.session_id,
+        withdrawn=True,
+        message="Your study data has been permanently deleted"
+    )
+
+
+@app.get("/api/study/check/{session_id}")
+async def check_study_data(session_id: str, db: Session = Depends(get_db)):
+    """Check if study data exists for a session."""
+    exists = db.query(StudyCompletedResponse).filter(
+        StudyCompletedResponse.session_id == session_id
+    ).first() is not None
+
+    return {"session_id": session_id, "exists": exists}
 
 
 def calculate_std(values: list) -> float:
