@@ -11,6 +11,860 @@ const PROVIDER_COLORS = {
   'Ollama': '#94a3b8',
 }
 
+// ============================================
+// Enhanced Evidence Quality Framework
+// ============================================
+
+// Source Credibility Tiers - Higher tier = more trustworthy
+const SOURCE_CREDIBILITY = {
+  // Tier 1: Gold Standard - Official government/international health bodies (weight: 5)
+  tier1: {
+    domains: ['cdc.gov', 'who.int', 'fda.gov', 'nih.gov', 'cochranelibrary.com', 'cochrane.org'],
+    weight: 5,
+    label: 'Official Health Authority',
+    color: '#10b981'
+  },
+  // Tier 2: High Credibility - Major peer-reviewed journals (weight: 4)
+  tier2: {
+    domains: ['nejm.org', 'jamanetwork.com', 'thelancet.com', 'bmj.com', 'nature.com', 'pubmed.ncbi.nlm.nih.gov', 'ncbi.nlm.nih.gov', 'sciencedirect.com'],
+    weight: 4,
+    label: 'Peer-Reviewed Journal',
+    color: '#3b82f6'
+  },
+  // Tier 3: Academic/Institutional - Universities, major medical centers (weight: 3)
+  tier3: {
+    domains: ['.edu', 'mayoclinic.org', 'clevelandclinic.org', 'hopkinsmedicine.org', 'uptodate.com', 'medscape.com'],
+    weight: 3,
+    label: 'Academic/Medical Center',
+    color: '#8b5cf6'
+  },
+  // Tier 4: Consumer Health - Reputable consumer health sites (weight: 2)
+  tier4: {
+    domains: ['webmd.com', 'healthline.com', 'medlineplus.gov', 'drugs.com', 'patient.info'],
+    weight: 2,
+    label: 'Consumer Health Site',
+    color: '#f59e0b'
+  },
+  // Tier 5: General/News - Everything else (weight: 1)
+  tier5: {
+    domains: [],
+    weight: 1,
+    label: 'General Source',
+    color: '#94a3b8'
+  }
+}
+
+// Classify a URL into a credibility tier
+const getSourceTier = (url) => {
+  if (!url) return { tier: 5, ...SOURCE_CREDIBILITY.tier5 }
+  const urlLower = url.toLowerCase()
+
+  for (const [tierName, tierData] of Object.entries(SOURCE_CREDIBILITY)) {
+    if (tierData.domains.some(domain => urlLower.includes(domain))) {
+      return { tier: parseInt(tierName.replace('tier', '')), ...tierData }
+    }
+  }
+  return { tier: 5, ...SOURCE_CREDIBILITY.tier5 }
+}
+
+// Analyze sources and return credibility breakdown
+const analyzeSourceCredibility = (sources) => {
+  if (!sources || !Array.isArray(sources) || sources.length === 0) {
+    return { tierCounts: {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}, weightedScore: 0, topTier: 5, totalWeight: 0 }
+  }
+
+  const tierCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+  let totalWeight = 0
+  let topTier = 5
+
+  sources.forEach(source => {
+    const url = source.url || source.link || ''
+    const { tier, weight } = getSourceTier(url)
+    tierCounts[tier]++
+    totalWeight += weight
+    if (tier < topTier) topTier = tier
+  })
+
+  return { tierCounts, weightedScore: totalWeight, topTier, totalWeight }
+}
+
+// Hedging language patterns - indicates uncertainty
+const HEDGING_PATTERNS = [
+  /\bmay\b/gi, /\bmight\b/gi, /\bcould\b/gi, /\bpossibly\b/gi, /\bpotentially\b/gi,
+  /\bsome (studies|research|evidence)\b/gi, /\blimited (evidence|research|data)\b/gi,
+  /\bemerging (research|evidence)\b/gi, /\bpreliminary\b/gi, /\bearly (studies|research)\b/gi,
+  /\bsuggests?\b/gi, /\bappears? to\b/gi, /\bseems? to\b/gi,
+  /\bnot (fully|well|clearly) (understood|established)\b/gi,
+  /\bmore research (is )?(needed|required)\b/gi, /\bfurther (study|research|investigation)\b/gi,
+  /\binconsistent\b/gi, /\bconflicting\b/gi, /\bmixed (results|findings|evidence)\b/gi
+]
+
+// Confidence language patterns - indicates certainty
+const CONFIDENCE_PATTERNS = [
+  /\bhas been (shown|demonstrated|proven)\b/gi, /\bstrongly (supports?|suggests?)\b/gi,
+  /\bwell[- ]established\b/gi, /\bdefinitively\b/gi, /\bclearly (shows?|demonstrates?)\b/gi,
+  /\brobust evidence\b/gi, /\bstrong evidence\b/gi, /\bmeta-analysis\b/gi,
+  /\brandomized controlled trial\b/gi, /\blarge[- ]scale (study|trial)\b/gi,
+  /\bsystematic review\b/gi, /\bCochrane\b/gi
+]
+
+// Analyze AI response text for hedging and confidence language
+const analyzeResponseConfidence = (text) => {
+  if (!text) return { hedgingScore: 0, confidenceScore: 0, hedgingCount: 0, confidenceCount: 0 }
+
+  let hedgingCount = 0
+  let confidenceCount = 0
+
+  HEDGING_PATTERNS.forEach(pattern => {
+    const matches = text.match(pattern)
+    if (matches) hedgingCount += matches.length
+  })
+
+  CONFIDENCE_PATTERNS.forEach(pattern => {
+    const matches = text.match(pattern)
+    if (matches) confidenceCount += matches.length
+  })
+
+  // Normalize by text length (per 500 words approximately)
+  const wordCount = text.split(/\s+/).length
+  const normalizer = Math.max(1, wordCount / 500)
+
+  return {
+    hedgingScore: Math.min(1, hedgingCount / (5 * normalizer)), // 0-1, higher = more hedging
+    confidenceScore: Math.min(1, confidenceCount / (3 * normalizer)), // 0-1, higher = more confident
+    hedgingCount,
+    confidenceCount,
+    netConfidence: Math.max(0, Math.min(1, 0.5 + (confidenceCount - hedgingCount) / (10 * normalizer)))
+  }
+}
+
+// Analyze AI consensus quality - hedging, agreement, contradictions
+const analyzeAIConsensusQuality = (responses) => {
+  if (!responses || !Array.isArray(responses)) {
+    return { agreementLevel: 0, modelConfidence: 0, hasContradictions: false, analysis: {} }
+  }
+
+  const successfulResponses = responses.filter(r => r.success && r.content)
+  if (successfulResponses.length < 2) {
+    return {
+      agreementLevel: successfulResponses.length > 0 ? 0.5 : 0,
+      modelConfidence: 0.5,
+      hasContradictions: false,
+      analysis: {}
+    }
+  }
+
+  // Analyze each response for hedging
+  const analyses = successfulResponses.map(r => ({
+    provider: r.provider_name,
+    ...analyzeResponseConfidence(r.content)
+  }))
+
+  // Average hedging across all models
+  const avgHedging = analyses.reduce((sum, a) => sum + a.hedgingScore, 0) / analyses.length
+  const avgConfidence = analyses.reduce((sum, a) => sum + a.netConfidence, 0) / analyses.length
+
+  // Look for contradiction indicators in responses
+  const allText = successfulResponses.map(r => r.content).join(' ').toLowerCase()
+  const contradictionIndicators = [
+    /however,? (other|some) (studies|research)/gi,
+    /in contrast/gi, /on the other hand/gi,
+    /disputed/gi, /controversial/gi, /debate/gi
+  ]
+
+  let contradictionCount = 0
+  contradictionIndicators.forEach(pattern => {
+    const matches = allText.match(pattern)
+    if (matches) contradictionCount += matches.length
+  })
+
+  return {
+    agreementLevel: Math.max(0.3, 1 - avgHedging * 0.5 - contradictionCount * 0.1),
+    modelConfidence: avgConfidence,
+    hedgingLevel: avgHedging,
+    hasContradictions: contradictionCount > 2,
+    contradictionCount,
+    modelCount: successfulResponses.length,
+    analysis: analyses
+  }
+}
+
+// ============================================
+// Extended Evidence Quality Metrics
+// ============================================
+
+// Study Design Hierarchy - Higher level = stronger evidence
+const STUDY_DESIGN_HIERARCHY = {
+  level1: { // Highest evidence
+    patterns: [/systematic review/gi, /meta-analysis/gi, /cochrane review/gi],
+    weight: 5,
+    label: 'Systematic Review/Meta-analysis',
+    abbrev: 'SR'
+  },
+  level2: { // Strong evidence
+    patterns: [/randomized controlled trial/gi, /\bRCT\b/g, /randomised controlled/gi, /double[- ]blind/gi, /placebo[- ]controlled/gi],
+    weight: 4,
+    label: 'Randomized Controlled Trial',
+    abbrev: 'RCT'
+  },
+  level3: { // Moderate evidence
+    patterns: [/cohort study/gi, /prospective study/gi, /longitudinal study/gi, /observational study/gi],
+    weight: 3,
+    label: 'Cohort/Observational',
+    abbrev: 'COH'
+  },
+  level4: { // Limited evidence
+    patterns: [/case[- ]control/gi, /retrospective/gi, /cross[- ]sectional/gi],
+    weight: 2,
+    label: 'Case-Control/Retrospective',
+    abbrev: 'CC'
+  },
+  level5: { // Weak evidence
+    patterns: [/case (series|report)/gi, /case study/gi, /pilot study/gi, /preliminary/gi],
+    weight: 1,
+    label: 'Case Report/Pilot',
+    abbrev: 'CS'
+  },
+  level6: { // Lowest evidence
+    patterns: [/expert opinion/gi, /editorial/gi, /commentary/gi, /narrative review/gi],
+    weight: 0.5,
+    label: 'Expert Opinion',
+    abbrev: 'EO'
+  }
+}
+
+// Analyze text for study design mentions
+const analyzeStudyDesign = (text) => {
+  if (!text) return { highestLevel: 6, designs: [], weightedScore: 0 }
+
+  const designs = []
+  let highestLevel = 6
+  let totalWeight = 0
+
+  for (const [levelName, levelData] of Object.entries(STUDY_DESIGN_HIERARCHY)) {
+    const level = parseInt(levelName.replace('level', ''))
+    for (const pattern of levelData.patterns) {
+      const matches = text.match(pattern)
+      if (matches) {
+        designs.push({ level, label: levelData.label, abbrev: levelData.abbrev, count: matches.length })
+        totalWeight += levelData.weight * matches.length
+        if (level < highestLevel) highestLevel = level
+      }
+    }
+  }
+
+  return { highestLevel, designs, weightedScore: totalWeight, hasRCT: highestLevel <= 2 }
+}
+
+// Sample Size Detection
+const SAMPLE_SIZE_PATTERNS = [
+  /n\s*[=:]\s*([\d,]+)/gi,  // n=1000, n: 500
+  /([\d,]+)\s*participants/gi,
+  /([\d,]+)\s*patients/gi,
+  /([\d,]+)\s*subjects/gi,
+  /([\d,]+)\s*individuals/gi,
+  /enrolled\s*([\d,]+)/gi,
+  /sample\s*(size|of)\s*([\d,]+)/gi,
+  /([\d,]+)\s*(people|adults|children|women|men)/gi
+]
+
+const analyzeSampleSize = (text) => {
+  if (!text) return { sizes: [], largest: 0, total: 0, hasLargeSample: false }
+
+  const sizes = []
+
+  SAMPLE_SIZE_PATTERNS.forEach(pattern => {
+    let match
+    const regex = new RegExp(pattern.source, pattern.flags)
+    while ((match = regex.exec(text)) !== null) {
+      // Find the number in the match
+      const numMatch = match[0].match(/[\d,]+/)
+      if (numMatch) {
+        const size = parseInt(numMatch[0].replace(/,/g, ''))
+        if (size >= 10 && size < 10000000) { // Reasonable sample size range
+          sizes.push(size)
+        }
+      }
+    }
+  })
+
+  const uniqueSizes = [...new Set(sizes)].sort((a, b) => b - a)
+  const largest = uniqueSizes[0] || 0
+  const total = uniqueSizes.reduce((sum, s) => sum + s, 0)
+
+  return {
+    sizes: uniqueSizes.slice(0, 5),
+    largest,
+    total,
+    hasLargeSample: largest >= 1000,
+    hasVeryLargeSample: largest >= 10000,
+    sampleCategory: largest >= 10000 ? 'very-large' : largest >= 1000 ? 'large' : largest >= 100 ? 'moderate' : largest > 0 ? 'small' : 'unknown'
+  }
+}
+
+// Follow-up Duration Detection
+const DURATION_PATTERNS = [
+  /followed?\s*(for|over|up)?\s*(\d+)\s*(year|month|week|day)s?/gi,
+  /(\d+)[- ](year|month|week)[- ]follow[- ]?up/gi,
+  /follow[- ]?up\s*(period|duration)?\s*(of)?\s*(\d+)\s*(year|month|week|day)s?/gi,
+  /(\d+)[- ](year|month|week|day)s?\s*(of)?\s*follow[- ]?up/gi,
+  /median\s*follow[- ]?up\s*(of)?\s*(\d+\.?\d*)\s*(year|month|week|day)s?/gi,
+  /long[- ]?term\s*\((\d+)\s*(year|month)s?\)/gi
+]
+
+const analyzeDuration = (text) => {
+  if (!text) return { durations: [], longestMonths: 0, hasLongTerm: false }
+
+  const durations = []
+
+  DURATION_PATTERNS.forEach(pattern => {
+    let match
+    const regex = new RegExp(pattern.source, pattern.flags)
+    while ((match = regex.exec(text)) !== null) {
+      // Extract number and unit
+      const numMatch = match[0].match(/(\d+\.?\d*)/)
+      const unitMatch = match[0].match(/(year|month|week|day)s?/i)
+
+      if (numMatch && unitMatch) {
+        const value = parseFloat(numMatch[1])
+        const unit = unitMatch[1].toLowerCase()
+
+        // Convert to months
+        let months = 0
+        switch (unit) {
+          case 'year': months = value * 12; break
+          case 'month': months = value; break
+          case 'week': months = value / 4.33; break
+          case 'day': months = value / 30; break
+        }
+
+        if (months > 0 && months < 600) { // Max 50 years
+          durations.push({ value, unit, months: Math.round(months * 10) / 10 })
+        }
+      }
+    }
+  })
+
+  // Sort by duration and dedupe
+  const sorted = durations.sort((a, b) => b.months - a.months)
+  const longestMonths = sorted[0]?.months || 0
+
+  return {
+    durations: sorted.slice(0, 3),
+    longestMonths,
+    hasLongTerm: longestMonths >= 12,
+    hasVeryLongTerm: longestMonths >= 60,
+    durationCategory: longestMonths >= 60 ? '5+ years' : longestMonths >= 24 ? '2-5 years' : longestMonths >= 12 ? '1-2 years' : longestMonths >= 6 ? '6-12 months' : longestMonths > 0 ? '<6 months' : 'unknown'
+  }
+}
+
+// Effect Size Language Detection
+const EFFECT_SIZE_PATTERNS = {
+  strong: [
+    /(\d+)[%x]\s*(reduction|decrease|increase|improvement)/gi,
+    /reduced\s*(by)?\s*(\d+)%/gi,
+    /(\d+)[- ]fold\s*(increase|decrease|reduction)/gi,
+    /significantly\s*(reduced|increased|improved)/gi,
+    /dramatic\s*(improvement|reduction|effect)/gi,
+    /substantial\s*(benefit|effect|improvement)/gi
+  ],
+  moderate: [
+    /moderate\s*(effect|improvement|reduction)/gi,
+    /meaningful\s*(improvement|difference|effect)/gi,
+    /clinically\s*significant/gi,
+    /statistically\s*significant/gi
+  ],
+  weak: [
+    /marginal\s*(improvement|effect|benefit)/gi,
+    /slight\s*(improvement|effect|benefit)/gi,
+    /small\s*(effect|difference|improvement)/gi,
+    /modest\s*(improvement|effect|benefit)/gi,
+    /trend\s*toward/gi
+  ],
+  null: [
+    /no\s*significant\s*(difference|effect|improvement)/gi,
+    /failed\s*to\s*(show|demonstrate|find)/gi,
+    /did\s*not\s*(differ|improve|change)/gi,
+    /non[- ]?significant/gi
+  ]
+}
+
+const analyzeEffectSize = (text) => {
+  if (!text) return { category: 'unknown', patterns: [], hasQuantified: false }
+
+  const found = { strong: 0, moderate: 0, weak: 0, null: 0 }
+  const patterns = []
+
+  for (const [category, categoryPatterns] of Object.entries(EFFECT_SIZE_PATTERNS)) {
+    for (const pattern of categoryPatterns) {
+      const matches = text.match(pattern)
+      if (matches) {
+        found[category] += matches.length
+        patterns.push({ category, count: matches.length })
+      }
+    }
+  }
+
+  // Detect quantified effects (percentages)
+  const quantifiedMatches = text.match(/(\d+\.?\d*)%/g)
+  const hasQuantified = quantifiedMatches && quantifiedMatches.length > 0
+
+  // Determine dominant category
+  const dominant = Object.entries(found).sort((a, b) => b[1] - a[1])[0]
+
+  return {
+    category: dominant[1] > 0 ? dominant[0] : 'unknown',
+    counts: found,
+    patterns: patterns.slice(0, 5),
+    hasQuantified,
+    quantifiedCount: quantifiedMatches?.length || 0
+  }
+}
+
+// Geographic Diversity Detection
+const GEOGRAPHIC_PATTERNS = {
+  regions: {
+    'North America': /\b(united states|usa|u\.s\.|american|canada|canadian|mexico|mexican)\b/gi,
+    'Europe': /\b(europe|european|uk|united kingdom|british|germany|german|france|french|italy|italian|spain|spanish|netherlands|dutch|sweden|swedish|norway|norwegian|denmark|danish)\b/gi,
+    'Asia': /\b(china|chinese|japan|japanese|korea|korean|india|indian|taiwan|singapore|hong kong|thailand|vietnam|indonesia|malaysia|philippines)\b/gi,
+    'Oceania': /\b(australia|australian|new zealand)\b/gi,
+    'Latin America': /\b(brazil|brazilian|argentina|chile|colombia|peru|latin america)\b/gi,
+    'Africa': /\b(africa|african|south africa|nigeria|kenya|egypt|morocco)\b/gi,
+    'Middle East': /\b(israel|israeli|iran|saudi|dubai|qatar|turkey|turkish)\b/gi
+  },
+  scope: {
+    multinational: /\b(multinational|multi[- ]?national|multi[- ]?center|multi[- ]?centre|international|global|worldwide|across\s*\d+\s*countries)\b/gi,
+    multisite: /\b(multi[- ]?site|multiple\s*(sites|centers|centres|institutions|hospitals))\b/gi
+  }
+}
+
+const analyzeGeographicDiversity = (text) => {
+  if (!text) return { regions: [], regionCount: 0, isMultinational: false, diversityScore: 0 }
+
+  const regionsFound = []
+
+  for (const [region, pattern] of Object.entries(GEOGRAPHIC_PATTERNS.regions)) {
+    if (pattern.test(text)) {
+      regionsFound.push(region)
+    }
+  }
+
+  const isMultinational = GEOGRAPHIC_PATTERNS.scope.multinational.test(text)
+  const isMultisite = GEOGRAPHIC_PATTERNS.scope.multisite.test(text)
+
+  // Reset lastIndex for patterns used with test()
+  Object.values(GEOGRAPHIC_PATTERNS.regions).forEach(p => p.lastIndex = 0)
+  Object.values(GEOGRAPHIC_PATTERNS.scope).forEach(p => p.lastIndex = 0)
+
+  const diversityScore = Math.min(1, (regionsFound.length * 0.15) + (isMultinational ? 0.3 : 0) + (isMultisite ? 0.1 : 0))
+
+  return {
+    regions: regionsFound,
+    regionCount: regionsFound.length,
+    isMultinational,
+    isMultisite,
+    diversityScore,
+    diversityCategory: regionsFound.length >= 4 ? 'global' : regionsFound.length >= 2 ? 'multi-regional' : regionsFound.length === 1 ? 'single-region' : 'unknown'
+  }
+}
+
+// Funding Source / Research Independence
+const FUNDING_PATTERNS = {
+  independent: [
+    /\b(NIH|National Institutes? of Health)\b/gi,
+    /\b(NCI|National Cancer Institute)\b/gi,
+    /\b(CDC|Centers? for Disease Control)\b/gi,
+    /\b(NSF|National Science Foundation)\b/gi,
+    /\b(WHO|World Health Organization)\b/gi,
+    /\b(government[- ]?funded|publicly[- ]?funded)\b/gi,
+    /\b(academic|university)[- ]?(funded|grant|research)\b/gi,
+    /\bno\s*(conflicts?|competing)\s*(of\s*)?interest\b/gi
+  ],
+  industry: [
+    /\b(industry[- ]?funded|pharmaceutical[- ]?company|drug[- ]?maker)\b/gi,
+    /\b(sponsored\s*by|funding\s*from)\s*[A-Z][a-z]+\b/g,
+    /\b(Pfizer|Merck|Johnson|Novartis|Roche|AstraZeneca|Moderna|BioNTech|GSK|Sanofi|AbbVie|Bristol[- ]?Myers|Eli Lilly|Amgen)\b/gi
+  ],
+  conflicted: [
+    /\b(conflict[s]?\s*(of\s*)?interest|competing\s*interest)\b/gi,
+    /\breceived\s*(funding|grants?|honorari|payment|consulting)/gi,
+    /\b(advisory\s*board|consultant|speaker)\s*(for|fee)/gi
+  ]
+}
+
+const analyzeFundingSource = (text) => {
+  if (!text) return { category: 'unknown', sources: [], independenceScore: 0.5 }
+
+  let independentCount = 0
+  let industryCount = 0
+  let conflictCount = 0
+  const sources = []
+
+  FUNDING_PATTERNS.independent.forEach(pattern => {
+    const matches = text.match(pattern)
+    if (matches) {
+      independentCount += matches.length
+      sources.push({ type: 'independent', matches: matches.slice(0, 2) })
+    }
+  })
+
+  FUNDING_PATTERNS.industry.forEach(pattern => {
+    const matches = text.match(pattern)
+    if (matches) {
+      industryCount += matches.length
+      sources.push({ type: 'industry', matches: matches.slice(0, 2) })
+    }
+  })
+
+  FUNDING_PATTERNS.conflicted.forEach(pattern => {
+    const matches = text.match(pattern)
+    if (matches) {
+      conflictCount += matches.length
+    }
+  })
+
+  // Calculate independence score
+  let independenceScore = 0.5 // Default neutral
+  if (independentCount > 0 && industryCount === 0) {
+    independenceScore = 0.9
+  } else if (independentCount > industryCount) {
+    independenceScore = 0.7
+  } else if (industryCount > 0 && independentCount === 0) {
+    independenceScore = 0.3
+  }
+
+  if (conflictCount > 0) {
+    independenceScore -= 0.1 * Math.min(conflictCount, 3)
+  }
+
+  return {
+    category: independenceScore >= 0.7 ? 'independent' : independenceScore <= 0.4 ? 'industry' : 'mixed',
+    sources: sources.slice(0, 3),
+    independentCount,
+    industryCount,
+    conflictCount,
+    independenceScore: Math.max(0, Math.min(1, independenceScore))
+  }
+}
+
+// Publication Recency
+const extractPublicationYears = (text) => {
+  if (!text) return { years: [], mostRecent: null, oldest: null, span: 0 }
+
+  // Match years in common citation formats
+  const yearPatterns = [
+    /\((\d{4})\)/g,  // (2023)
+    /,\s*(\d{4})\b/g,  // , 2023
+    /\b(19\d{2}|20[0-2]\d)\b/g  // Any year 1900-2029
+  ]
+
+  const years = new Set()
+
+  yearPatterns.forEach(pattern => {
+    let match
+    while ((match = pattern.exec(text)) !== null) {
+      const year = parseInt(match[1])
+      if (year >= 1990 && year <= new Date().getFullYear()) {
+        years.add(year)
+      }
+    }
+  })
+
+  const sortedYears = [...years].sort((a, b) => b - a)
+  const currentYear = new Date().getFullYear()
+  const mostRecent = sortedYears[0] || null
+  const oldest = sortedYears[sortedYears.length - 1] || null
+
+  let recencyScore = 0
+  if (mostRecent) {
+    const yearsOld = currentYear - mostRecent
+    if (yearsOld <= 1) recencyScore = 1
+    else if (yearsOld <= 2) recencyScore = 0.9
+    else if (yearsOld <= 3) recencyScore = 0.8
+    else if (yearsOld <= 5) recencyScore = 0.6
+    else if (yearsOld <= 10) recencyScore = 0.4
+    else recencyScore = 0.2
+  }
+
+  return {
+    years: sortedYears.slice(0, 10),
+    mostRecent,
+    oldest,
+    span: oldest && mostRecent ? mostRecent - oldest : 0,
+    recencyScore,
+    recencyCategory: mostRecent ? (currentYear - mostRecent <= 2 ? 'current' : currentYear - mostRecent <= 5 ? 'recent' : 'dated') : 'unknown'
+  }
+}
+
+// Replication Status
+const REPLICATION_PATTERNS = {
+  replicated: [
+    /\breplicat(ed|ion)\b/gi,
+    /\bconfirm(ed|s)?\s*(by|in)\s*(multiple|other|subsequent)\s*(studies|trials|research)/gi,
+    /\bconsistent(ly)?\s*(across|with)\s*(multiple|other)\s*(studies|trials)/gi,
+    /\brobust\s*(across|finding)/gi,
+    /\breproducib(le|ility)\b/gi,
+    /\bmultiple\s*(studies|trials)\s*(have\s*)?(shown|demonstrated|confirmed)/gi
+  ],
+  notReplicated: [
+    /\bnot\s*(been\s*)?(replicated|reproduced|confirmed)/gi,
+    /\bfailed\s*to\s*replicate/gi,
+    /\binconsistent\s*(results|findings)/gi,
+    /\bcontradictory\s*(results|findings|evidence)/gi
+  ],
+  needsReplication: [
+    /\brequires?\s*(further|additional)\s*(replication|confirmation|study)/gi,
+    /\bmore\s*(research|studies)\s*(is\s*)?(needed|required)/gi,
+    /\bpreliminary\s*(finding|result|evidence)/gi,
+    /\bsingle\s*study/gi
+  ]
+}
+
+const analyzeReplicationStatus = (text) => {
+  if (!text) return { status: 'unknown', score: 0.5, indicators: [] }
+
+  let replicatedCount = 0
+  let notReplicatedCount = 0
+  let needsCount = 0
+  const indicators = []
+
+  REPLICATION_PATTERNS.replicated.forEach(pattern => {
+    const matches = text.match(pattern)
+    if (matches) {
+      replicatedCount += matches.length
+      indicators.push({ type: 'replicated', match: matches[0] })
+    }
+  })
+
+  REPLICATION_PATTERNS.notReplicated.forEach(pattern => {
+    const matches = text.match(pattern)
+    if (matches) {
+      notReplicatedCount += matches.length
+      indicators.push({ type: 'not-replicated', match: matches[0] })
+    }
+  })
+
+  REPLICATION_PATTERNS.needsReplication.forEach(pattern => {
+    const matches = text.match(pattern)
+    if (matches) {
+      needsCount += matches.length
+      indicators.push({ type: 'needs-replication', match: matches[0] })
+    }
+  })
+
+  let status = 'unknown'
+  let score = 0.5
+
+  if (replicatedCount > 0 && notReplicatedCount === 0) {
+    status = 'replicated'
+    score = Math.min(1, 0.7 + replicatedCount * 0.1)
+  } else if (notReplicatedCount > 0) {
+    status = 'disputed'
+    score = Math.max(0.2, 0.5 - notReplicatedCount * 0.1)
+  } else if (needsCount > 0) {
+    status = 'preliminary'
+    score = 0.4
+  }
+
+  return { status, score, indicators: indicators.slice(0, 5), replicatedCount, notReplicatedCount, needsCount }
+}
+
+// Systematic Review Detection
+const SYSTEMATIC_REVIEW_PATTERNS = {
+  present: [
+    /\bsystematic\s*review/gi,
+    /\bmeta[- ]?analysis/gi,
+    /\bCochrane\s*(review|database|collaboration)/gi,
+    /\bpooled\s*(analysis|data|results)/gi,
+    /\bquantitative\s*synthesis/gi
+  ],
+  quality: [
+    /\bPRISMA\b/gi,
+    /\bMOOSE\b/gi,
+    /\bprospero/gi,
+    /\bheterogeneity\b/gi,
+    /\bfunnel\s*plot/gi,
+    /\bpublication\s*bias/gi,
+    /\bquality\s*(assessment|appraisal)/gi
+  ]
+}
+
+const analyzeSystematicReview = (text) => {
+  if (!text) return { hasSystematicReview: false, hasMeta: false, quality: 0 }
+
+  let srCount = 0
+  let qualityCount = 0
+
+  SYSTEMATIC_REVIEW_PATTERNS.present.forEach(pattern => {
+    const matches = text.match(pattern)
+    if (matches) srCount += matches.length
+  })
+
+  SYSTEMATIC_REVIEW_PATTERNS.quality.forEach(pattern => {
+    const matches = text.match(pattern)
+    if (matches) qualityCount += matches.length
+  })
+
+  const hasSystematicReview = srCount > 0
+  const hasMeta = /meta[- ]?analysis/gi.test(text)
+
+  // Quality score based on methodology mentions
+  const quality = Math.min(1, (srCount * 0.2) + (qualityCount * 0.15))
+
+  return {
+    hasSystematicReview,
+    hasMeta,
+    count: srCount,
+    qualityIndicators: qualityCount,
+    quality,
+    category: hasMeta ? 'meta-analysis' : hasSystematicReview ? 'systematic-review' : 'none'
+  }
+}
+
+// Endpoint Type Classification
+const ENDPOINT_PATTERNS = {
+  hard: [
+    /\b(mortality|death|survival)\b/gi,
+    /\b(myocardial\s*infarction|heart\s*attack|stroke)\b/gi,
+    /\b(hospitalization|hospitalisation)\b/gi,
+    /\ball[- ]?cause\s*(mortality|death)/gi,
+    /\bcardiovascular\s*(event|death|outcome)/gi,
+    /\bcancer\s*(incidence|mortality|death)/gi,
+    /\b(cure|remission)\s*rate/gi
+  ],
+  clinical: [
+    /\b(symptom|pain)\s*(score|reduction|improvement)/gi,
+    /\bquality\s*of\s*life/gi,
+    /\b(functional|physical)\s*(status|capacity|improvement)/gi,
+    /\bdisease\s*progression/gi,
+    /\brelapse\s*rate/gi,
+    /\brecurrence/gi
+  ],
+  surrogate: [
+    /\b(biomarker|blood\s*pressure|cholesterol|HbA1c|glucose)\b/gi,
+    /\b(tumor\s*size|lesion)\b/gi,
+    /\blaboratory\s*(measure|value|parameter)/gi,
+    /\b(imaging|radiologic)\s*(finding|response)/gi,
+    /\bproxy\s*(measure|endpoint)/gi
+  ]
+}
+
+const analyzeEndpointType = (text) => {
+  if (!text) return { category: 'unknown', hasHard: false, hasClinical: false, hasSurrogate: false }
+
+  let hardCount = 0
+  let clinicalCount = 0
+  let surrogateCount = 0
+
+  ENDPOINT_PATTERNS.hard.forEach(pattern => {
+    const matches = text.match(pattern)
+    if (matches) hardCount += matches.length
+  })
+
+  ENDPOINT_PATTERNS.clinical.forEach(pattern => {
+    const matches = text.match(pattern)
+    if (matches) clinicalCount += matches.length
+  })
+
+  ENDPOINT_PATTERNS.surrogate.forEach(pattern => {
+    const matches = text.match(pattern)
+    if (matches) surrogateCount += matches.length
+  })
+
+  // Determine primary endpoint type
+  const total = hardCount + clinicalCount + surrogateCount
+  let category = 'unknown'
+  let reliabilityScore = 0.5
+
+  if (total > 0) {
+    if (hardCount >= clinicalCount && hardCount >= surrogateCount) {
+      category = 'hard'
+      reliabilityScore = 0.9
+    } else if (clinicalCount >= surrogateCount) {
+      category = 'clinical'
+      reliabilityScore = 0.7
+    } else {
+      category = 'surrogate'
+      reliabilityScore = 0.5
+    }
+  }
+
+  return {
+    category,
+    hasHard: hardCount > 0,
+    hasClinical: clinicalCount > 0,
+    hasSurrogate: surrogateCount > 0,
+    counts: { hard: hardCount, clinical: clinicalCount, surrogate: surrogateCount },
+    reliabilityScore
+  }
+}
+
+// Combined Deep Analysis - runs all metrics on text
+const analyzeEvidenceDepth = (text, sources = []) => {
+  const studyDesign = analyzeStudyDesign(text)
+  const sampleSize = analyzeSampleSize(text)
+  const duration = analyzeDuration(text)
+  const effectSize = analyzeEffectSize(text)
+  const geography = analyzeGeographicDiversity(text)
+  const funding = analyzeFundingSource(text)
+  const recency = extractPublicationYears(text)
+  const replication = analyzeReplicationStatus(text)
+  const systematicReview = analyzeSystematicReview(text)
+  const endpoints = analyzeEndpointType(text)
+
+  // Calculate composite depth score (0-100)
+  let depthScore = 0
+
+  // Study design: max 25 points
+  depthScore += (6 - studyDesign.highestLevel) * 5
+
+  // Sample size: max 15 points
+  if (sampleSize.hasVeryLargeSample) depthScore += 15
+  else if (sampleSize.hasLargeSample) depthScore += 10
+  else if (sampleSize.largest >= 100) depthScore += 5
+
+  // Duration: max 10 points
+  if (duration.hasVeryLongTerm) depthScore += 10
+  else if (duration.hasLongTerm) depthScore += 6
+  else if (duration.longestMonths >= 6) depthScore += 3
+
+  // Effect size quantification: max 10 points
+  if (effectSize.hasQuantified) depthScore += 5
+  if (effectSize.category === 'strong') depthScore += 5
+  else if (effectSize.category === 'moderate') depthScore += 3
+
+  // Geographic diversity: max 10 points
+  depthScore += Math.round(geography.diversityScore * 10)
+
+  // Funding independence: max 10 points
+  depthScore += Math.round(funding.independenceScore * 10)
+
+  // Recency: max 10 points
+  depthScore += Math.round(recency.recencyScore * 10)
+
+  // Replication: max 5 points
+  depthScore += Math.round(replication.score * 5)
+
+  // Systematic review: max 5 points
+  if (systematicReview.hasMeta) depthScore += 5
+  else if (systematicReview.hasSystematicReview) depthScore += 3
+
+  return {
+    studyDesign,
+    sampleSize,
+    duration,
+    effectSize,
+    geography,
+    funding,
+    recency,
+    replication,
+    systematicReview,
+    endpoints,
+    depthScore: Math.min(100, Math.max(0, depthScore)),
+    depthCategory: depthScore >= 70 ? 'comprehensive' : depthScore >= 50 ? 'substantial' : depthScore >= 30 ? 'moderate' : 'limited'
+  }
+}
+
 // Prism logo - triangular prism refracting light
 function PrismLogo({ size = 48 }) {
   return (
@@ -197,7 +1051,15 @@ function EvidenceProfilePanel({ confidence, compact = false }) {
               <span className="source-name">Guidelines</span>
             </div>
             {renderDots(sources.guidelines?.strength || 0, 4, '#6366f1')}
-            <span className="source-detail">{sources.guidelines?.count || 0} official sources</span>
+            <span className="source-detail">
+              {sources.guidelines?.count || 0} sources
+              {sources.guidelines?.credibility?.topTier <= 2 && (
+                <span className="tier-badge tier-high" title="Includes CDC, WHO, NIH, or major journals"> T1-2</span>
+              )}
+              {sources.guidelines?.credibility?.topTier === 3 && (
+                <span className="tier-badge tier-mid" title="Academic/Medical center sources"> T3</span>
+              )}
+            </span>
           </div>
 
           {/* Literature */}
@@ -210,7 +1072,12 @@ function EvidenceProfilePanel({ confidence, compact = false }) {
               <span className="source-name">Literature</span>
             </div>
             {renderDots(sources.literature?.strength || 0, 4, '#0891b2')}
-            <span className="source-detail">{sources.literature?.count || 0} papers</span>
+            <span className="source-detail">
+              {sources.literature?.count || 0} papers
+              {sources.literature?.credibility?.tierCounts?.[2] > 0 && (
+                <span className="tier-badge tier-peer" title="Includes peer-reviewed journals (NEJM, JAMA, etc.)"> PR</span>
+              )}
+            </span>
           </div>
 
           {/* AI Consensus */}
@@ -223,7 +1090,15 @@ function EvidenceProfilePanel({ confidence, compact = false }) {
               <span className="source-name">AI Models</span>
             </div>
             {renderDots(sources.ai?.strength || 0, 4, '#8b5cf6')}
-            <span className="source-detail">{sources.ai?.count || 0} models agree</span>
+            <span className="source-detail">
+              {sources.ai?.count || 0} models
+              {sources.ai?.quality?.hedgingLevel > 0.3 && (
+                <span className="tier-badge tier-caution" title="AI responses contain hedging/uncertainty language"> ?</span>
+              )}
+              {sources.ai?.quality?.hasContradictions && (
+                <span className="tier-badge tier-warn" title="AI responses show contradictions"> !</span>
+              )}
+            </span>
           </div>
 
           {/* Cross-validation */}
@@ -242,6 +1117,56 @@ function EvidenceProfilePanel({ confidence, compact = false }) {
           </div>
         </div>
       </div>
+
+      {/* Evidence Depth Insights - NEW */}
+      {confidence.evidenceDepth && confidence.evidenceDepth.depthScore > 0 && (
+        <div className="evidence-depth-section">
+          <div className="depth-header">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2">
+              <path d="M12 2v6m0 0l-3-3m3 3l3-3"/><path d="M12 22v-6m0 0l3 3m-3-3l-3 3"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <span className="depth-label">Evidence Depth: {confidence.evidenceDepth.depthCategory}</span>
+            <span className="depth-score">{confidence.evidenceDepth.depthScore}/100</span>
+          </div>
+          <div className="depth-indicators">
+            {confidence.evidenceDepth.systematicReview?.hasSystematicReview && (
+              <span className="depth-badge depth-gold" title="Systematic review or meta-analysis cited">SR/MA</span>
+            )}
+            {confidence.evidenceDepth.studyDesign?.hasRCT && !confidence.evidenceDepth.systematicReview?.hasSystematicReview && (
+              <span className="depth-badge depth-purple" title="Randomized controlled trial evidence">RCT</span>
+            )}
+            {confidence.evidenceDepth.sampleSize?.hasLargeSample && (
+              <span className="depth-badge depth-teal" title={`Large sample: n=${confidence.evidenceDepth.sampleSize.largest?.toLocaleString()}`}>
+                n={confidence.evidenceDepth.sampleSize.largest >= 10000 ? '10k+' : confidence.evidenceDepth.sampleSize.largest >= 1000 ? `${Math.round(confidence.evidenceDepth.sampleSize.largest / 1000)}k` : confidence.evidenceDepth.sampleSize.largest}
+              </span>
+            )}
+            {confidence.evidenceDepth.duration?.hasLongTerm && (
+              <span className="depth-badge depth-purple" title={`Long-term follow-up: ${confidence.evidenceDepth.duration.category}`}>
+                {confidence.evidenceDepth.duration.category}
+              </span>
+            )}
+            {confidence.evidenceDepth.replication?.status === 'replicated' && (
+              <span className="depth-badge depth-green" title="Findings replicated across studies">Replicated</span>
+            )}
+            {confidence.evidenceDepth.replication?.status === 'preliminary' && (
+              <span className="depth-badge depth-amber" title="Preliminary evidence, needs replication">Preliminary</span>
+            )}
+            {confidence.evidenceDepth.geography?.isMultinational && (
+              <span className="depth-badge depth-teal" title={`Multi-national: ${confidence.evidenceDepth.geography.regions?.join(', ')}`}>Global</span>
+            )}
+            {confidence.evidenceDepth.funding?.category === 'independent' && (
+              <span className="depth-badge depth-green" title="Independently funded research">Independent</span>
+            )}
+            {confidence.evidenceDepth.recency?.category === 'current' && (
+              <span className="depth-badge depth-blue" title={`Most recent: ${confidence.evidenceDepth.recency.mostRecent}`}>Current</span>
+            )}
+            {confidence.evidenceDepth.recency?.category === 'dated' && (
+              <span className="depth-badge depth-red" title="Some sources are dated">Dated</span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Cochrane-style qualitative statement */}
       <div className="profile-statement" style={{ borderLeftColor: qColor.main }}>
@@ -784,37 +1709,68 @@ function App() {
     const literatureCount = literature.available ? (literature.totalPapers || 0) : 0
     const aiCount = aiConsensus.available ? (aiConsensus.modelCount || 0) : 0
 
-    // Source strengths (1-4 dots) - conservative
-    const guidelinesStrength = guidelinesCount >= 5 ? 4 : guidelinesCount >= 3 ? 3 : guidelinesCount >= 2 ? 2 : guidelinesCount >= 1 ? 1 : 0
-    const literatureStrength = literatureCount >= 20 ? 4 : literatureCount >= 10 ? 3 : literatureCount >= 5 ? 2 : literatureCount >= 1 ? 1 : 0
+    // === NEW: Analyze source credibility using tier system ===
+    const guidelineCredibility = analyzeSourceCredibility(guidelines.sources || [])
+    const literatureCredibility = analyzeSourceCredibility(literature.sources || [])
+
+    // === NEW: Analyze AI response quality (hedging, confidence language) ===
+    const aiResponses = aiConsensus.providers?.map(p => ({
+      success: true,
+      content: p.content,
+      provider_name: p.name
+    })) || []
+    const aiQuality = analyzeAIConsensusQuality(aiResponses)
+
+    // === NEW: Deep evidence analysis on AI response content ===
+    const allAIContent = aiConsensus.providers?.map(p => p.content).join('\n\n') || ''
+    const evidenceDepth = analyzeEvidenceDepth(allAIContent)
+
+    // Source strengths (1-4 dots) - now weighted by credibility tier
+    const guidelinesStrength = guidelineCredibility.topTier <= 2 ? 4 :
+                               guidelineCredibility.topTier <= 3 ? 3 :
+                               guidelinesCount >= 2 ? 2 : guidelinesCount >= 1 ? 1 : 0
+    const literatureStrength = literatureCredibility.topTier <= 2 ? 4 :
+                               literatureCount >= 10 ? 3 : literatureCount >= 5 ? 2 : literatureCount >= 1 ? 1 : 0
     const aiStrength = aiCount >= 4 ? 3 : aiCount >= 3 ? 2 : aiCount >= 1 ? 1 : 0 // AI max is 3, never 4
 
     const sourceTypes = [guidelines.available, literature.available, aiConsensus.available].filter(Boolean).length
     const crossValidationStrength = sourceTypes >= 3 ? 3 : sourceTypes >= 2 ? 2 : sourceTypes >= 1 ? 1 : 0
 
     // Evidence Quality Grade (A-D) - VERY conservative based on GRADE
-    // A: HIGH - Requires official treatment guidelines from CDC/WHO/FDA + large RCTs/meta-analyses
-    //    Think: "Vaccines prevent measles" or "Antibiotics treat bacterial infections"
-    // B: MODERATE - Some guidelines OR substantial peer-reviewed literature
-    // C: LOW - Limited studies, emerging research, or only AI synthesis
-    // D: VERY LOW - Anecdotal, AI-only, or contradictory evidence
+    // Now incorporates source credibility tiers AND study design hierarchy
     let quality = 'D'
-    const hasOfficialGuidelines = guidelinesCount >= 1
+    const hasTier1Guidelines = guidelineCredibility.tierCounts[1] > 0 // CDC, WHO, FDA, NIH
+    const hasTier2Literature = literatureCredibility.tierCounts[2] > 0 // NEJM, JAMA, Lancet, etc.
     const hasSubstantialLiterature = literatureCount >= 10
     const hasModestLiterature = literatureCount >= 3
+    const highCredibilityWeight = guidelineCredibility.weightedScore + literatureCredibility.weightedScore
 
-    if (guidelinesCount >= 3 && literatureCount >= 15) {
-      quality = 'A' // Very high bar: multiple official guidelines + extensive literature
-    } else if (hasOfficialGuidelines && hasSubstantialLiterature) {
-      quality = 'B' // Official guidance backed by solid research
-    } else if (hasOfficialGuidelines || hasModestLiterature) {
+    // NEW: Factor in study design from AI content
+    const hasRCTEvidence = evidenceDepth.studyDesign.hasRCT
+    const hasSystematicReview = evidenceDepth.systematicReview.hasMeta || evidenceDepth.systematicReview.hasSystematicReview
+    const hasLargeSample = evidenceDepth.sampleSize.hasLargeSample
+    const isReplicated = evidenceDepth.replication.status === 'replicated'
+
+    if ((hasSystematicReview || hasRCTEvidence) && hasTier1Guidelines && hasTier2Literature) {
+      quality = 'A' // Gold: RCT/SR + Official guidelines + peer-reviewed journals
+    } else if (hasTier1Guidelines && hasTier2Literature && literatureCount >= 10) {
+      quality = 'A' // Gold: Official guidelines from tier-1 sources + peer-reviewed journals
+    } else if (hasRCTEvidence && (hasTier1Guidelines || guidelineCredibility.topTier <= 2)) {
+      quality = 'B' // RCT evidence with good guidance
+    } else if ((hasTier1Guidelines || guidelineCredibility.topTier <= 2) && hasSubstantialLiterature) {
+      quality = 'B' // Good: High-credibility guidance + solid research base
+    } else if ((hasLargeSample || isReplicated) && hasModestLiterature) {
+      quality = 'B' // Large sample or replicated with some literature
+    } else if (guidelinesCount >= 1 || hasModestLiterature || highCredibilityWeight >= 8) {
       quality = 'C' // Some evidence but not robust
+    } else if (evidenceDepth.depthScore >= 30) {
+      quality = 'C' // Moderate depth analysis suggests some evidence
     }
     // D is default - AI consensus alone is never higher than D
 
     // Retrieval Confidence (I-III) - how well we found relevant evidence
     let retrieval = 'III'
-    if (sourceTypes >= 3 && (guidelinesCount >= 2 || literatureCount >= 5)) {
+    if (sourceTypes >= 3 && (guidelineCredibility.topTier <= 2 || literatureCount >= 5)) {
       retrieval = 'I'
     } else if (sourceTypes >= 2 && (guidelinesCount >= 1 || literatureCount >= 3)) {
       retrieval = 'II'
@@ -822,32 +1778,68 @@ function App() {
 
     // Agreement % - CONSERVATIVE: 100% should be nearly impossible
     // Base agreement starts at 40% (uncertainty is default)
-    // Max achievable without RCTs + guidelines is ~70%
     let agreement = 40
 
-    // Guidelines add credibility
-    if (guidelinesCount >= 3) agreement += 20
-    else if (guidelinesCount >= 2) agreement += 15
-    else if (guidelinesCount >= 1) agreement += 10
+    // Guidelines add credibility - weighted by tier
+    if (hasTier1Guidelines) {
+      agreement += 15 + Math.min(10, guidelineCredibility.tierCounts[1] * 3) // Tier 1: up to +25
+    } else if (guidelineCredibility.topTier <= 3) {
+      agreement += 10 + Math.min(5, guidelinesCount * 2) // Tier 2-3: up to +15
+    } else if (guidelinesCount >= 1) {
+      agreement += 5 // Lower tier sources: +5
+    }
 
-    // Literature adds evidence
-    if (literatureCount >= 15) agreement += 15
-    else if (literatureCount >= 10) agreement += 10
-    else if (literatureCount >= 5) agreement += 7
-    else if (literatureCount >= 1) agreement += 3
+    // Literature adds evidence - weighted by tier
+    if (hasTier2Literature) {
+      agreement += 10 + Math.min(10, literatureCount) // Peer-reviewed: up to +20
+    } else if (literatureCount >= 10) {
+      agreement += 12
+    } else if (literatureCount >= 5) {
+      agreement += 7
+    } else if (literatureCount >= 1) {
+      agreement += 3
+    }
 
-    // AI consensus adds modest support (AI agreement alone shouldn't drive high confidence)
-    if (aiCount >= 4) agreement += 8
-    else if (aiCount >= 3) agreement += 5
-    else if (aiCount >= 2) agreement += 3
+    // AI consensus - PENALIZED by hedging language
+    // High hedging = AI models are uncertain = lower agreement
+    const hedgingPenalty = Math.round(aiQuality.hedgingLevel * 10) // 0-10 point penalty
+    const basseAIBonus = aiCount >= 4 ? 8 : aiCount >= 3 ? 5 : aiCount >= 2 ? 3 : 0
+    const aiBonus = Math.max(0, basseAIBonus - hedgingPenalty)
+    agreement += aiBonus
 
     // Cross-validation bonus (sources corroborate each other)
     if (sourceTypes >= 3) agreement += 10
     else if (sourceTypes >= 2) agreement += 5
 
+    // NEW: Contradiction penalty - if AI models show contradictions
+    if (aiQuality.hasContradictions) {
+      agreement -= 5
+    }
+
+    // NEW: Evidence depth bonuses
+    // Study design bonus (RCT/meta-analysis mentioned)
+    if (hasSystematicReview) agreement += 8
+    else if (hasRCTEvidence) agreement += 5
+    else if (evidenceDepth.studyDesign.highestLevel <= 4) agreement += 2
+
+    // Replication bonus
+    if (isReplicated) agreement += 5
+    else if (evidenceDepth.replication.status === 'preliminary') agreement -= 3
+
+    // Sample size bonus
+    if (evidenceDepth.sampleSize.hasVeryLargeSample) agreement += 4
+    else if (hasLargeSample) agreement += 2
+
+    // Duration bonus
+    if (evidenceDepth.duration.hasVeryLongTerm) agreement += 3
+    else if (evidenceDepth.duration.hasLongTerm) agreement += 1
+
+    // Recency penalty for dated evidence
+    if (evidenceDepth.recency.recencyCategory === 'dated') agreement -= 3
+    else if (evidenceDepth.recency.recencyCategory === 'current') agreement += 2
+
     // Cap at 95% - true 100% requires established medical fact
-    // (like "water is essential for life" or "penicillin treats bacterial infections")
-    agreement = Math.min(agreement, 95)
+    agreement = Math.min(95, Math.max(35, agreement))
 
     const sourcesUsed = [
       guidelines.available && 'Guidelines',
@@ -858,20 +1850,101 @@ function App() {
     return {
       profile: { quality, retrieval, agreement },
       sources: {
-        guidelines: { strength: guidelinesStrength, count: guidelinesCount, orgs: guidelines.organizations || [] },
-        literature: { strength: literatureStrength, count: literatureCount, topCitations: literature.topCited?.[0]?.citations || 0 },
-        ai: { strength: aiStrength, count: aiCount, models: aiConsensus.providers?.map(p => p.name) || [] },
+        guidelines: {
+          strength: guidelinesStrength,
+          count: guidelinesCount,
+          orgs: guidelines.organizations || [],
+          credibility: guidelineCredibility
+        },
+        literature: {
+          strength: literatureStrength,
+          count: literatureCount,
+          topCitations: literature.topCited?.[0]?.citations || 0,
+          credibility: literatureCredibility
+        },
+        ai: {
+          strength: aiStrength,
+          count: aiCount,
+          models: aiConsensus.providers?.map(p => p.name) || [],
+          quality: aiQuality
+        },
         crossValidation: { strength: crossValidationStrength, sources: sourcesUsed }
+      },
+      // Enhanced metrics for display
+      credibilityProfile: {
+        guidelinesTier: guidelineCredibility.topTier,
+        literatureTier: literatureCredibility.topTier,
+        totalWeight: guidelineCredibility.weightedScore + literatureCredibility.weightedScore,
+        aiHedging: aiQuality.hedgingLevel,
+        aiConfidence: aiQuality.modelConfidence,
+        hasContradictions: aiQuality.hasContradictions
+      },
+      // NEW: Deep evidence analysis
+      evidenceDepth: {
+        depthScore: evidenceDepth.depthScore,
+        depthCategory: evidenceDepth.depthCategory,
+        studyDesign: {
+          highestLevel: evidenceDepth.studyDesign.highestLevel,
+          hasRCT: hasRCTEvidence,
+          hasSystematicReview: hasSystematicReview,
+          designs: evidenceDepth.studyDesign.designs.slice(0, 3)
+        },
+        sampleSize: {
+          largest: evidenceDepth.sampleSize.largest,
+          category: evidenceDepth.sampleSize.sampleCategory,
+          hasLarge: hasLargeSample
+        },
+        duration: {
+          longestMonths: evidenceDepth.duration.longestMonths,
+          category: evidenceDepth.duration.durationCategory,
+          hasLongTerm: evidenceDepth.duration.hasLongTerm
+        },
+        effectSize: {
+          category: evidenceDepth.effectSize.category,
+          hasQuantified: evidenceDepth.effectSize.hasQuantified
+        },
+        geography: {
+          regions: evidenceDepth.geography.regions,
+          isMultinational: evidenceDepth.geography.isMultinational,
+          category: evidenceDepth.geography.diversityCategory
+        },
+        funding: {
+          category: evidenceDepth.funding.category,
+          independenceScore: evidenceDepth.funding.independenceScore
+        },
+        recency: {
+          mostRecent: evidenceDepth.recency.mostRecent,
+          category: evidenceDepth.recency.recencyCategory
+        },
+        replication: {
+          status: evidenceDepth.replication.status,
+          score: evidenceDepth.replication.score
+        },
+        endpoints: {
+          category: evidenceDepth.endpoints.category,
+          hasHard: evidenceDepth.endpoints.hasHard
+        }
       },
       // Legacy - use profile format display, not these raw numbers
       total: agreement,
       score: agreement,
       level: quality === 'A' ? 'high' : quality === 'B' ? 'moderate' : 'limited',
       factors: [
-        guidelinesCount > 0 && `Official guidelines (${guidelinesCount} sources)`,
-        literatureCount > 0 && `Research literature (${literatureCount} papers)`,
-        aiCount > 0 && `AI consensus (${aiCount} models)`,
-        sourceTypes >= 2 && 'Cross-validated'
+        guidelinesCount > 0 && `Official guidelines (${guidelinesCount} sources${hasTier1Guidelines ? ', incl. Tier 1' : ''})`,
+        literatureCount > 0 && `Research literature (${literatureCount} papers${hasTier2Literature ? ', incl. peer-reviewed' : ''})`,
+        aiCount > 0 && `AI consensus (${aiCount} models${aiQuality.hedgingLevel > 0.3 ? ', high uncertainty' : ''})`,
+        sourceTypes >= 2 && 'Cross-validated',
+        aiQuality.hasContradictions && 'Contains contradictions',
+        // NEW: Evidence depth factors
+        hasSystematicReview && 'Systematic review/meta-analysis',
+        hasRCTEvidence && !hasSystematicReview && 'RCT evidence cited',
+        hasLargeSample && `Large sample (n=${evidenceDepth.sampleSize.largest.toLocaleString()})`,
+        evidenceDepth.duration.hasVeryLongTerm && `Long-term follow-up (${evidenceDepth.duration.durationCategory})`,
+        isReplicated && 'Replicated findings',
+        evidenceDepth.replication.status === 'preliminary' && 'Preliminary evidence',
+        evidenceDepth.geography.isMultinational && 'Multi-national research',
+        evidenceDepth.funding.category === 'independent' && 'Independently funded',
+        evidenceDepth.recency.category === 'dated' && 'Some dated sources'
       ].filter(Boolean)
     }
   }
