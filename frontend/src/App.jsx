@@ -1972,6 +1972,71 @@ function App() {
     }
   }
 
+  // Parse structured markdown sections from AI synthesis
+  const parseSynthesisSections = (markdown) => {
+    if (!markdown || typeof markdown !== 'string') {
+      return { sections: {}, fullText: '', hasStructuredSections: false }
+    }
+
+    const sections = {}
+    const lines = markdown.split('\n')
+    let currentSection = null
+    let currentContent = []
+
+    // Known section headers from backend
+    const SECTION_HEADERS = [
+      'CONSENSUS', 'OFFICIAL GUIDANCE', 'SCIENTIFIC EVIDENCE',
+      'AI MODEL PERSPECTIVES', 'DISCORDANCE', 'BOTTOM LINE'
+    ]
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]
+
+      // Check if this line is a main section header (## SECTION_NAME)
+      const headerMatch = line.match(/^##\s+(.+)$/)
+      if (headerMatch) {
+        const headerText = headerMatch[1].trim().toUpperCase()
+
+        // Save previous section if exists
+        if (currentSection && currentContent.length > 0) {
+          sections[currentSection] = currentContent.join('\n').trim()
+        }
+
+        // Check if this is a known section header
+        const matchedSection = SECTION_HEADERS.find(h =>
+          headerText.includes(h) || h.includes(headerText)
+        )
+
+        currentSection = matchedSection || headerText
+        currentContent = []
+      } else if (currentSection) {
+        currentContent.push(line)
+      } else {
+        // Content before any section header (preamble)
+        if (!sections['PREAMBLE']) sections['PREAMBLE'] = ''
+        sections['PREAMBLE'] += line + '\n'
+      }
+    }
+
+    // Save last section
+    if (currentSection && currentContent.length > 0) {
+      sections[currentSection] = currentContent.join('\n').trim()
+    }
+
+    // Clean up empty sections
+    Object.keys(sections).forEach(key => {
+      if (!sections[key] || sections[key].trim() === '') {
+        delete sections[key]
+      }
+    })
+
+    return {
+      sections,
+      fullText: markdown,
+      hasStructuredSections: Object.keys(sections).length > 1
+    }
+  }
+
   // Generate patient-friendly summary - unified synthesis with agreement/disagreement
   const generatePatientSummary = () => {
     const integrated = generateIntegratedSynthesis()
@@ -1979,6 +2044,9 @@ function App() {
 
     let sections = []
     const aiContent = integrated.aiConsensus.synthesisContent || ''
+
+    // Parse structured sections from new backend format
+    const parsed = parseSynthesisSections(aiContent)
     const paragraphs = aiContent.split('\n\n').filter(p => p.trim())
 
     const guidelineCount = integrated.guidelines?.totalSources || 0
@@ -1989,7 +2057,7 @@ function App() {
       : []
 
     // SECTION 1: Main Summary (unified synthesis)
-    if (integrated.aiConsensus.available && paragraphs.length > 0) {
+    if (integrated.aiConsensus.available && (paragraphs.length > 0 || parsed.hasStructuredSections)) {
       // Build informative intro
       let intro = ''
       if (guidelineCount > 0 || literatureCount > 0) {
@@ -2001,69 +2069,141 @@ function App() {
         intro += parts.join(', ') + '.*\n\n'
       }
 
-      // Create brief version - short summary with key points
-      const briefPoints = paragraphs.slice(0, 2).map(p => {
-        const firstSentence = p.split(/[.!?](?:\s|$)/)[0]
-        return `- ${firstSentence.trim()}`
-      }).join('\n')
-      const briefContent = intro + briefPoints + '\n\n*Click "More" for detailed analysis including individual AI perspectives and evidence sources...*'
+      let briefContent = ''
+      let detailedContent = ''
 
-      // Detailed version - comprehensive deep dive
-      let detailedContent = intro + '### Summary\n\n' + paragraphs.join('\n\n')
+      // Use parsed sections if available (new structured format)
+      if (parsed.hasStructuredSections) {
+        // BRIEF: Show CONSENSUS + BOTTOM LINE (For Patients)
+        briefContent = intro
 
-      // Add individual AI model perspectives (always show if we have providers)
-      if (integrated.aiConsensus.providers && integrated.aiConsensus.providers.length > 0) {
-        detailedContent += '\n\n---\n\n### What Individual AI Systems Said\n\n'
-        integrated.aiConsensus.providers.forEach(provider => {
-          const providerContent = provider.content || ''
-          // Extract first 3-4 sentences from each provider for more detail
-          const sentences = providerContent.split(/[.!?](?:\s|$)/).filter(s => s.trim()).slice(0, 4)
-          if (sentences.length > 0) {
-            detailedContent += `**${provider.name}** (${provider.model || 'unknown model'}):\n`
-            detailedContent += sentences.map(s => `> ${s.trim()}`).join('. ') + '.\n\n'
+        if (parsed.sections['CONSENSUS']) {
+          briefContent += '### What We Know\n\n' + parsed.sections['CONSENSUS'] + '\n\n'
+        }
+
+        // Extract "For Patients" from BOTTOM LINE
+        const bottomLine = parsed.sections['BOTTOM LINE'] || ''
+        const forPatientsMatch = bottomLine.match(/###\s*For Patients\s*([\s\S]*?)(?=###|$)/i)
+        if (forPatientsMatch) {
+          briefContent += '### What This Means For You\n\n' + forPatientsMatch[1].trim() + '\n\n'
+        }
+
+        // Extract Important Caveats
+        const caveatsMatch = bottomLine.match(/###\s*Important Caveats\s*([\s\S]*?)(?=###|$)/i)
+        if (caveatsMatch) {
+          briefContent += '*' + caveatsMatch[1].trim().split('\n')[0] + '*\n\n'
+        }
+
+        briefContent += '*Click "More" for official guidance, research details, and source citations...*'
+
+        // DETAILED: Show all sections with formatting
+        detailedContent = intro
+
+        // Consensus section
+        if (parsed.sections['CONSENSUS']) {
+          detailedContent += '### Consensus\n\n' + parsed.sections['CONSENSUS'] + '\n\n'
+        }
+
+        // Official Guidance section
+        if (parsed.sections['OFFICIAL GUIDANCE']) {
+          detailedContent += '---\n\n### Official Health Guidance\n\n' + parsed.sections['OFFICIAL GUIDANCE'] + '\n\n'
+        }
+
+        // Scientific Evidence section
+        if (parsed.sections['SCIENTIFIC EVIDENCE']) {
+          detailedContent += '---\n\n### Scientific Evidence\n\n' + parsed.sections['SCIENTIFIC EVIDENCE'] + '\n\n'
+        }
+
+        // AI Model Perspectives section
+        if (parsed.sections['AI MODEL PERSPECTIVES']) {
+          detailedContent += '---\n\n### AI Model Perspectives\n\n' + parsed.sections['AI MODEL PERSPECTIVES'] + '\n\n'
+        }
+
+        // Discordance section (only if there is discordance)
+        if (parsed.sections['DISCORDANCE'] && !parsed.sections['DISCORDANCE'].toLowerCase().includes('no significant discordance')) {
+          detailedContent += '---\n\n### Areas of Disagreement\n\n' + parsed.sections['DISCORDANCE'] + '\n\n'
+        }
+
+        // Bottom Line section
+        if (parsed.sections['BOTTOM LINE']) {
+          detailedContent += '---\n\n### Bottom Line\n\n' + parsed.sections['BOTTOM LINE'] + '\n\n'
+        }
+
+        // Add evidence quality assessment
+        if (integrated.confidence) {
+          detailedContent += '---\n\n### Evidence Quality\n\n'
+          const conf = integrated.confidence
+          detailedContent += `- **Grade:** ${conf.quality || 'D'} `
+          if (conf.quality === 'A') detailedContent += '(High quality)\n'
+          else if (conf.quality === 'B') detailedContent += '(Good quality)\n'
+          else if (conf.quality === 'C') detailedContent += '(Moderate)\n'
+          else detailedContent += '(Limited)\n'
+          detailedContent += `- **Sources:** ${guidelineCount} guidelines, ${literatureCount} papers, ${aiCount} AI systems\n`
+        }
+      } else {
+        // FALLBACK: Old format - use paragraph-based extraction
+        const briefPoints = paragraphs.slice(0, 2).map(p => {
+          const firstSentence = p.split(/[.!?](?:\s|$)/)[0]
+          return `- ${firstSentence.trim()}`
+        }).join('\n')
+        briefContent = intro + briefPoints + '\n\n*Click "More" for detailed analysis including individual AI perspectives and evidence sources...*'
+
+        // Detailed version - comprehensive deep dive
+        detailedContent = intro + '### Summary\n\n' + paragraphs.join('\n\n')
+
+        // Add individual AI model perspectives
+        if (integrated.aiConsensus.providers && integrated.aiConsensus.providers.length > 0) {
+          detailedContent += '\n\n---\n\n### What Individual AI Systems Said\n\n'
+          integrated.aiConsensus.providers.forEach(provider => {
+            const providerContent = provider.content || ''
+            const sentences = providerContent.split(/[.!?](?:\s|$)/).filter(s => s.trim()).slice(0, 4)
+            if (sentences.length > 0) {
+              detailedContent += `**${provider.name}** (${provider.model || 'unknown model'}):\n`
+              detailedContent += sentences.map(s => `> ${s.trim()}`).join('. ') + '.\n\n'
+            }
+          })
+        }
+
+        // Add guideline evidence snippets
+        if (integrated.guidelines.available && integrated.guidelines.keyPoints?.length > 0) {
+          detailedContent += '\n---\n\n### Evidence from Official Guidelines\n\n'
+          integrated.guidelines.keyPoints.slice(0, 3).forEach(point => {
+            if (point.text) {
+              detailedContent += `**${point.source}:**\n> "${point.text.slice(0, 300)}${point.text.length > 300 ? '...' : ''}"\n\n`
+            }
+          })
+        }
+
+        // Add research findings
+        if (integrated.literature.available && integrated.literature.researchFindings?.length > 0) {
+          detailedContent += '\n---\n\n### Research Findings\n\n'
+          integrated.literature.researchFindings.slice(0, 3).forEach(finding => {
+            if (finding.text) {
+              const citeInfo = finding.citations > 0 ? ` *(${finding.citations} citations)*` : ''
+              detailedContent += `**${finding.title?.slice(0, 60) || 'Study'}**${citeInfo}:\n> "${finding.text.slice(0, 250)}${finding.text.length > 250 ? '...' : ''}"\n\n`
+            }
+          })
+        }
+
+        // Add evidence quality notes
+        if (integrated.confidence) {
+          detailedContent += '\n---\n\n### Evidence Quality Assessment\n\n'
+          const conf = integrated.confidence
+          detailedContent += `- **Evidence Grade:** ${conf.quality || 'D'} `
+          if (conf.quality === 'A') detailedContent += '(High quality - systematic reviews/RCTs with official guidelines)\n'
+          else if (conf.quality === 'B') detailedContent += '(Good quality - solid evidence with some limitations)\n'
+          else if (conf.quality === 'C') detailedContent += '(Moderate - some evidence but not robust)\n'
+          else detailedContent += '(Limited - primarily AI consensus without strong independent evidence)\n'
+
+          detailedContent += `- **Sources Reviewed:** ${guidelineCount} official guidelines, ${literatureCount} research papers, ${aiCount} AI systems\n`
+
+          if (conf.evidenceDepth) {
+            const depth = conf.evidenceDepth
+            if (depth.studyDesign?.hasRCT) detailedContent += '- **Study Design:** Includes randomized controlled trial evidence\n'
+            if (depth.systematicReview?.hasMeta) detailedContent += '- **Meta-Analysis:** Systematic review with meta-analysis available\n'
+            if (depth.sampleSize?.hasLargeSample) detailedContent += '- **Sample Size:** Large-scale studies (1000+ participants) referenced\n'
+            if (depth.replication?.status === 'replicated') detailedContent += '- **Replication:** Findings have been replicated across studies\n'
           }
-        })
-      }
-
-      // Add guideline evidence snippets
-      if (integrated.guidelines.available && integrated.guidelines.keyPoints?.length > 0) {
-        detailedContent += '\n---\n\n### Evidence from Official Guidelines\n\n'
-        integrated.guidelines.keyPoints.slice(0, 3).forEach(point => {
-          if (point.text) {
-            detailedContent += `**${point.source}:**\n> "${point.text.slice(0, 300)}${point.text.length > 300 ? '...' : ''}"\n\n`
-          }
-        })
-      }
-
-      // Add research findings
-      if (integrated.literature.available && integrated.literature.researchFindings?.length > 0) {
-        detailedContent += '\n---\n\n### Research Findings\n\n'
-        integrated.literature.researchFindings.slice(0, 3).forEach(finding => {
-          if (finding.text) {
-            const citeInfo = finding.citations > 0 ? ` *(${finding.citations} citations)*` : ''
-            detailedContent += `**${finding.title?.slice(0, 60) || 'Study'}**${citeInfo}:\n> "${finding.text.slice(0, 250)}${finding.text.length > 250 ? '...' : ''}"\n\n`
-          }
-        })
-      }
-
-      // Add evidence quality notes
-      if (integrated.confidence) {
-        detailedContent += '\n---\n\n### Evidence Quality Assessment\n\n'
-        const conf = integrated.confidence
-        detailedContent += `- **Evidence Grade:** ${conf.quality || 'D'} `
-        if (conf.quality === 'A') detailedContent += '(High quality - systematic reviews/RCTs with official guidelines)\n'
-        else if (conf.quality === 'B') detailedContent += '(Good quality - solid evidence with some limitations)\n'
-        else if (conf.quality === 'C') detailedContent += '(Moderate - some evidence but not robust)\n'
-        else detailedContent += '(Limited - primarily AI consensus without strong independent evidence)\n'
-
-        detailedContent += `- **Sources Reviewed:** ${guidelineCount} official guidelines, ${literatureCount} research papers, ${aiCount} AI systems\n`
-
-        if (conf.evidenceDepth) {
-          const depth = conf.evidenceDepth
-          if (depth.studyDesign?.hasRCT) detailedContent += '- **Study Design:** Includes randomized controlled trial evidence\n'
-          if (depth.systematicReview?.hasMeta) detailedContent += '- **Meta-Analysis:** Systematic review with meta-analysis available\n'
-          if (depth.sampleSize?.hasLargeSample) detailedContent += '- **Sample Size:** Large-scale studies (1000+ participants) referenced\n'
-          if (depth.replication?.status === 'replicated') detailedContent += '- **Replication:** Findings have been replicated across studies\n'
         }
       }
 
@@ -2169,6 +2309,10 @@ function App() {
 
     let sections = []
     const aiContent = integrated.aiConsensus.synthesisContent || ''
+
+    // Parse structured sections from new backend format
+    const parsed = parseSynthesisSections(aiContent)
+
     let refNum = 1
     const allRefs = []
 
@@ -2205,7 +2349,7 @@ function App() {
       : []
 
     // SECTION 1: Unified Synthesis (combines authority + literature + AI into one coherent summary)
-    if (integrated.aiConsensus.available && aiContent) {
+    if (integrated.aiConsensus.available && (aiContent || parsed.hasStructuredSections)) {
       // Build a comprehensive header describing what was synthesized
       let synthesisIntro = '### Integrated Evidence Summary\n\n'
 
@@ -2221,11 +2365,76 @@ function App() {
         synthesisIntro += `- **${aiCount} AI models** (${integrated.aiConsensus.providers.map(p => p.name).join(', ')})\n\n`
       }
 
+      let briefContent = ''
+      let detailedContent = ''
+
+      // Use parsed sections if available (new structured format)
+      if (parsed.hasStructuredSections) {
+        // BRIEF: Show CONSENSUS + BOTTOM LINE (For Clinicians)
+        briefContent = synthesisIntro
+
+        if (parsed.sections['CONSENSUS']) {
+          briefContent += '**Consensus:**\n\n' + parsed.sections['CONSENSUS'] + '\n\n'
+        }
+
+        // Extract "For Clinicians" from BOTTOM LINE
+        const bottomLine = parsed.sections['BOTTOM LINE'] || ''
+        const forCliniciansMatch = bottomLine.match(/###\s*For Clinicians\s*([\s\S]*?)(?=###|$)/i)
+        if (forCliniciansMatch) {
+          briefContent += '**Clinical Implications:**\n\n' + forCliniciansMatch[1].trim() + '\n\n'
+        }
+
+        briefContent += '*Click "More" for official guidance, evidence details, and full analysis...*'
+
+        // DETAILED: Show all sections with professional formatting
+        detailedContent = synthesisIntro
+
+        // Consensus
+        if (parsed.sections['CONSENSUS']) {
+          detailedContent += '**Consensus:**\n\n' + parsed.sections['CONSENSUS'] + '\n\n'
+        }
+
+        // Official Guidance
+        if (parsed.sections['OFFICIAL GUIDANCE']) {
+          detailedContent += '---\n\n### Official Clinical Guidelines\n\n' + parsed.sections['OFFICIAL GUIDANCE'] + '\n\n'
+        }
+
+        // Scientific Evidence
+        if (parsed.sections['SCIENTIFIC EVIDENCE']) {
+          detailedContent += '---\n\n### Evidence Base\n\n' + parsed.sections['SCIENTIFIC EVIDENCE'] + '\n\n'
+        }
+
+        // AI Model Perspectives
+        if (parsed.sections['AI MODEL PERSPECTIVES']) {
+          detailedContent += '---\n\n### AI Model Perspectives\n\n' + parsed.sections['AI MODEL PERSPECTIVES'] + '\n\n'
+        }
+
+        // Discordance (only if significant)
+        if (parsed.sections['DISCORDANCE'] && !parsed.sections['DISCORDANCE'].toLowerCase().includes('no significant discordance')) {
+          detailedContent += '---\n\n### Points of Discordance\n\n' + parsed.sections['DISCORDANCE'] + '\n\n'
+        }
+
+        // Bottom Line
+        if (parsed.sections['BOTTOM LINE']) {
+          detailedContent += '---\n\n### Bottom Line\n\n' + parsed.sections['BOTTOM LINE'] + '\n\n'
+        }
+      } else {
+        // FALLBACK: Old format
+        briefContent = synthesisIntro
+        const sentences = aiContent.split(/[.!?](?:\s|$)/).filter(s => s.trim() && !s.startsWith('##')).slice(0, 4)
+        briefContent += sentences.join('. ') + '.\n\n'
+        briefContent += '*Click "More" for detailed analysis...*'
+
+        detailedContent = synthesisIntro + aiContent
+      }
+
       sections.push({
         type: 'synthesis',
         title: 'Evidence Synthesis',
         subtitle: 'Unified summary from authorities, research, and AI',
-        content: synthesisIntro + aiContent,
+        briefContent,
+        detailedContent,
+        content: detailedContent,
         modelCount: aiCount,
         isPrimary: true,
       })
