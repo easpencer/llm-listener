@@ -935,3 +935,492 @@ body {
     padding: 2px 6px;
   }
 }
+
+/* ==========================================
+   Summary Card and Section Styles
+   ========================================== */
+
+/* Main summary card container */
+.chorus-summary-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.summary-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.6) 100%);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.summary-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.summary-subtitle {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.summary-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.summary-icon.patient-icon {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.15) 100%);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.summary-icon.clinician-icon {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.15) 100%);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.summary-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Patient summary sections - warm, accessible */
+.summary-section {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.4) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.summary-section:hover {
+  border-color: rgba(148, 163, 184, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.section-header-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.5) 100%);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.section-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.section-header-inline h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin: 0;
+  flex: 1;
+}
+
+.source-count-badge {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: #94a3b8;
+  background: rgba(100, 116, 139, 0.2);
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.section-content {
+  padding: 14px 16px;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: #cbd5e1;
+}
+
+/* Patient view - markdown content styling (warmer, more accessible) */
+.patient-summary .section-content p {
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(30, 41, 59, 0.3) 100%);
+  border-radius: 8px;
+  border-left: 3px solid rgba(16, 185, 129, 0.4);
+}
+
+.patient-summary .section-content p:last-child {
+  margin-bottom: 0;
+}
+
+.patient-summary .section-content ul,
+.patient-summary .section-content ol {
+  margin: 12px 0;
+  padding: 12px 16px 12px 32px;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.3) 100%);
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.patient-summary .section-content li {
+  margin-bottom: 8px;
+  padding: 6px 0;
+  position: relative;
+}
+
+.patient-summary .section-content li:last-child {
+  margin-bottom: 0;
+}
+
+.patient-summary .section-content li::marker {
+  color: #34d399;
+}
+
+.patient-summary .section-content strong {
+  color: #f1f5f9;
+  font-weight: 600;
+}
+
+.patient-summary .section-content h1,
+.patient-summary .section-content h2,
+.patient-summary .section-content h3,
+.patient-summary .section-content h4 {
+  margin: 16px 0 8px 0;
+  padding: 8px 12px;
+  font-weight: 600;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.08);
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.patient-summary .section-content h1:first-child,
+.patient-summary .section-content h2:first-child,
+.patient-summary .section-content h3:first-child,
+.patient-summary .section-content h4:first-child {
+  margin-top: 0;
+}
+
+/* Patient view - special card styling for multiple sections in content */
+.patient-summary .section-content > *:not(:last-child) {
+  margin-bottom: 10px;
+}
+
+/* Section type variants for patient view */
+.patient-summary .section-synthesis .section-header-inline {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.5) 100%);
+}
+
+.patient-summary .section-key_points .section-header-inline {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(15, 23, 42, 0.5) 100%);
+}
+
+.patient-summary .section-recommendations .section-header-inline {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(15, 23, 42, 0.5) 100%);
+}
+
+.patient-summary .section-cautions .section-header-inline {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(15, 23, 42, 0.5) 100%);
+}
+
+/* ==========================================
+   Clinician Summary Styles (Technical, Dense)
+   ========================================== */
+
+.clinician-summary .summary-content {
+  padding: 16px;
+  gap: 12px;
+}
+
+.clinician-section {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.4) 100%);
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.clinician-section:hover {
+  border-color: rgba(59, 130, 246, 0.25);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.clinician-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(15, 23, 42, 0.5) 100%);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.section-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.clinician-section-header h4 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.section-subtitle {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.model-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.model-badge {
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.section-source-count {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  background: rgba(100, 116, 139, 0.2);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.clinician-section-content {
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  line-height: 1.65;
+  color: #cbd5e1;
+}
+
+/* Clinician view - markdown content styling (more technical, dense) */
+.clinician-summary .clinician-section-content p {
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background: rgba(30, 41, 59, 0.4);
+  border-radius: 6px;
+  border-left: 2px solid rgba(59, 130, 246, 0.4);
+}
+
+.clinician-summary .clinician-section-content p:last-child {
+  margin-bottom: 0;
+}
+
+.clinician-summary .clinician-section-content ul,
+.clinician-summary .clinician-section-content ol {
+  margin: 8px 0;
+  padding: 10px 14px 10px 28px;
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 8px;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+.clinician-summary .clinician-section-content li {
+  margin-bottom: 6px;
+  padding: 4px 0;
+  font-size: 0.8rem;
+}
+
+.clinician-summary .clinician-section-content li:last-child {
+  margin-bottom: 0;
+}
+
+.clinician-summary .clinician-section-content li::marker {
+  color: #60a5fa;
+}
+
+.clinician-summary .clinician-section-content strong {
+  color: #f1f5f9;
+  font-weight: 600;
+}
+
+.clinician-summary .clinician-section-content em {
+  color: #a78bfa;
+  font-style: italic;
+}
+
+/* Clinician headings - more clinical/technical feel */
+.clinician-summary .clinician-section-content h1,
+.clinician-summary .clinician-section-content h2,
+.clinician-summary .clinician-section-content h3,
+.clinician-summary .clinician-section-content h4 {
+  margin: 12px 0 6px 0;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #60a5fa;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.clinician-summary .clinician-section-content h1:first-child,
+.clinician-summary .clinician-section-content h2:first-child,
+.clinician-summary .clinician-section-content h3:first-child,
+.clinician-summary .clinician-section-content h4:first-child {
+  margin-top: 0;
+}
+
+/* Code blocks for clinical data/dosing */
+.clinician-summary .clinician-section-content code {
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-size: 0.75rem;
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.clinician-summary .clinician-section-content pre {
+  margin: 10px 0;
+  padding: 12px;
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 8px;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  overflow-x: auto;
+}
+
+.clinician-summary .clinician-section-content pre code {
+  background: transparent;
+  padding: 0;
+}
+
+/* Section type variants for clinician view */
+.clinician-section.section-evidence .clinician-section-header {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(15, 23, 42, 0.5) 100%);
+}
+
+.clinician-section.section-clinical .clinician-section-header {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(15, 23, 42, 0.5) 100%);
+}
+
+.clinician-section.section-dosing .clinician-section-header {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(15, 23, 42, 0.5) 100%);
+}
+
+.clinician-section.section-contraindications .clinician-section-header {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(15, 23, 42, 0.5) 100%);
+}
+
+.clinician-section.section-interactions .clinician-section-header {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(15, 23, 42, 0.5) 100%);
+}
+
+/* Evidence header group in summary headers */
+.evidence-header-group {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.evidence-info-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(100, 116, 139, 0.2);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.evidence-info-btn:hover {
+  background: rgba(100, 116, 139, 0.3);
+  color: #e2e8f0;
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+/* Evidence links in content */
+.evidence-link {
+  color: #60a5fa;
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(96, 165, 250, 0.4);
+  transition: all 0.2s ease;
+}
+
+.evidence-link:hover {
+  color: #93c5fd;
+  border-bottom-color: rgba(147, 197, 253, 0.6);
+}
+
+/* Mobile responsive for summary cards */
+@media (max-width: 640px) {
+  .summary-header {
+    padding: 12px 14px;
+    flex-wrap: wrap;
+  }
+
+  .summary-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .summary-header h3 {
+    font-size: 1rem;
+  }
+
+  .summary-content {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .section-header-inline {
+    padding: 10px 12px;
+    flex-wrap: wrap;
+  }
+
+  .section-content {
+    padding: 12px;
+    font-size: 0.85rem;
+  }
+
+  .clinician-section-header {
+    padding: 8px 12px;
+  }
+
+  .clinician-section-content {
+    padding: 10px 12px;
+    font-size: 0.8rem;
+  }
+
+  .patient-summary .section-content p,
+  .clinician-summary .clinician-section-content p {
+    padding: 8px 10px;
+  }
+
+  .patient-summary .section-content ul,
+  .patient-summary .section-content ol,
+  .clinician-summary .clinician-section-content ul,
+  .clinician-summary .clinician-section-content ol {
+    padding: 10px 12px 10px 24px;
+  }
+}
