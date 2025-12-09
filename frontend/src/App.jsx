@@ -2664,8 +2664,13 @@ function App() {
                         <div className="evidence-header-group">
                           <EvidenceProfilePanel confidence={patientSummary.confidence} compact={true} />
                           <button
+                            type="button"
                             className="evidence-info-btn"
-                            onClick={() => setShowEvidenceInfo(true)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              e.preventDefault()
+                              setShowEvidenceInfo(true)
+                            }}
                             title="What does this mean?"
                           >
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -2743,8 +2748,13 @@ function App() {
                         <div className="evidence-header-group">
                           <EvidenceProfilePanel confidence={clinicianSummary.confidence} compact={true} />
                           <button
+                            type="button"
                             className="evidence-info-btn"
-                            onClick={() => setShowEvidenceInfo(true)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              e.preventDefault()
+                              setShowEvidenceInfo(true)
+                            }}
                             title="What does this mean?"
                           >
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
