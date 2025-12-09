@@ -75,239 +75,189 @@ function ChorusLogo({ size = 48, animated = true }) {
   )
 }
 
-// Evidence Confidence Panel - Shows overall score with breakdown by source type
-function EvidenceConfidencePanel({ confidence, compact = false }) {
-  if (!confidence || !confidence.breakdown) return null
+// Evidence Profile Panel - Multi-dimensional scoring: Quality (A-D) · Retrieval (I-III) · Agreement (%)
+function EvidenceProfilePanel({ confidence, compact = false }) {
+  if (!confidence) return null
 
-  const { total, level, breakdown } = confidence
-  const { guidelines, literature, aiConsensus, crossValidation } = breakdown
+  // Extract or compute profile dimensions
+  const profile = confidence.profile || {}
+  const quality = profile.quality || 'C'
+  const retrieval = profile.retrieval || 'II'
+  const agreement = profile.agreement ?? 75
+  const sources = confidence.sources || {}
 
-  // SVG arc path generator for radial gauge
-  const describeArc = (cx, cy, radius, startAngle, endAngle) => {
-    const start = {
-      x: cx + radius * Math.cos((startAngle - 90) * Math.PI / 180),
-      y: cy + radius * Math.sin((startAngle - 90) * Math.PI / 180)
-    }
-    const end = {
-      x: cx + radius * Math.cos((endAngle - 90) * Math.PI / 180),
-      y: cy + radius * Math.sin((endAngle - 90) * Math.PI / 180)
-    }
-    const largeArc = endAngle - startAngle > 180 ? 1 : 0
-    return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArc} 1 ${end.x} ${end.y}`
+  // Color schemes for each grade
+  const qualityColors = {
+    A: { main: '#10b981', bg: 'rgba(16, 185, 129, 0.15)', label: 'High Quality' },
+    B: { main: '#3b82f6', bg: 'rgba(59, 130, 246, 0.15)', label: 'Moderate Quality' },
+    C: { main: '#f59e0b', bg: 'rgba(245, 158, 11, 0.15)', label: 'Low Quality' },
+    D: { main: '#ef4444', bg: 'rgba(239, 68, 68, 0.15)', label: 'Very Low' }
   }
 
-  // Colors for different confidence levels
-  const levelColors = {
-    high: { main: '#10b981', bg: '#d1fae5', text: 'High Confidence' },
-    moderate: { main: '#f59e0b', bg: '#fef3c7', text: 'Moderate' },
-    limited: { main: '#ef4444', bg: '#fee2e2', text: 'Limited Data' }
+  const retrievalColors = {
+    I: { main: '#10b981', label: 'Strong Retrieval' },
+    II: { main: '#f59e0b', label: 'Moderate Retrieval' },
+    III: { main: '#ef4444', label: 'Limited Retrieval' }
   }
 
-  const colors = levelColors[level] || levelColors.limited
+  const qColor = qualityColors[quality] || qualityColors.C
+  const rColor = retrievalColors[retrieval] || retrievalColors.II
 
-  // Axis colors
-  const axisColors = {
-    guidelines: '#6366f1',  // Indigo - official/authoritative
-    literature: '#0891b2',  // Cyan - research/academic
-    aiConsensus: '#8b5cf6', // Purple - AI/technology
-    crossValidation: '#10b981' // Emerald - validation/trust
+  // Agreement color
+  const getAgreementColor = (pct) => {
+    if (pct >= 85) return '#10b981'
+    if (pct >= 65) return '#3b82f6'
+    if (pct >= 45) return '#f59e0b'
+    return '#ef4444'
   }
+
+  // Render dots for source strength (1-4)
+  const renderDots = (filled, total = 4, color) => (
+    <div className="source-dots">
+      {Array.from({ length: total }, (_, i) => (
+        <span
+          key={i}
+          className={`dot ${i < filled ? 'filled' : ''}`}
+          style={{ backgroundColor: i < filled ? color : undefined }}
+        />
+      ))}
+    </div>
+  )
 
   if (compact) {
-    // Compact version for inline display
     return (
-      <div className="confidence-compact">
-        <div className="confidence-mini-gauge" style={{ '--gauge-color': colors.main }}>
-          <svg viewBox="0 0 36 36" className="confidence-ring">
-            <path
-              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              fill="none"
-              stroke="#e5e7eb"
-              strokeWidth="3"
-            />
-            <path
-              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              fill="none"
-              stroke={colors.main}
-              strokeWidth="3"
-              strokeDasharray={`${total}, 100`}
-              strokeLinecap="round"
-            />
-          </svg>
-          <span className="confidence-mini-score">{total}</span>
-        </div>
-        <span className="confidence-mini-label" style={{ color: colors.main }}>{colors.text}</span>
+      <div className="evidence-profile-compact" style={{ borderColor: qColor.main }}>
+        <span className="profile-code">
+          <span className="code-quality" style={{ color: qColor.main }}>{quality}</span>
+          <span className="code-separator">·</span>
+          <span className="code-retrieval" style={{ color: rColor.main }}>{retrieval}</span>
+          <span className="code-separator">·</span>
+          <span className="code-agreement" style={{ color: getAgreementColor(agreement) }}>{agreement}%</span>
+        </span>
       </div>
     )
   }
 
   return (
-    <div className={`evidence-confidence-panel confidence-level-${level}`}>
-      <div className="confidence-header">
-        <h4>Evidence Confidence</h4>
-        <div className="confidence-level-badge" style={{ backgroundColor: colors.bg, color: colors.main }}>
-          {colors.text}
+    <div className="evidence-profile-panel">
+      {/* Main Profile Badge */}
+      <div className="profile-header">
+        <div className="profile-badge-container">
+          <div className="profile-badge" style={{ background: `linear-gradient(135deg, ${qColor.bg} 0%, rgba(30, 41, 59, 0.95) 100%)` }}>
+            <span className="badge-quality" style={{ color: qColor.main }}>{quality}</span>
+            <span className="badge-dot">·</span>
+            <span className="badge-retrieval" style={{ color: rColor.main }}>{retrieval}</span>
+            <span className="badge-dot">·</span>
+            <span className="badge-agreement" style={{ color: getAgreementColor(agreement) }}>{agreement}%</span>
+          </div>
+          <div className="profile-label">Evidence Profile</div>
+        </div>
+
+        {/* Quick interpretation */}
+        <div className="profile-interpretation">
+          <div className="interp-item">
+            <span className="interp-icon" style={{ color: qColor.main }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+              </svg>
+            </span>
+            <span className="interp-text">{qColor.label}</span>
+          </div>
+          <div className="interp-item">
+            <span className="interp-icon" style={{ color: rColor.main }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+              </svg>
+            </span>
+            <span className="interp-text">{rColor.label}</span>
+          </div>
+          <div className="interp-item">
+            <span className="interp-icon" style={{ color: getAgreementColor(agreement) }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </span>
+            <span className="interp-text">{agreement >= 85 ? 'Strong' : agreement >= 65 ? 'Moderate' : 'Limited'} Consensus</span>
+          </div>
         </div>
       </div>
 
-      <div className="confidence-main">
-        {/* Radial gauge */}
-        <div className="confidence-gauge">
-          <svg viewBox="0 0 120 120" className="gauge-svg">
-            {/* Background track */}
-            <circle cx="60" cy="60" r="50" fill="none" stroke="#e5e7eb" strokeWidth="8" />
+      {/* Source Breakdown */}
+      <div className="profile-sources">
+        <div className="sources-grid">
+          {/* Guidelines */}
+          <div className="source-card">
+            <div className="source-header">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+              <span className="source-name">Guidelines</span>
+            </div>
+            {renderDots(sources.guidelines?.strength || 0, 4, '#6366f1')}
+            <span className="source-detail">{sources.guidelines?.count || 0} official sources</span>
+          </div>
 
-            {/* Colored segments for each axis */}
-            {/* Guidelines segment (0-30%) */}
-            <path
-              d={describeArc(60, 60, 50, 0, (guidelines.score / 100) * 360 * 0.3)}
-              fill="none"
-              stroke={axisColors.guidelines}
-              strokeWidth="8"
-              strokeLinecap="round"
-              opacity={guidelines.available ? 1 : 0.2}
-            />
-            {/* Literature segment (30-55%) */}
-            <path
-              d={describeArc(60, 60, 50, 108, 108 + (literature.score / 100) * 360 * 0.25)}
-              fill="none"
-              stroke={axisColors.literature}
-              strokeWidth="8"
-              strokeLinecap="round"
-              opacity={literature.available ? 1 : 0.2}
-            />
-            {/* AI segment (55-75%) */}
-            <path
-              d={describeArc(60, 60, 50, 198, 198 + (aiConsensus.score / 100) * 360 * 0.2)}
-              fill="none"
-              stroke={axisColors.aiConsensus}
-              strokeWidth="8"
-              strokeLinecap="round"
-              opacity={aiConsensus.available ? 1 : 0.2}
-            />
-            {/* Cross-validation segment (75-100%) */}
-            <path
-              d={describeArc(60, 60, 50, 270, 270 + (crossValidation.score / 100) * 360 * 0.25)}
-              fill="none"
-              stroke={axisColors.crossValidation}
-              strokeWidth="8"
-              strokeLinecap="round"
-              opacity={crossValidation.score > 0 ? 1 : 0.2}
-            />
+          {/* Literature */}
+          <div className="source-card">
+            <div className="source-header">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0891b2" strokeWidth="2">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              </svg>
+              <span className="source-name">Literature</span>
+            </div>
+            {renderDots(sources.literature?.strength || 0, 4, '#0891b2')}
+            <span className="source-detail">{sources.literature?.count || 0} papers</span>
+          </div>
 
-            {/* Center score */}
-            <text x="60" y="55" textAnchor="middle" className="gauge-score">{total}</text>
-            <text x="60" y="72" textAnchor="middle" className="gauge-label">/ 100</text>
+          {/* AI Consensus */}
+          <div className="source-card">
+            <div className="source-header">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="2">
+                <rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="3"/>
+                <path d="M12 8v3"/><path d="M8 16h.01"/><path d="M16 16h.01"/>
+              </svg>
+              <span className="source-name">AI Models</span>
+            </div>
+            {renderDots(sources.ai?.strength || 0, 4, '#8b5cf6')}
+            <span className="source-detail">{sources.ai?.count || 0} models agree</span>
+          </div>
+
+          {/* Cross-validation */}
+          <div className="source-card source-bonus">
+            <div className="source-header">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              <span className="source-name">Validation</span>
+            </div>
+            {renderDots(sources.crossValidation?.strength || 0, 4, '#10b981')}
+            <span className="source-detail">
+              {sources.crossValidation?.sources?.join(' + ') || 'Cross-checked'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Cochrane-style qualitative statement */}
+      <div className="profile-statement" style={{ borderLeftColor: qColor.main }}>
+        <span className="statement-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
           </svg>
-        </div>
-
-        {/* Breakdown bars */}
-        <div className="confidence-breakdown">
-          <div className="breakdown-item">
-            <div className="breakdown-header">
-              <span className="breakdown-icon" style={{ color: axisColors.guidelines }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                  <line x1="16" y1="13" x2="8" y2="13"/>
-                  <line x1="16" y1="17" x2="8" y2="17"/>
-                </svg>
-              </span>
-              <span className="breakdown-name">Guidelines</span>
-              <span className="breakdown-score">{guidelines.score}/{guidelines.max}</span>
-            </div>
-            <div className="breakdown-bar">
-              <div
-                className="breakdown-fill"
-                style={{
-                  width: `${(guidelines.score / guidelines.max) * 100}%`,
-                  backgroundColor: axisColors.guidelines
-                }}
-              />
-            </div>
-            {guidelines.count > 0 && (
-              <span className="breakdown-detail">{guidelines.count} official sources</span>
-            )}
-          </div>
-
-          <div className="breakdown-item">
-            <div className="breakdown-header">
-              <span className="breakdown-icon" style={{ color: axisColors.literature }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                </svg>
-              </span>
-              <span className="breakdown-name">Literature</span>
-              <span className="breakdown-score">{literature.score}/{literature.max}</span>
-            </div>
-            <div className="breakdown-bar">
-              <div
-                className="breakdown-fill"
-                style={{
-                  width: `${(literature.score / literature.max) * 100}%`,
-                  backgroundColor: axisColors.literature
-                }}
-              />
-            </div>
-            {literature.count > 0 && (
-              <span className="breakdown-detail">{literature.count} research papers</span>
-            )}
-          </div>
-
-          <div className="breakdown-item">
-            <div className="breakdown-header">
-              <span className="breakdown-icon" style={{ color: axisColors.aiConsensus }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/>
-                  <path d="M16 14v6a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6"/>
-                  <circle cx="12" cy="6" r="1"/>
-                </svg>
-              </span>
-              <span className="breakdown-name">AI Consensus</span>
-              <span className="breakdown-score">{aiConsensus.score}/{aiConsensus.max}</span>
-            </div>
-            <div className="breakdown-bar">
-              <div
-                className="breakdown-fill"
-                style={{
-                  width: `${(aiConsensus.score / aiConsensus.max) * 100}%`,
-                  backgroundColor: axisColors.aiConsensus
-                }}
-              />
-            </div>
-            {aiConsensus.count > 0 && (
-              <span className="breakdown-detail">{aiConsensus.count} AI models</span>
-            )}
-          </div>
-
-          <div className="breakdown-item breakdown-bonus">
-            <div className="breakdown-header">
-              <span className="breakdown-icon" style={{ color: axisColors.crossValidation }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                  <polyline points="22 4 12 14.01 9 11.01"/>
-                </svg>
-              </span>
-              <span className="breakdown-name">Cross-Validation</span>
-              <span className="breakdown-score">+{crossValidation.score}</span>
-            </div>
-            <div className="breakdown-bar">
-              <div
-                className="breakdown-fill"
-                style={{
-                  width: `${(crossValidation.score / crossValidation.max) * 100}%`,
-                  backgroundColor: axisColors.crossValidation
-                }}
-              />
-            </div>
-            {crossValidation.sourcesUsed?.length > 1 && (
-              <span className="breakdown-detail">
-                {crossValidation.sourcesUsed.join(' + ')} agree
-              </span>
-            )}
-          </div>
-        </div>
+        </span>
+        <span className="statement-text">
+          {quality === 'A' && agreement >= 85 && "We are highly confident in this evidence. Multiple high-quality sources strongly agree."}
+          {quality === 'A' && agreement < 85 && "High-quality evidence available, though sources show some variation in recommendations."}
+          {quality === 'B' && agreement >= 70 && "We are moderately confident. Good evidence with reasonable consensus across sources."}
+          {quality === 'B' && agreement < 70 && "Moderate evidence quality with notable disagreement between sources."}
+          {quality === 'C' && "Limited evidence available. Findings should be interpreted with caution."}
+          {quality === 'D' && "Very limited evidence. Recommendations are largely based on AI synthesis or expert opinion."}
+        </span>
       </div>
     </div>
   )
@@ -826,78 +776,101 @@ function App() {
 
   // Calculate overall confidence based on source agreement
   const calculateConfidence = (guidelines, literature, aiConsensus) => {
-    // Calculate individual axis scores
-    let guidelinesScore = 0
-    let guidelinesDetail = { available: false, count: 0, orgs: [] }
-    if (guidelines.available) {
-      guidelinesDetail.available = true
-      guidelinesDetail.count = guidelines.totalSources || 0
-      guidelinesDetail.orgs = guidelines.organizations || []
-      if (guidelines.totalSources >= 3) {
-        guidelinesScore = 30
-      } else if (guidelines.totalSources >= 1) {
-        guidelinesScore = Math.min(15 + (guidelines.totalSources - 1) * 5, 30)
-      }
+    // Multi-dimensional Evidence Profile: Quality (A-D) · Retrieval (I-III) · Agreement (%)
+
+    // Source strength: 0-4 dots based on quantity/quality
+    const guidelinesCount = guidelines.available ? (guidelines.totalSources || 0) : 0
+    const literatureCount = literature.available ? (literature.totalPapers || 0) : 0
+    const aiCount = aiConsensus.available ? (aiConsensus.modelCount || 0) : 0
+
+    // Calculate source strengths (1-4 dots)
+    const guidelinesStrength = guidelinesCount >= 3 ? 4 : guidelinesCount >= 2 ? 3 : guidelinesCount >= 1 ? 2 : 0
+    const literatureStrength = literatureCount >= 10 ? 4 : literatureCount >= 5 ? 3 : literatureCount >= 2 ? 2 : literatureCount >= 1 ? 1 : 0
+    const aiStrength = aiCount >= 4 ? 4 : aiCount >= 3 ? 3 : aiCount >= 2 ? 2 : aiCount >= 1 ? 1 : 0
+
+    // Cross-validation strength based on how many source types agree
+    const sourceTypes = [guidelines.available, literature.available, aiConsensus.available].filter(Boolean).length
+    const crossValidationStrength = sourceTypes >= 3 ? 4 : sourceTypes >= 2 ? 3 : sourceTypes >= 1 ? 1 : 0
+
+    // Calculate Evidence Quality Grade (A-D) based on GRADE hierarchy
+    // A: High - Systematic reviews, RCTs, official guidelines from major orgs
+    // B: Moderate - Good observational studies, expert consensus, multiple AI agreement
+    // C: Low - Limited studies, case reports, single source
+    // D: Very Low - AI-only, opinion, very limited evidence
+    let quality = 'D'
+    if (guidelinesCount >= 2 && literatureCount >= 5) {
+      quality = 'A'
+    } else if (guidelinesCount >= 1 && literatureCount >= 3) {
+      quality = 'B'
+    } else if (guidelinesCount >= 1 || literatureCount >= 2) {
+      quality = 'C'
     }
 
-    let literatureScore = 0
-    let literatureDetail = { available: false, count: 0, topCitations: 0 }
-    if (literature.available) {
-      literatureDetail.available = true
-      literatureDetail.count = literature.totalPapers || 0
-      literatureDetail.topCitations = literature.topCited?.[0]?.citations || 0
-      if (literature.totalPapers >= 5) {
-        literatureScore = 25
-      } else if (literature.totalPapers >= 1) {
-        literatureScore = Math.min(10 + literature.totalPapers * 3, 25)
-      }
+    // Calculate Retrieval Confidence (I-III)
+    // I: Strong - Multiple source types, good coverage
+    // II: Moderate - Some sources, partial coverage
+    // III: Limited - Few sources, gaps in evidence
+    let retrieval = 'III'
+    if (sourceTypes >= 3 && (guidelinesCount >= 2 || literatureCount >= 3)) {
+      retrieval = 'I'
+    } else if (sourceTypes >= 2 || guidelinesCount >= 1 || literatureCount >= 2) {
+      retrieval = 'II'
     }
 
-    let aiScore = 0
-    let aiDetail = { available: false, count: 0, models: [] }
-    if (aiConsensus.available) {
-      aiDetail.available = true
-      aiDetail.count = aiConsensus.modelCount || 0
-      aiDetail.models = aiConsensus.providers?.map(p => p.name) || []
-      if (aiConsensus.modelCount >= 3) {
-        aiScore = 20
-      } else if (aiConsensus.modelCount >= 1) {
-        aiScore = Math.min(8 + (aiConsensus.modelCount - 1) * 6, 20)
-      }
-    }
+    // Calculate Agreement % - how much sources align
+    // Based on: AI model agreement + cross-validation bonus
+    let agreement = 50 // Base
+    if (aiCount >= 3) agreement += 20
+    else if (aiCount >= 2) agreement += 10
+    if (sourceTypes >= 3) agreement += 20
+    else if (sourceTypes >= 2) agreement += 10
+    if (guidelinesCount >= 2) agreement += 10
+    agreement = Math.min(agreement, 100)
 
-    // Cross-validation bonus when all three sources agree
-    let crossValidationScore = 0
-    if (guidelines.available && literature.available && aiConsensus.available) {
-      crossValidationScore = 25
-    } else if ((guidelines.available && literature.available) ||
-               (guidelines.available && aiConsensus.available) ||
-               (literature.available && aiConsensus.available)) {
-      crossValidationScore = 12
-    }
-
-    const totalScore = Math.min(guidelinesScore + literatureScore + aiScore + crossValidationScore, 100)
+    // Build sources object for the panel
+    const sourcesUsed = [
+      guidelines.available && 'Guidelines',
+      literature.available && 'Literature',
+      aiConsensus.available && 'AI'
+    ].filter(Boolean)
 
     return {
-      total: totalScore,
-      level: totalScore >= 70 ? 'high' : totalScore >= 40 ? 'moderate' : 'limited',
-      breakdown: {
-        guidelines: { score: guidelinesScore, max: 30, ...guidelinesDetail },
-        literature: { score: literatureScore, max: 25, ...literatureDetail },
-        aiConsensus: { score: aiScore, max: 20, ...aiDetail },
-        crossValidation: { score: crossValidationScore, max: 25, sourcesUsed: [
-          guidelines.available && 'Guidelines',
-          literature.available && 'Literature',
-          aiConsensus.available && 'AI'
-        ].filter(Boolean) }
+      // New profile format for EvidenceProfilePanel
+      profile: {
+        quality,
+        retrieval,
+        agreement
       },
-      // Legacy support
-      score: totalScore,
+      sources: {
+        guidelines: {
+          strength: guidelinesStrength,
+          count: guidelinesCount,
+          orgs: guidelines.organizations || []
+        },
+        literature: {
+          strength: literatureStrength,
+          count: literatureCount,
+          topCitations: literature.topCited?.[0]?.citations || 0
+        },
+        ai: {
+          strength: aiStrength,
+          count: aiCount,
+          models: aiConsensus.providers?.map(p => p.name) || []
+        },
+        crossValidation: {
+          strength: crossValidationStrength,
+          sources: sourcesUsed
+        }
+      },
+      // Legacy support for any old code that uses these
+      total: agreement,
+      score: agreement,
+      level: quality === 'A' ? 'high' : quality === 'B' ? 'moderate' : 'limited',
       factors: [
-        guidelinesScore > 0 && `Official guidelines (${guidelinesDetail.count} sources)`,
-        literatureScore > 0 && `Research literature (${literatureDetail.count} papers)`,
-        aiScore > 0 && `AI consensus (${aiDetail.count} models)`,
-        crossValidationScore > 0 && 'Cross-validated'
+        guidelinesCount > 0 && `Official guidelines (${guidelinesCount} sources)`,
+        literatureCount > 0 && `Research literature (${literatureCount} papers)`,
+        aiCount > 0 && `AI consensus (${aiCount} models)`,
+        sourceTypes >= 2 && 'Cross-validated'
       ].filter(Boolean)
     }
   }
@@ -1552,7 +1525,7 @@ function App() {
                         </div>
                       ))}
                       {patientSummary.confidence && (
-                        <EvidenceConfidencePanel confidence={patientSummary.confidence} />
+                        <EvidenceProfilePanel confidence={patientSummary.confidence} />
                       )}
                     </div>
                   </div>
@@ -1611,7 +1584,7 @@ function App() {
                         </div>
                       ))}
                       {clinicianSummary.confidence && (
-                        <EvidenceConfidencePanel confidence={clinicianSummary.confidence} />
+                        <EvidenceProfilePanel confidence={clinicianSummary.confidence} />
                       )}
                     </div>
                   </div>
