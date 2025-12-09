@@ -1209,6 +1209,7 @@ function App() {
   const [clarifyInput, setClarifyInput] = useState('') // Current clarification input
   const [clarifyReady, setClarifyReady] = useState(false) // Whether the refined question is ready
   const [showEvidenceInfo, setShowEvidenceInfo] = useState(false) // Evidence scoring info modal
+  const [showDetailedSummary, setShowDetailedSummary] = useState(false) // Brief (false) vs Detailed (true) summary toggle
   const resultsRef = useRef(null)
   const followUpRef = useRef(null)
   const clarifyRef = useRef(null)
@@ -2000,64 +2001,101 @@ function App() {
         intro += parts.join(', ') + '.*\n\n'
       }
 
+      // Create brief version (first 2 paragraphs as bullet points)
+      const briefPoints = paragraphs.slice(0, 2).map(p => {
+        // Extract first sentence or truncate
+        const firstSentence = p.split(/[.!?](?:\s|$)/)[0]
+        return `- ${firstSentence.trim()}`
+      }).join('\n')
+      const briefContent = intro + briefPoints + (paragraphs.length > 2 ? '\n\n*Click "Show More" for complete analysis...*' : '')
+
+      // Detailed version includes all content with expanded prose
+      const detailedContent = intro + paragraphs.join('\n\n')
+
       sections.push({
         type: 'synthesis',
         icon: '💡',
         title: 'What You Should Know',
-        content: intro + paragraphs.join('\n\n'),
+        briefContent,
+        detailedContent,
+        content: detailedContent, // Default fallback
         modelCount: aiCount,
         isPrimary: true,
+        hasExpandedContent: paragraphs.length > 2,
       })
     }
 
     // SECTION 2: Key Takeaways (agreement)
-    let takeawaysContent = ''
+    let briefTakeaways = '**Important:** Always consult your healthcare provider for personalized advice.'
+    let detailedTakeaways = ''
     if (guidelineCount >= 2 || literatureCount >= 2) {
-      takeawaysContent += '**The evidence agrees on:**\n'
-      takeawaysContent += '- Multiple sources have been reviewed and synthesized above\n'
+      detailedTakeaways += '**The evidence agrees on:**\n'
+      detailedTakeaways += '- Multiple sources have been reviewed and synthesized above\n'
       if (guidelineCount >= 2) {
-        takeawaysContent += `- Official guidance is available from ${orgs.slice(0, 3).join(', ')}\n`
+        detailedTakeaways += `- Official guidance is available from ${orgs.slice(0, 3).join(', ')}\n`
       }
       if (literatureCount >= 3) {
-        takeawaysContent += `- Scientific research supports these recommendations\n`
+        detailedTakeaways += `- Scientific research supports these recommendations\n`
       }
     }
 
-    takeawaysContent += '\n**Important notes:**\n'
-    takeawaysContent += '- This is for educational purposes - always consult your healthcare provider\n'
-    takeawaysContent += '- Individual circumstances may vary\n'
+    detailedTakeaways += '\n**Important notes:**\n'
+    detailedTakeaways += '- This is for educational purposes - always consult your healthcare provider\n'
+    detailedTakeaways += '- Individual circumstances may vary\n'
+    detailedTakeaways += '- New research may update current recommendations\n'
+    detailedTakeaways += '- Consider discussing multiple treatment options with your doctor\n'
 
     sections.push({
       type: 'takeaways',
       icon: '✅',
       title: 'Key Points',
-      content: takeawaysContent,
+      briefContent: briefTakeaways,
+      detailedContent: detailedTakeaways,
+      content: detailedTakeaways,
     })
 
     // SECTION 3: Sources
-    const sourceLinks = []
+    const briefSourceLinks = []
+    const detailedSourceLinks = []
 
     if (integrated.guidelines.available && integrated.guidelines.sources) {
-      const guidelineLinks = integrated.guidelines.sources.slice(0, 8).map(s =>
+      // Brief: top 3 sources
+      const briefGuidelineLinks = integrated.guidelines.sources.slice(0, 3).map(s =>
         `- [${s.title}](${s.url}) *(${extractOrgFromUrl(s.url)})*`
       ).join('\n')
-      sourceLinks.push(`**Official Guidelines:**\n${guidelineLinks}`)
+      briefSourceLinks.push(`**Official Guidelines:**\n${briefGuidelineLinks}`)
+
+      // Detailed: all sources with more info
+      const detailedGuidelineLinks = integrated.guidelines.sources.slice(0, 8).map(s =>
+        `- [${s.title}](${s.url}) *(${extractOrgFromUrl(s.url)})*`
+      ).join('\n')
+      detailedSourceLinks.push(`**Official Guidelines:**\n${detailedGuidelineLinks}`)
     }
 
     if (integrated.literature.available && integrated.literature.sources) {
-      const researchLinks = integrated.literature.sources.slice(0, 8).map(s => {
+      // Brief: top 3 research papers
+      const briefResearchLinks = integrated.literature.sources.slice(0, 3).map(s => {
         const cites = s.cited_by > 0 ? ` *(${s.cited_by} citations)*` : ''
         return `- [${s.title}](${s.url})${cites}`
       }).join('\n')
-      sourceLinks.push(`**Research:**\n${researchLinks}`)
+      briefSourceLinks.push(`**Research:**\n${briefResearchLinks}`)
+
+      // Detailed: all papers with citations
+      const detailedResearchLinks = integrated.literature.sources.slice(0, 8).map(s => {
+        const cites = s.cited_by > 0 ? ` *(${s.cited_by} citations)*` : ''
+        return `- [${s.title}](${s.url})${cites}`
+      }).join('\n')
+      detailedSourceLinks.push(`**Research:**\n${detailedResearchLinks}`)
     }
 
-    if (sourceLinks.length > 0) {
+    if (briefSourceLinks.length > 0 || detailedSourceLinks.length > 0) {
       sections.push({
         type: 'sources',
         icon: '📚',
         title: 'Sources',
-        content: sourceLinks.join('\n\n'),
+        briefContent: briefSourceLinks.join('\n\n') + '\n\n*Show more for complete source list...*',
+        detailedContent: detailedSourceLinks.join('\n\n'),
+        content: detailedSourceLinks.join('\n\n'),
         isSecondary: true,
       })
     }
@@ -2581,6 +2619,27 @@ function App() {
                           </button>
                         </div>
                       )}
+                      <button
+                        className="summary-depth-toggle"
+                        onClick={() => setShowDetailedSummary(!showDetailedSummary)}
+                        title={showDetailedSummary ? 'Show brief summary' : 'Show detailed summary'}
+                      >
+                        {showDetailedSummary ? (
+                          <>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+                            </svg>
+                            Brief
+                          </>
+                        ) : (
+                          <>
+                            More
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M5 12h14"/><path d="M12 5l7 7-7 7"/>
+                            </svg>
+                          </>
+                        )}
+                      </button>
                     </div>
                     <div className="summary-content">
                       {patientSummary.sections.map((section, i) => (
@@ -2602,7 +2661,7 @@ function App() {
                                   <a {...props} target="_blank" rel="noopener noreferrer" className="evidence-link" />
                                 ),
                               }}
-                            >{section.content}</ReactMarkdown>
+                            >{showDetailedSummary ? (section.detailedContent || section.content) : (section.briefContent || section.content)}</ReactMarkdown>
                           </div>
                         </div>
                       ))}
@@ -2639,6 +2698,27 @@ function App() {
                           </button>
                         </div>
                       )}
+                      <button
+                        className="summary-depth-toggle clinician-toggle"
+                        onClick={() => setShowDetailedSummary(!showDetailedSummary)}
+                        title={showDetailedSummary ? 'Show brief summary' : 'Show detailed summary'}
+                      >
+                        {showDetailedSummary ? (
+                          <>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+                            </svg>
+                            Brief
+                          </>
+                        ) : (
+                          <>
+                            More
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M5 12h14"/><path d="M12 5l7 7-7 7"/>
+                            </svg>
+                          </>
+                        )}
+                      </button>
                     </div>
                     <div className="summary-content clinician-content">
                       {clinicianSummary.sections.map((section, i) => (
@@ -2670,7 +2750,7 @@ function App() {
                                   <a {...props} target="_blank" rel="noopener noreferrer" className="evidence-link" />
                                 ),
                               }}
-                            >{section.content}</ReactMarkdown>
+                            >{showDetailedSummary ? (section.detailedContent || section.content) : (section.briefContent || section.content)}</ReactMarkdown>
                           </div>
                         </div>
                       ))}
@@ -5424,10 +5504,63 @@ styleSheet.textContent = `
     color: #64748b;
   }
 
+  /* Summary Depth Toggle */
+  .summary-depth-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .summary-depth-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #e2e8f0;
+  }
+
+  .summary-depth-toggle svg {
+    flex-shrink: 0;
+  }
+
+  /* Patient view toggle styling */
+  .patient-summary .summary-depth-toggle {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: rgba(34, 197, 94, 0.25);
+    color: #86efac;
+  }
+
+  .patient-summary .summary-depth-toggle:hover {
+    background: rgba(34, 197, 94, 0.2);
+    border-color: rgba(34, 197, 94, 0.4);
+    color: #bbf7d0;
+  }
+
+  /* Clinician view toggle styling */
+  .clinician-toggle {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.25);
+    color: #93c5fd;
+  }
+
+  .clinician-toggle:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.4);
+    color: #bfdbfe;
+  }
+
   /* References Section */
   .chorus-references-section .glass-card {
     padding: 0;
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   .references-list {
