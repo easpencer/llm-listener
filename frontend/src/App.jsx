@@ -6206,6 +6206,69 @@ styleSheet.textContent = `
     }
   }
 
+  /* Chorus Mobile Responsive */
+  @media (max-width: 640px) {
+    .chorus-main {
+      padding: 0 1rem 1.5rem;
+    }
+
+    .chorus-header {
+      padding: 1rem 1rem 1.5rem;
+    }
+
+    .chorus-brand {
+      flex-direction: column;
+      gap: 0.75rem;
+      text-align: center;
+    }
+
+    .chorus-title {
+      font-size: 1.75rem;
+    }
+
+    .chorus-tagline {
+      font-size: 0.85rem;
+    }
+
+    .chorus-trust-badges {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .chorus-search-section {
+      padding: 1rem;
+    }
+
+    .chorus-input-wrapper {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .chorus-submit-btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .chorus-orb-1 {
+      width: 300px;
+      height: 300px;
+      top: -100px;
+      right: -100px;
+    }
+
+    .chorus-orb-2 {
+      width: 250px;
+      height: 250px;
+      bottom: -75px;
+      left: -75px;
+    }
+
+    .chorus-orb-3 {
+      width: 150px;
+      height: 150px;
+    }
+  }
+
   /* ===== PRISM STYLES (Original) ===== */
   .app-container {
     max-width: 1400px;
