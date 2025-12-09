@@ -777,57 +777,77 @@ function App() {
   // Calculate overall confidence based on source agreement
   const calculateConfidence = (guidelines, literature, aiConsensus) => {
     // Multi-dimensional Evidence Profile: Quality (A-D) · Retrieval (I-III) · Agreement (%)
+    // CONSERVATIVE scoring - 100% should be nearly impossible without RCTs + major guidelines
 
-    // Source strength: 0-4 dots based on quantity/quality
     const guidelinesCount = guidelines.available ? (guidelines.totalSources || 0) : 0
     const literatureCount = literature.available ? (literature.totalPapers || 0) : 0
     const aiCount = aiConsensus.available ? (aiConsensus.modelCount || 0) : 0
 
-    // Calculate source strengths (1-4 dots)
-    const guidelinesStrength = guidelinesCount >= 3 ? 4 : guidelinesCount >= 2 ? 3 : guidelinesCount >= 1 ? 2 : 0
-    const literatureStrength = literatureCount >= 10 ? 4 : literatureCount >= 5 ? 3 : literatureCount >= 2 ? 2 : literatureCount >= 1 ? 1 : 0
-    const aiStrength = aiCount >= 4 ? 4 : aiCount >= 3 ? 3 : aiCount >= 2 ? 2 : aiCount >= 1 ? 1 : 0
+    // Source strengths (1-4 dots) - conservative
+    const guidelinesStrength = guidelinesCount >= 5 ? 4 : guidelinesCount >= 3 ? 3 : guidelinesCount >= 2 ? 2 : guidelinesCount >= 1 ? 1 : 0
+    const literatureStrength = literatureCount >= 20 ? 4 : literatureCount >= 10 ? 3 : literatureCount >= 5 ? 2 : literatureCount >= 1 ? 1 : 0
+    const aiStrength = aiCount >= 4 ? 3 : aiCount >= 3 ? 2 : aiCount >= 1 ? 1 : 0 // AI max is 3, never 4
 
-    // Cross-validation strength based on how many source types agree
     const sourceTypes = [guidelines.available, literature.available, aiConsensus.available].filter(Boolean).length
-    const crossValidationStrength = sourceTypes >= 3 ? 4 : sourceTypes >= 2 ? 3 : sourceTypes >= 1 ? 1 : 0
+    const crossValidationStrength = sourceTypes >= 3 ? 3 : sourceTypes >= 2 ? 2 : sourceTypes >= 1 ? 1 : 0
 
-    // Calculate Evidence Quality Grade (A-D) based on GRADE hierarchy
-    // A: High - Systematic reviews, RCTs, official guidelines from major orgs
-    // B: Moderate - Good observational studies, expert consensus, multiple AI agreement
-    // C: Low - Limited studies, case reports, single source
-    // D: Very Low - AI-only, opinion, very limited evidence
+    // Evidence Quality Grade (A-D) - VERY conservative based on GRADE
+    // A: HIGH - Requires official treatment guidelines from CDC/WHO/FDA + large RCTs/meta-analyses
+    //    Think: "Vaccines prevent measles" or "Antibiotics treat bacterial infections"
+    // B: MODERATE - Some guidelines OR substantial peer-reviewed literature
+    // C: LOW - Limited studies, emerging research, or only AI synthesis
+    // D: VERY LOW - Anecdotal, AI-only, or contradictory evidence
     let quality = 'D'
-    if (guidelinesCount >= 2 && literatureCount >= 5) {
-      quality = 'A'
-    } else if (guidelinesCount >= 1 && literatureCount >= 3) {
-      quality = 'B'
-    } else if (guidelinesCount >= 1 || literatureCount >= 2) {
-      quality = 'C'
-    }
+    const hasOfficialGuidelines = guidelinesCount >= 1
+    const hasSubstantialLiterature = literatureCount >= 10
+    const hasModestLiterature = literatureCount >= 3
 
-    // Calculate Retrieval Confidence (I-III)
-    // I: Strong - Multiple source types, good coverage
-    // II: Moderate - Some sources, partial coverage
-    // III: Limited - Few sources, gaps in evidence
+    if (guidelinesCount >= 3 && literatureCount >= 15) {
+      quality = 'A' // Very high bar: multiple official guidelines + extensive literature
+    } else if (hasOfficialGuidelines && hasSubstantialLiterature) {
+      quality = 'B' // Official guidance backed by solid research
+    } else if (hasOfficialGuidelines || hasModestLiterature) {
+      quality = 'C' // Some evidence but not robust
+    }
+    // D is default - AI consensus alone is never higher than D
+
+    // Retrieval Confidence (I-III) - how well we found relevant evidence
     let retrieval = 'III'
-    if (sourceTypes >= 3 && (guidelinesCount >= 2 || literatureCount >= 3)) {
+    if (sourceTypes >= 3 && (guidelinesCount >= 2 || literatureCount >= 5)) {
       retrieval = 'I'
-    } else if (sourceTypes >= 2 || guidelinesCount >= 1 || literatureCount >= 2) {
+    } else if (sourceTypes >= 2 && (guidelinesCount >= 1 || literatureCount >= 3)) {
       retrieval = 'II'
     }
 
-    // Calculate Agreement % - how much sources align
-    // Based on: AI model agreement + cross-validation bonus
-    let agreement = 50 // Base
-    if (aiCount >= 3) agreement += 20
-    else if (aiCount >= 2) agreement += 10
-    if (sourceTypes >= 3) agreement += 20
-    else if (sourceTypes >= 2) agreement += 10
-    if (guidelinesCount >= 2) agreement += 10
-    agreement = Math.min(agreement, 100)
+    // Agreement % - CONSERVATIVE: 100% should be nearly impossible
+    // Base agreement starts at 40% (uncertainty is default)
+    // Max achievable without RCTs + guidelines is ~70%
+    let agreement = 40
 
-    // Build sources object for the panel
+    // Guidelines add credibility
+    if (guidelinesCount >= 3) agreement += 20
+    else if (guidelinesCount >= 2) agreement += 15
+    else if (guidelinesCount >= 1) agreement += 10
+
+    // Literature adds evidence
+    if (literatureCount >= 15) agreement += 15
+    else if (literatureCount >= 10) agreement += 10
+    else if (literatureCount >= 5) agreement += 7
+    else if (literatureCount >= 1) agreement += 3
+
+    // AI consensus adds modest support (AI agreement alone shouldn't drive high confidence)
+    if (aiCount >= 4) agreement += 8
+    else if (aiCount >= 3) agreement += 5
+    else if (aiCount >= 2) agreement += 3
+
+    // Cross-validation bonus (sources corroborate each other)
+    if (sourceTypes >= 3) agreement += 10
+    else if (sourceTypes >= 2) agreement += 5
+
+    // Cap at 95% - true 100% requires established medical fact
+    // (like "water is essential for life" or "penicillin treats bacterial infections")
+    agreement = Math.min(agreement, 95)
+
     const sourcesUsed = [
       guidelines.available && 'Guidelines',
       literature.available && 'Literature',
@@ -835,34 +855,14 @@ function App() {
     ].filter(Boolean)
 
     return {
-      // New profile format for EvidenceProfilePanel
-      profile: {
-        quality,
-        retrieval,
-        agreement
-      },
+      profile: { quality, retrieval, agreement },
       sources: {
-        guidelines: {
-          strength: guidelinesStrength,
-          count: guidelinesCount,
-          orgs: guidelines.organizations || []
-        },
-        literature: {
-          strength: literatureStrength,
-          count: literatureCount,
-          topCitations: literature.topCited?.[0]?.citations || 0
-        },
-        ai: {
-          strength: aiStrength,
-          count: aiCount,
-          models: aiConsensus.providers?.map(p => p.name) || []
-        },
-        crossValidation: {
-          strength: crossValidationStrength,
-          sources: sourcesUsed
-        }
+        guidelines: { strength: guidelinesStrength, count: guidelinesCount, orgs: guidelines.organizations || [] },
+        literature: { strength: literatureStrength, count: literatureCount, topCitations: literature.topCited?.[0]?.citations || 0 },
+        ai: { strength: aiStrength, count: aiCount, models: aiConsensus.providers?.map(p => p.name) || [] },
+        crossValidation: { strength: crossValidationStrength, sources: sourcesUsed }
       },
-      // Legacy support for any old code that uses these
+      // Legacy - use profile format display, not these raw numbers
       total: agreement,
       score: agreement,
       level: quality === 'A' ? 'high' : quality === 'B' ? 'moderate' : 'limited',
