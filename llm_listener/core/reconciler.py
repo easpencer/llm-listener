@@ -232,49 +232,139 @@ class ResponseReconciler:
         return await self.synthesis_provider.query(prompt)
 
     def _format_evidence(self, evidence_data: dict) -> str:
-        """Format evidence data for inclusion in prompt."""
+        """Format evidence data for inclusion in prompt.
+
+        Provides rich, source-by-source information to enable better discordance analysis.
+        Groups sources by organization and includes full snippets and metadata.
+        """
         parts = []
 
-        # Format guidelines
+        # Format guidelines with detailed source breakdown
         guidelines = evidence_data.get("guidelines", {})
         if guidelines.get("count", 0) > 0:
+            metadata = guidelines.get("metadata", {})
+            total_available = metadata.get("total_available", "unknown")
+            examined = metadata.get("examined", 0)
+            included = metadata.get("included", 0)
+            excluded = metadata.get("excluded", 0)
+
             parts.append("## Official Guidelines & Sources")
-            parts.append(f"Found {guidelines['count']} official sources:")
+            parts.append(f"({total_available} found, {examined} examined, {included} included, {excluded} excluded)")
+            parts.append("")
 
-            # Add source breakdown
-            source_types = guidelines.get("source_types", {})
-            if source_types:
-                source_list = ", ".join([f"{count} from {org}" for org, count in source_types.items()])
-                parts.append(f"- {source_list}")
+            # Group sources by organization
+            links = guidelines.get("links", [])
+            grouped_sources = {
+                "CDC": [],
+                "WHO": [],
+                "FDA": [],
+                "NIH": [],
+                "Medical Societies": []
+            }
 
-            # Add digest
-            parts.append(f"\nKey findings: {guidelines.get('digest', 'N/A')}")
+            for link in links:
+                url = link.get("url", "").lower()
+                if "cdc.gov" in url:
+                    grouped_sources["CDC"].append(link)
+                elif "who.int" in url:
+                    grouped_sources["WHO"].append(link)
+                elif "fda.gov" in url:
+                    grouped_sources["FDA"].append(link)
+                elif "nih.gov" in url:
+                    grouped_sources["NIH"].append(link)
+                else:
+                    grouped_sources["Medical Societies"].append(link)
 
-            # Add top links
-            links = guidelines.get("links", [])[:3]
-            if links:
-                parts.append("\nTop sources:")
-                for link in links:
-                    parts.append(f"- {link['title']}: {link['url']}")
+            # Format each organization's sources
+            for org, sources in grouped_sources.items():
+                if sources:
+                    parts.append(f"### {org} ({len(sources)} sources)")
+                    for source in sources:
+                        title = source.get("title", "Untitled")
+                        snippet = source.get("snippet", "No description available")
+                        url = source.get("url", "")
+                        parts.append(f"- **{title}**: {snippet}")
+                        parts.append(f"  URL: {url}")
+                    parts.append("")
 
-        # Format literature
+        # Format literature with detailed citation information
         literature = evidence_data.get("literature", {})
         if literature.get("count", 0) > 0:
+            metadata = literature.get("metadata", {})
+            total_available = metadata.get("total_available", "unknown")
+            examined = metadata.get("examined", 0)
+            included = metadata.get("included", 0)
+            excluded = metadata.get("excluded", 0)
+
+            quality_threshold = metadata.get("quality_threshold", {})
+            min_citations = quality_threshold.get("min_citations", 5)
+
             if parts:
                 parts.append("")  # Add spacing
             parts.append("## Scientific Literature")
-            parts.append(f"Found {literature['count']} peer-reviewed articles")
+            parts.append(f"({total_available} found, {examined} examined, {included} high-quality)")
+            parts.append(f"Quality threshold: {min_citations}+ citations")
+            parts.append("")
 
-            # Add digest
-            parts.append(f"\nKey findings: {literature.get('digest', 'N/A')}")
+            # Group by citation count
+            all_links = literature.get("links", [])
+            highly_cited = [p for p in all_links if p.get("cited_by", 0) >= 50]
+            moderately_cited = [p for p in all_links if 10 <= p.get("cited_by", 0) < 50]
+            lower_cited = [p for p in all_links if p.get("cited_by", 0) < 10]
 
-            # Add top cited papers
-            top_cited = literature.get("top_cited", [])[:3]
-            if top_cited:
-                parts.append("\nHighly cited papers:")
-                for paper in top_cited:
-                    cited = paper.get("cited_by", 0)
-                    parts.append(f"- {paper['title']} ({cited} citations): {paper['url']}")
+            # Format highly cited papers
+            if highly_cited:
+                parts.append(f"### Highly Cited ({len(highly_cited)} papers, 50+ citations)")
+                for paper in highly_cited[:10]:  # Limit to top 10
+                    title = paper.get("title", "Untitled")
+                    citations = paper.get("cited_by", 0)
+                    snippet = paper.get("snippet", "No abstract available")
+                    pub_info = paper.get("publication_info", "")
+                    url = paper.get("url", "")
+
+                    parts.append(f"- **{title}** ({citations} citations)")
+                    parts.append(f"  {snippet}")
+                    if pub_info:
+                        parts.append(f"  Publication: {pub_info}")
+                    parts.append(f"  URL: {url}")
+                parts.append("")
+
+            # Format moderately cited papers
+            if moderately_cited:
+                parts.append(f"### Moderately Cited ({len(moderately_cited)} papers, 10-49 citations)")
+                for paper in moderately_cited[:8]:  # Limit to 8
+                    title = paper.get("title", "Untitled")
+                    citations = paper.get("cited_by", 0)
+                    snippet = paper.get("snippet", "No abstract available")
+                    pub_info = paper.get("publication_info", "")
+                    url = paper.get("url", "")
+
+                    parts.append(f"- **{title}** ({citations} citations)")
+                    parts.append(f"  {snippet}")
+                    if pub_info:
+                        parts.append(f"  Publication: {pub_info}")
+                    parts.append(f"  URL: {url}")
+                parts.append("")
+
+            # Format lower cited papers (brief summary)
+            if lower_cited:
+                parts.append(f"### Lower Cited ({len(lower_cited)} papers, 5-9 citations)")
+                for paper in lower_cited[:5]:  # Limit to 5
+                    title = paper.get("title", "Untitled")
+                    citations = paper.get("cited_by", 0)
+                    snippet = paper.get("snippet", "No abstract available")
+                    url = paper.get("url", "")
+
+                    parts.append(f"- **{title}** ({citations} citations)")
+                    parts.append(f"  {snippet}")
+                    parts.append(f"  URL: {url}")
+                parts.append("")
+
+            # Note about low quality results
+            low_quality = literature.get("low_quality_results", [])
+            if low_quality:
+                parts.append(f"### Note: {len(low_quality)} additional papers with <{min_citations} citations were found but flagged as lower quality")
+                parts.append("")
 
         if not parts:
             return ""
