@@ -54,7 +54,7 @@ class OllamaProvider(LLMProvider):
             if system_prompt:
                 payload["system"] = system_prompt
 
-            timeout = aiohttp.ClientTimeout(total=30, connect=5)
+            timeout = aiohttp.ClientTimeout(total=10, connect=2)
             async with aiohttp.ClientSession(timeout=timeout) as session:
                 async with session.post(url, json=payload) as response:
                     if response.status != 200:
