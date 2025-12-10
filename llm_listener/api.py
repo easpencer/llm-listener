@@ -386,7 +386,7 @@ async def get_providers():
     settings = Settings.from_env()
     return ProvidersResponse(
         configured=settings.get_available_providers(),
-        available=["openai", "anthropic", "gemini", "ollama"],
+        available=["openai", "anthropic", "gemini", "grok", "ollama"],
     )
 
 
