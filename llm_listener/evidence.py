@@ -1,5 +1,6 @@
 """Evidence search service using SERPAPI for health research."""
 
+import re
 import httpx
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
@@ -27,17 +28,56 @@ class QualityFilters:
 class EvidenceSearcher:
     """Search for evidence using SERPAPI."""
 
-    # Government and medical organizations to search
-    GOVERNMENT_SITES = [
+    # Sites for official guidelines and recommendations (NOT research papers)
+    # Note: Excluding nih.gov from guidelines as it's primarily PubMed (research papers)
+    GUIDELINE_SITES = [
         "cdc.gov",
         "who.int",
         "fda.gov",
-        "nih.gov",
-        "heart.org",  # American Heart Association
-        "cancer.org",  # American Cancer Society
-        "acog.org",   # American College of Obstetricians and Gynecologists
-        "aap.org",    # American Academy of Pediatrics
-        "ada.org",    # American Diabetes Association
+        "heart.org",       # American Heart Association
+        "cancer.org",      # American Cancer Society
+        "acog.org",        # American College of Obstetricians and Gynecologists
+        "aap.org",         # American Academy of Pediatrics
+        "diabetes.org",    # American Diabetes Association (ada.org is dental)
+        "mayoclinic.org",  # Mayo Clinic (authoritative clinical information)
+    ]
+
+    # URL patterns that indicate research papers (should NOT be in guidelines)
+    RESEARCH_URL_PATTERNS = [
+        r"pubmed\.ncbi\.nlm\.nih\.gov",
+        r"ncbi\.nlm\.nih\.gov/pmc",
+        r"ncbi\.nlm\.nih\.gov/pubmed",
+        r"/articles/PMC",
+        r"/pmc/articles",
+        r"doi\.org",
+        r"journals\.",
+        r"/journal/",
+        r"/abstract/",
+        r"sciencedirect\.com",
+        r"springer\.com",
+        r"wiley\.com",
+        r"nature\.com/articles",
+        r"thelancet\.com",
+        r"bmj\.com/content",
+        r"jamanetwork\.com",
+    ]
+
+    # Keywords that suggest official guidelines/recommendations
+    GUIDELINE_KEYWORDS = [
+        "guideline",
+        "guidelines",
+        "recommendation",
+        "recommendations",
+        "clinical practice",
+        "position statement",
+        "policy statement",
+        "consensus statement",
+        "treatment protocol",
+        "patient guide",
+        "fact sheet",
+        "health advisory",
+        "immunization schedule",
+        "screening recommendation",
     ]
 
     # Default quality thresholds
@@ -49,8 +89,55 @@ class EvidenceSearcher:
         self.base_url = "https://serpapi.com/search"
         self.filters = filters or QualityFilters()
 
+    def _is_research_paper_url(self, url: str) -> bool:
+        """Check if a URL points to a research paper rather than official guidance."""
+        url_lower = url.lower()
+        for pattern in self.RESEARCH_URL_PATTERNS:
+            if re.search(pattern, url_lower):
+                return True
+        return False
+
+    def _has_guideline_keywords(self, title: str, snippet: str) -> bool:
+        """Check if title or snippet contains keywords suggesting official guidelines."""
+        combined = f"{title} {snippet}".lower()
+        return any(kw in combined for kw in self.GUIDELINE_KEYWORDS)
+
+    def _classify_source_type(self, url: str, title: str, snippet: str) -> str:
+        """Classify a source into a content type category."""
+        url_lower = url.lower()
+
+        # Check for research paper indicators first
+        if self._is_research_paper_url(url):
+            return "research_paper"
+
+        # Check for guideline keywords
+        if self._has_guideline_keywords(title, snippet):
+            return "official_guideline"
+
+        # Classify by domain
+        if "cdc.gov" in url_lower:
+            return "cdc_guidance"
+        elif "who.int" in url_lower:
+            return "who_guidance"
+        elif "fda.gov" in url_lower:
+            return "fda_guidance"
+        elif "heart.org" in url_lower:
+            return "aha_guidance"
+        elif "cancer.org" in url_lower:
+            return "acs_guidance"
+        elif "mayoclinic.org" in url_lower:
+            return "clinical_information"
+        elif any(site in url_lower for site in ["acog.org", "aap.org", "diabetes.org"]):
+            return "medical_society_guidance"
+
+        return "health_information"
+
     async def search_government_guidelines(self, query: str, max_results: int = 50) -> Dict[str, Any]:
-        """Search government and medical organization sites for guidelines.
+        """Search authoritative health organizations for official guidelines.
+
+        This method specifically targets official recommendations and guidelines
+        from government health agencies and medical societies. Research papers
+        are filtered out and should be retrieved via search_scholarly_literature.
 
         Args:
             query: The health question to search for
@@ -59,12 +146,14 @@ class EvidenceSearcher:
         Returns:
             Dictionary with count, digest, links, metadata, and excluded results
         """
-        # Create site-restricted search query
-        site_restriction = " OR ".join([f"site:{site}" for site in self.GOVERNMENT_SITES])
+        # Create site-restricted search query focused on guidelines
+        site_restriction = " OR ".join([f"site:{site}" for site in self.GUIDELINE_SITES])
+        # Add guideline-focused terms to improve result quality
         full_query = f"{query} ({site_restriction})"
 
         links = []
         excluded = []
+        reclassified_as_research = []  # Research papers found on guideline sites
         snippets = []
         seen_urls = set()
         metadata = SearchMetadata()
@@ -102,7 +191,7 @@ class EvidenceSearcher:
                         link = result.get("link", "")
                         snippet = result.get("snippet", "")
 
-                        # Quality checks
+                        # Basic quality checks
                         exclusion_reason = None
                         if not link or not title:
                             exclusion_reason = "missing_data"
@@ -125,11 +214,30 @@ class EvidenceSearcher:
                             continue
 
                         seen_urls.add(link)
+
+                        # Classify the source type
+                        source_type = self._classify_source_type(link, title, snippet)
+
+                        # Check if this is actually a research paper
+                        if source_type == "research_paper":
+                            metadata.excluded += 1
+                            metadata.exclusion_reasons["research_paper_on_guideline_site"] = \
+                                metadata.exclusion_reasons.get("research_paper_on_guideline_site", 0) + 1
+                            reclassified_as_research.append({
+                                "title": title,
+                                "url": link,
+                                "snippet": snippet,
+                                "source_type": source_type,
+                                "note": "Reclassified as research paper - use scholarly literature search instead",
+                            })
+                            continue
+
                         metadata.included += 1
                         links.append({
                             "title": title,
                             "url": link,
                             "snippet": snippet,
+                            "source_type": source_type,
                         })
                         snippets.append(f"{title}: {snippet}")
 
@@ -151,8 +259,10 @@ class EvidenceSearcher:
                         "included": metadata.included,
                         "excluded": metadata.excluded,
                         "exclusion_reasons": metadata.exclusion_reasons,
+                        "note": "Research papers are excluded - use scholarly literature search for peer-reviewed studies",
                     },
-                    "excluded_results": excluded[:10],  # Return first 10 excluded for transparency
+                    "excluded_results": excluded[:10],
+                    "reclassified_as_research": reclassified_as_research[:10],
                 }
 
         except Exception as e:
@@ -170,6 +280,7 @@ class EvidenceSearcher:
                     "error": str(e),
                 },
                 "excluded_results": excluded[:10],
+                "reclassified_as_research": reclassified_as_research[:10] if reclassified_as_research else [],
             }
 
     async def search_scholarly_literature(self, query: str, max_results: int = 50) -> Dict[str, Any]:
@@ -327,8 +438,11 @@ class EvidenceSearcher:
             "CDC": 0,
             "WHO": 0,
             "FDA": 0,
-            "NIH": 0,
+            "American Heart Association": 0,
+            "American Cancer Society": 0,
+            "Mayo Clinic": 0,
             "Medical Societies": 0,
+            "Other": 0,
         }
 
         for link in links:
@@ -339,10 +453,16 @@ class EvidenceSearcher:
                 categories["WHO"] += 1
             elif "fda.gov" in url:
                 categories["FDA"] += 1
-            elif "nih.gov" in url:
-                categories["NIH"] += 1
-            else:
+            elif "heart.org" in url:
+                categories["American Heart Association"] += 1
+            elif "cancer.org" in url:
+                categories["American Cancer Society"] += 1
+            elif "mayoclinic.org" in url:
+                categories["Mayo Clinic"] += 1
+            elif any(site in url for site in ["acog.org", "aap.org", "diabetes.org"]):
                 categories["Medical Societies"] += 1
+            else:
+                categories["Other"] += 1
 
         # Remove zero counts
         return {k: v for k, v in categories.items() if v > 0}
