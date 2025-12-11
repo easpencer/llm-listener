@@ -3351,23 +3351,23 @@ function App() {
               <span className="speed-dial-label">Upload</span>
             </button>
 
-            {/* Ask Follow-up Action (only when there's a synthesis) */}
-            {synthesis && (
-              <button
-                className="speed-dial-action"
-                onClick={() => {
-                  setSpeedDialOpen(false)
-                  setFollowUpOpen(true)
-                  setTimeout(() => followUpRef.current?.focus(), 100)
-                }}
-                title="Ask Follow-up"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                </svg>
-                <span className="speed-dial-label">Follow-up</span>
-              </button>
-            )}
+            {/* Ask Follow-up Action */}
+            <button
+              className={`speed-dial-action ${!synthesis ? 'disabled' : ''}`}
+              onClick={() => {
+                if (!synthesis) return
+                setSpeedDialOpen(false)
+                setFollowUpOpen(true)
+                setTimeout(() => followUpRef.current?.focus(), 100)
+              }}
+              title={synthesis ? "Ask Follow-up" : "Search first to ask follow-up"}
+              disabled={!synthesis}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+              <span className="speed-dial-label">Follow-up</span>
+            </button>
 
             {/* Clear Context (when there are attached files) */}
             {attachedFiles.length > 0 && (
@@ -3449,8 +3449,9 @@ function App() {
               </svg>
             ) : (
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="12" y1="5" x2="12" y2="19"/>
-                <line x1="5" y1="12" x2="19" y2="12"/>
+                {/* Sparkles/magic wand icon */}
+                <path d="M12 3v1m0 16v1m-9-9h1m16 0h1m-2.636-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m11.314 11.314l.707.707"/>
+                <circle cx="12" cy="12" r="3"/>
               </svg>
             )}
           </button>
@@ -6343,6 +6344,18 @@ styleSheet.textContent = `
   .speed-dial-action.danger:hover {
     background: rgba(127, 29, 29, 0.95);
     border-color: rgba(239, 68, 68, 0.3);
+  }
+
+  .speed-dial-action.disabled,
+  .speed-dial-action:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .speed-dial-action.disabled:hover,
+  .speed-dial-action:disabled:hover {
+    transform: none;
+    background: rgba(30, 41, 59, 0.95);
   }
 
   .speed-dial-label {
