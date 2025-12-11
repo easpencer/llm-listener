@@ -31,6 +31,7 @@ from .database import (
 
 # Authentication imports
 from .auth.routes import router as auth_router
+from .file_upload import router as file_router, get_file_context, build_file_context_prompt
 from .auth.dependencies import (
     get_current_user,
     require_auth,
@@ -390,6 +391,9 @@ app.add_middleware(
 
 # Include authentication router
 app.include_router(auth_router)
+
+# Include file upload router
+app.include_router(file_router)
 
 
 @app.get("/api/providers", response_model=ProvidersResponse)

@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { StudyFAB, StudyModal } from './StudyMode'
 import { ViewResultsLink } from './ResultsDashboard'
-import { HealthRecordUpload } from './components/HealthRecordUpload'
 
 const PROVIDER_COLORS = {
   'OpenAI': '#10a37f',
@@ -1212,6 +1211,11 @@ function App() {
   const [showEvidenceInfo, setShowEvidenceInfo] = useState(false) // Evidence scoring info modal
   const [showDetailedSummary, setShowDetailedSummary] = useState(false) // Brief (false) vs Detailed (true) summary toggle
   const [healthContext, setHealthContext] = useState(null) // De-identified health context from uploaded records
+  const [attachedFiles, setAttachedFiles] = useState([]) // Uploaded file contexts [{file_id, filename, preview}]
+  const [isDragging, setIsDragging] = useState(false) // Drag state for textarea
+  const [speedDialOpen, setSpeedDialOpen] = useState(false) // Speed dial FAB state
+  const [uploadingFile, setUploadingFile] = useState(false) // File upload loading state
+  const fileInputRef = useRef(null)
   const resultsRef = useRef(null)
   const followUpRef = useRef(null)
   const clarifyRef = useRef(null)
@@ -1270,6 +1274,79 @@ function App() {
       }, 100)
     }
   }, [clarifyConvo.length])
+
+  // File upload handling
+  const handleFileUpload = async (files) => {
+    if (!files || files.length === 0) return
+
+    setUploadingFile(true)
+    setError(null)
+
+    try {
+      const formData = new FormData()
+      for (const file of files) {
+        formData.append('files', file)
+      }
+
+      const response = await fetch('/api/files/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const err = await response.json()
+        throw new Error(err.detail || 'Upload failed')
+      }
+
+      const data = await response.json()
+      setAttachedFiles(prev => [
+        ...prev,
+        ...data.files.map(f => ({
+          file_id: f.file_id,
+          filename: f.filename,
+          preview: f.preview,
+          extracted_chars: f.extracted_chars,
+        }))
+      ])
+    } catch (err) {
+      setError(`File upload failed: ${err.message}`)
+    } finally {
+      setUploadingFile(false)
+    }
+  }
+
+  const removeAttachedFile = async (fileId) => {
+    try {
+      await fetch(`/api/files/${fileId}`, { method: 'DELETE' })
+    } catch (e) {
+      // Ignore delete errors
+    }
+    setAttachedFiles(prev => prev.filter(f => f.file_id !== fileId))
+  }
+
+  // Drag and drop handlers for textarea
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+
+    const files = Array.from(e.dataTransfer.files)
+    if (files.length > 0) {
+      handleFileUpload(files)
+    }
+  }
 
   const handleSubmit = async (e, skipClarification = false) => {
     e?.preventDefault?.()
@@ -2623,13 +2700,18 @@ function App() {
           <section className="chorus-search-section glass-card">
             <form onSubmit={handleSubmit} className="chorus-form">
               <label className="chorus-label">
-                Ask a clinical question
+                Ask a question
               </label>
-              <div className="chorus-input-wrapper">
+              <div
+                className={`chorus-input-wrapper ${isDragging ? 'dragging' : ''}`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
                 <textarea
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
-                  placeholder="Enter your clinical research question..."
+                  placeholder="Ask anything or drop a file here..."
                   className="chorus-textarea"
                   rows={2}
                 />
@@ -2653,7 +2735,49 @@ function App() {
                     </>
                   )}
                 </button>
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept=".pdf,.docx,.txt,.xml,.json,.md"
+                  onChange={(e) => handleFileUpload(Array.from(e.target.files))}
+                  style={{ display: 'none' }}
+                />
               </div>
+
+              {/* Attached files chips */}
+              {(attachedFiles.length > 0 || uploadingFile) && (
+                <div className="chorus-attached-files">
+                  {uploadingFile && (
+                    <span className="chorus-file-chip uploading">
+                      <span className="chorus-spinner-small"></span>
+                      Uploading...
+                    </span>
+                  )}
+                  {attachedFiles.map(f => (
+                    <span key={f.file_id} className="chorus-file-chip" title={`${f.extracted_chars} characters extracted`}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                      </svg>
+                      {f.filename.length > 20 ? f.filename.slice(0, 17) + '...' : f.filename}
+                      <button
+                        type="button"
+                        className="chorus-file-remove"
+                        onClick={() => removeAttachedFile(f.file_id)}
+                        aria-label="Remove file"
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <line x1="18" y1="6" x2="6" y2="18"/>
+                          <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+
               <div className="chorus-providers">
                 <span className="chorus-providers-label">Synthesizing from:</span>
                 {providers.map(p => (
@@ -2666,12 +2790,6 @@ function App() {
                 <span className="chorus-provider-chip chorus-provider-evidence">+ Evidence Sources</span>
               </div>
             </form>
-
-            {/* Health Record Upload for personalized context */}
-            <HealthRecordUpload
-              onHealthContextChange={setHealthContext}
-              isChorusMode={true}
-            />
 
             <div className="chorus-examples">
               <span className="chorus-examples-label">Try a question:</span>
@@ -3210,82 +3328,133 @@ function App() {
           )}
         </main>
 
-        {/* Floating Follow-up FAB */}
-        {synthesis && (
-          <div className={`follow-up-fab-container ${followUpOpen ? 'open' : ''}`}>
-            {/* Expanded Panel */}
-            {followUpOpen && (
-              <div className="follow-up-panel glass-card animate-slide-up">
-                <div className="follow-up-panel-header">
-                  <div className="follow-up-panel-title">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                    </svg>
-                    <span>Ask a follow-up</span>
-                    {conversationHistory.length > 1 && (
-                      <span className="conversation-count">{conversationHistory.length} exchanges</span>
-                    )}
-                  </div>
-                  <button
-                    className="follow-up-panel-close"
-                    onClick={() => setFollowUpOpen(false)}
-                    aria-label="Close"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                  </button>
-                </div>
-                <form onSubmit={(e) => { handleFollowUp(e); setFollowUpOpen(false); }} className="follow-up-panel-form">
-                  <input
-                    ref={followUpRef}
-                    type="text"
-                    value={followUp}
-                    onChange={(e) => setFollowUp(e.target.value)}
-                    placeholder="Tell me more about... What about... Can you clarify..."
-                    disabled={loading}
-                    autoFocus
-                  />
-                  <button type="submit" disabled={!followUp.trim() || loading} className="follow-up-panel-submit">
-                    {loading ? (
-                      <span className="spinner-small" />
-                    ) : (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <line x1="22" y1="2" x2="11" y2="13"/>
-                        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                      </svg>
-                    )}
-                  </button>
-                </form>
-              </div>
+        {/* Speed Dial FAB */}
+        <div className={`speed-dial-container ${speedDialOpen ? 'open' : ''}`}>
+          {/* Speed Dial Actions */}
+          <div className={`speed-dial-actions ${speedDialOpen ? 'visible' : ''}`}>
+            {/* Upload Document Action */}
+            <button
+              className="speed-dial-action"
+              onClick={() => {
+                fileInputRef.current?.click()
+                setSpeedDialOpen(false)
+              }}
+              title="Upload Document"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="12" y1="18" x2="12" y2="12"/>
+                <line x1="9" y1="15" x2="12" y2="12"/>
+                <line x1="15" y1="15" x2="12" y2="12"/>
+              </svg>
+              <span className="speed-dial-label">Upload</span>
+            </button>
+
+            {/* Ask Follow-up Action (only when there's a synthesis) */}
+            {synthesis && (
+              <button
+                className="speed-dial-action"
+                onClick={() => {
+                  setSpeedDialOpen(false)
+                  setFollowUpOpen(true)
+                  setTimeout(() => followUpRef.current?.focus(), 100)
+                }}
+                title="Ask Follow-up"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                <span className="speed-dial-label">Follow-up</span>
+              </button>
             )}
 
-            {/* FAB Button */}
-            <button
-              className={`follow-up-fab ${followUpOpen ? 'active' : ''}`}
-              onClick={() => {
-                setFollowUpOpen(!followUpOpen);
-                if (!followUpOpen) {
-                  setTimeout(() => followUpRef.current?.focus(), 100);
-                }
-              }}
-              aria-label="Ask follow-up question"
-            >
-              {followUpOpen ? (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"/>
-                  <line x1="6" y1="6" x2="18" y2="18"/>
+            {/* Clear Context (when there are attached files) */}
+            {attachedFiles.length > 0 && (
+              <button
+                className="speed-dial-action danger"
+                onClick={() => {
+                  attachedFiles.forEach(f => removeAttachedFile(f.file_id))
+                  setSpeedDialOpen(false)
+                }}
+                title="Clear Files"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                 </svg>
-              ) : (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                  <line x1="9" y1="10" x2="15" y2="10"/>
-                </svg>
-              )}
-            </button>
+                <span className="speed-dial-label">Clear Files</span>
+              </button>
+            )}
           </div>
-        )}
+
+          {/* Follow-up Panel (shown when followUpOpen is true) */}
+          {followUpOpen && (
+            <div className="follow-up-panel glass-card animate-slide-up">
+              <div className="follow-up-panel-header">
+                <div className="follow-up-panel-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  <span>Ask a follow-up</span>
+                  {conversationHistory.length > 1 && (
+                    <span className="conversation-count">{conversationHistory.length} exchanges</span>
+                  )}
+                </div>
+                <button
+                  className="follow-up-panel-close"
+                  onClick={() => setFollowUpOpen(false)}
+                  aria-label="Close"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+              <form onSubmit={(e) => { handleFollowUp(e); setFollowUpOpen(false); }} className="follow-up-panel-form">
+                <input
+                  ref={followUpRef}
+                  type="text"
+                  value={followUp}
+                  onChange={(e) => setFollowUp(e.target.value)}
+                  placeholder="Tell me more about... What about... Can you clarify..."
+                  disabled={loading}
+                  autoFocus
+                />
+                <button type="submit" disabled={!followUp.trim() || loading} className="follow-up-panel-submit">
+                  {loading ? (
+                    <span className="spinner-small" />
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="22" y1="2" x2="11" y2="13"/>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                  )}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* Main Speed Dial Button */}
+          <button
+            className={`speed-dial-fab ${speedDialOpen ? 'active' : ''} ${followUpOpen ? 'hidden' : ''}`}
+            onClick={() => setSpeedDialOpen(!speedDialOpen)}
+            aria-label="Open actions menu"
+          >
+            {speedDialOpen ? (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            ) : (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            )}
+          </button>
+        </div>
 
         {/* Footer */}
         <footer className="chorus-footer">
@@ -6049,8 +6218,80 @@ styleSheet.textContent = `
     color: #52525b !important;
   }
 
-  /* Follow-up FAB */
-  .follow-up-fab-container {
+  /* Drag-drop textarea styling */
+  .chorus-input-wrapper.dragging {
+    border: 2px dashed #06b6d4;
+    background: rgba(6, 182, 212, 0.1);
+    border-radius: 12px;
+  }
+
+  .chorus-input-wrapper.dragging .chorus-textarea {
+    background: transparent;
+    border-color: transparent;
+  }
+
+  /* Attached files chips */
+  .chorus-attached-files {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .chorus-file-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.625rem;
+    background: rgba(6, 182, 212, 0.15);
+    border: 1px solid rgba(6, 182, 212, 0.3);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    transition: all 0.2s ease;
+  }
+
+  .chorus-file-chip.uploading {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #f59e0b;
+  }
+
+  .chorus-file-chip svg {
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+
+  .chorus-file-remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 50%;
+    margin-left: 0.125rem;
+    transition: all 0.2s ease;
+  }
+
+  .chorus-file-remove:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+  }
+
+  .chorus-spinner-small {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(245, 158, 11, 0.3);
+    border-top-color: #f59e0b;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  /* Speed Dial FAB */
+  .speed-dial-container {
     position: fixed;
     bottom: 2rem;
     right: 2rem;
@@ -6061,7 +6302,55 @@ styleSheet.textContent = `
     gap: 0.75rem;
   }
 
-  .follow-up-fab {
+  .speed-dial-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+    opacity: 0;
+    transform: translateY(20px) scale(0.8);
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .speed-dial-actions.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+
+  .speed-dial-action {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: rgba(30, 41, 59, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 28px;
+    color: #e2e8f0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
+  }
+
+  .speed-dial-action:hover {
+    background: rgba(51, 65, 85, 0.95);
+    transform: translateX(-4px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  }
+
+  .speed-dial-action.danger:hover {
+    background: rgba(127, 29, 29, 0.95);
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+
+  .speed-dial-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .speed-dial-fab {
     width: 56px;
     height: 56px;
     border-radius: 50%;
@@ -6076,18 +6365,24 @@ styleSheet.textContent = `
     transition: all 0.3s ease;
   }
 
-  .follow-up-fab:hover {
+  .speed-dial-fab:hover {
     transform: scale(1.1);
     box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5);
   }
 
-  .follow-up-fab.active {
+  .speed-dial-fab.active {
     background: linear-gradient(135deg, #64748b 0%, #475569 100%);
     box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4);
+    transform: rotate(45deg);
   }
 
-  .follow-up-fab svg {
-    transition: transform 0.2s ease;
+  .speed-dial-fab.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .speed-dial-fab svg {
+    transition: transform 0.3s ease;
   }
 
   .follow-up-panel {
@@ -6201,9 +6496,9 @@ styleSheet.textContent = `
     cursor: not-allowed;
   }
 
-  /* Mobile adjustments for FAB */
+  /* Mobile adjustments for Speed Dial */
   @media (max-width: 480px) {
-    .follow-up-fab-container {
+    .speed-dial-container {
       bottom: 1rem;
       right: 1rem;
     }
@@ -6213,9 +6508,13 @@ styleSheet.textContent = `
       max-width: 340px;
     }
 
-    .follow-up-fab {
+    .speed-dial-fab {
       width: 52px;
       height: 52px;
+    }
+
+    .speed-dial-action {
+      padding: 0.625rem 0.875rem;
     }
   }
 
