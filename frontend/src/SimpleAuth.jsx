@@ -61,7 +61,11 @@ export function SimpleAuthProvider({ children }) {
   }, []);
 
   const login = (username, password) => {
-    if (username === VALID_USERNAME && password === VALID_PASSWORD) {
+    // Trim whitespace and compare (username case-insensitive)
+    const trimmedUser = (username || '').trim();
+    const trimmedPass = (password || '').trim();
+
+    if (trimmedUser.toLowerCase() === VALID_USERNAME.toLowerCase() && trimmedPass === VALID_PASSWORD) {
       sessionStorage.setItem(SESSION_KEY, 'authenticated');
       setIsAuthenticated(true);
       return { success: true };
@@ -89,24 +93,56 @@ export function useSimpleAuth() {
   return context;
 }
 
+// Get app mode from build-time environment variable or API
+// Set VITE_APP_MODE=prism or VITE_APP_MODE=chorus when building
+function getAppModeFromEnv() {
+  // Check Vite environment variable (set at build time)
+  const envMode = import.meta.env.VITE_APP_MODE;
+  if (envMode === 'prism' || envMode === 'chorus') {
+    return envMode;
+  }
+  return null;
+}
+
 // Login gate component
 export function SimpleAuthGate({ children }) {
   const { isAuthenticated, loading } = useSimpleAuth();
-  const [appMode, setAppMode] = useState('prism');
-  const [configLoading, setConfigLoading] = useState(true);
+  const [appMode, setAppMode] = useState(() => getAppModeFromEnv());
+  const [configLoading, setConfigLoading] = useState(!getAppModeFromEnv());
 
-  // Fetch app config to determine mode
+  // Fetch app config only if not set via environment variable
   useEffect(() => {
-    fetch('/api/config')
-      .then(res => res.json())
+    // If mode already set from env, skip API call
+    if (appMode) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+    fetch('/api/config', { signal: controller.signal })
+      .then(res => {
+        if (!res.ok) throw new Error('Config fetch failed');
+        return res.json();
+      })
       .then(data => {
         setAppMode(data.app_mode || 'prism');
         setConfigLoading(false);
       })
       .catch(() => {
+        // If API fails, default to prism
+        setAppMode('prism');
         setConfigLoading(false);
+      })
+      .finally(() => {
+        clearTimeout(timeoutId);
       });
-  }, []);
+
+    return () => {
+      controller.abort();
+      clearTimeout(timeoutId);
+    };
+  }, [appMode]);
 
   if (loading || configLoading) {
     return <LoadingScreen mode={appMode} />;
