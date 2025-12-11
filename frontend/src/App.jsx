@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { StudyFAB, StudyModal } from './StudyMode'
 import { ViewResultsLink } from './ResultsDashboard'
+import { HealthRecordUpload } from './components/HealthRecordUpload'
 
 const PROVIDER_COLORS = {
   'OpenAI': '#10a37f',
@@ -1210,6 +1211,7 @@ function App() {
   const [clarifyReady, setClarifyReady] = useState(false) // Whether the refined question is ready
   const [showEvidenceInfo, setShowEvidenceInfo] = useState(false) // Evidence scoring info modal
   const [showDetailedSummary, setShowDetailedSummary] = useState(false) // Brief (false) vs Detailed (true) summary toggle
+  const [healthContext, setHealthContext] = useState(null) // De-identified health context from uploaded records
   const resultsRef = useRef(null)
   const followUpRef = useRef(null)
   const clarifyRef = useRef(null)
@@ -1438,7 +1440,12 @@ function App() {
       const queryPromise = fetch('/api/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: searchQuestion, include_synthesis: true, mode }),
+        body: JSON.stringify({
+          question: searchQuestion,
+          include_synthesis: true,
+          mode,
+          health_context: healthContext || undefined,
+        }),
       })
 
       const evidencePromise = mode === 'health_research'
@@ -2659,6 +2666,12 @@ function App() {
                 <span className="chorus-provider-chip chorus-provider-evidence">+ Evidence Sources</span>
               </div>
             </form>
+
+            {/* Health Record Upload for personalized context */}
+            <HealthRecordUpload
+              onHealthContextChange={setHealthContext}
+              isChorusMode={true}
+            />
 
             <div className="chorus-examples">
               <span className="chorus-examples-label">Try a question:</span>

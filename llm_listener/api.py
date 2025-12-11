@@ -77,10 +77,20 @@ def get_client_ip(request: Request) -> str:
 
 
 
+class HealthContext(BaseModel):
+    """De-identified health context from client-side document parsing."""
+    patientContext: Optional[Dict[str, Any]] = None
+    activeConditions: Optional[List[Dict[str, Any]]] = None
+    currentMedications: Optional[List[Dict[str, Any]]] = None
+    allergyList: Optional[List[Dict[str, Any]]] = None
+    recentLabs: Optional[List[Dict[str, Any]]] = None
+
+
 class QueryRequest(BaseModel):
     question: str
     include_synthesis: bool = True
     mode: str = "public_health"  # "public_health" or "health_research"
+    health_context: Optional[HealthContext] = None  # De-identified health context
 
 
 class ProviderResponse(BaseModel):
@@ -95,6 +105,8 @@ class QueryResponse(BaseModel):
     question: str
     responses: list[ProviderResponse]
     synthesis: Optional[ProviderResponse] = None
+    guidelines: Optional[Dict[str, Any]] = None
+    research: Optional[Dict[str, Any]] = None
 
 
 class ProvidersResponse(BaseModel):
@@ -414,9 +426,66 @@ async def get_app_config():
         )
 
 
+def build_health_context_prompt(question: str, health_context: HealthContext) -> str:
+    """Enhance question with de-identified health context."""
+    context_parts = []
+
+    # Patient demographics (already de-identified - age range, gender)
+    if health_context.patientContext:
+        age = health_context.patientContext.get("ageRange", "adult")
+        gender = health_context.patientContext.get("gender", "")
+        if gender:
+            context_parts.append(f"Patient is a {age} year old {gender}")
+        else:
+            context_parts.append(f"Patient is {age}")
+
+    # Active conditions
+    if health_context.activeConditions:
+        conditions = [c.get("name", "") for c in health_context.activeConditions[:10] if c.get("name")]
+        if conditions:
+            context_parts.append(f"Active conditions: {', '.join(conditions)}")
+
+    # Current medications
+    if health_context.currentMedications:
+        meds = [m.get("name", "") for m in health_context.currentMedications[:10] if m.get("name")]
+        if meds:
+            context_parts.append(f"Current medications: {', '.join(meds)}")
+
+    # Allergies
+    if health_context.allergyList:
+        allergies = [a.get("substance", "") for a in health_context.allergyList if a.get("substance")]
+        if allergies:
+            context_parts.append(f"Known allergies: {', '.join(allergies)}")
+
+    # Recent labs
+    if health_context.recentLabs:
+        labs = [f"{l.get('test', '')} ({l.get('interpretation', '')})"
+                for l in health_context.recentLabs[:5]
+                if l.get('test')]
+        if labs:
+            context_parts.append(f"Recent labs: {', '.join(labs)}")
+
+    if not context_parts:
+        return question
+
+    context_text = "\n".join(f"- {part}" for part in context_parts)
+
+    return f"""The patient has shared de-identified health context for personalized guidance:
+
+{context_text}
+
+Based on this patient's health profile and current medical evidence, please address:
+
+{question}
+
+Note: Provide evidence-based information relevant to this patient's profile. Always recommend consulting their healthcare provider for personalized medical advice."""
+
+
 @app.post("/api/query", response_model=QueryResponse)
 async def query_llms(request: QueryRequest):
     """Query all configured LLMs with a question."""
+    import asyncio
+
     settings = Settings.from_env()
 
     if not settings.get_available_providers():
@@ -428,8 +497,32 @@ async def query_llms(request: QueryRequest):
     orchestrator = LLMOrchestrator(settings)
     reconciler = ResponseReconciler(settings)
 
-    # Query all providers
-    responses = await orchestrator.query_all(request.question)
+    # Enhance question with health context if provided
+    query_question = request.question
+    if request.health_context:
+        query_question = build_health_context_prompt(request.question, request.health_context)
+
+    # Create evidence search task if SERPAPI is configured
+    evidence_task = None
+    if settings.serpapi_api_key:
+        searcher = EvidenceSearcher(settings.serpapi_api_key)
+        evidence_task = searcher.search_all(request.question)  # Use original question for evidence search
+
+    # Query all providers (and evidence in parallel)
+    if evidence_task:
+        responses, evidence_results = await asyncio.gather(
+            orchestrator.query_all(query_question),
+            evidence_task,
+            return_exceptions=True
+        )
+        # Handle exceptions
+        if isinstance(responses, Exception):
+            raise HTTPException(status_code=500, detail=str(responses))
+        if isinstance(evidence_results, Exception):
+            evidence_results = {"guidelines": {}, "literature": {}}
+    else:
+        responses = await orchestrator.query_all(query_question)
+        evidence_results = None
 
     # Convert to response format
     provider_responses = [
@@ -464,6 +557,8 @@ async def query_llms(request: QueryRequest):
         question=request.question,
         responses=provider_responses,
         synthesis=synthesis,
+        guidelines=evidence_results.get("guidelines") if evidence_results else None,
+        research=evidence_results.get("literature") if evidence_results else None,
     )
 
 
