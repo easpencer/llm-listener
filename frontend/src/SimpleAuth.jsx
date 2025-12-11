@@ -75,13 +75,13 @@ function LoadingScreen() {
       justifyContent: 'center',
       alignItems: 'center',
       height: '100vh',
-      backgroundColor: '#f5f5f5',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     }}>
       <div style={{
-        width: '40px',
-        height: '40px',
-        border: '4px solid #e0e0e0',
-        borderTop: '4px solid #2563eb',
+        width: '50px',
+        height: '50px',
+        border: '4px solid rgba(255, 255, 255, 0.2)',
+        borderTop: '4px solid rgba(255, 255, 255, 0.9)',
         borderRadius: '50%',
         animation: 'spin 1s linear infinite',
       }} />
@@ -89,6 +89,16 @@ function LoadingScreen() {
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+
+        @keyframes shimmer {
+          0% { background-position: -1000px 0; }
+          100% { background-position: 1000px 0; }
+        }
+
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
         }
       `}</style>
     </div>
@@ -123,44 +133,91 @@ function LoginScreen() {
       justifyContent: 'center',
       alignItems: 'center',
       height: '100vh',
-      backgroundColor: '#f5f5f5',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      position: 'relative',
+      overflow: 'hidden',
     }}>
+      {/* Decorative gradient orbs */}
       <div style={{
-        backgroundColor: 'white',
-        padding: '40px',
-        borderRadius: '12px',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+        position: 'absolute',
+        top: '-10%',
+        left: '-10%',
+        width: '40%',
+        height: '40%',
+        background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
+        borderRadius: '50%',
+        filter: 'blur(40px)',
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: '-10%',
+        right: '-10%',
+        width: '40%',
+        height: '40%',
+        background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
+        borderRadius: '50%',
+        filter: 'blur(40px)',
+      }} />
+
+      {/* Glassmorphic login card */}
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.15)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        padding: '50px 40px',
+        borderRadius: '24px',
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37), inset 0 0 60px rgba(255, 255, 255, 0.05)',
         width: '100%',
-        maxWidth: '400px',
+        maxWidth: '420px',
         margin: '20px',
+        position: 'relative',
+        animation: 'float 6s ease-in-out infinite',
       }}>
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <h1 style={{
-            fontSize: '24px',
-            fontWeight: '600',
-            color: '#1a1a1a',
-            margin: '0 0 8px 0',
+        {/* Logo/Title area */}
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <div style={{
+            display: 'inline-block',
+            padding: '12px 28px',
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.4)',
+            borderRadius: '16px',
+            marginBottom: '20px',
+            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
           }}>
-            Welcome
-          </h1>
+            <h1 style={{
+              fontSize: '28px',
+              fontWeight: '700',
+              background: 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              margin: 0,
+              letterSpacing: '1px',
+            }}>
+              PRISM | Chorus
+            </h1>
+          </div>
           <p style={{
-            fontSize: '14px',
-            color: '#666',
+            fontSize: '15px',
+            color: 'rgba(255, 255, 255, 0.9)',
             margin: 0,
+            fontWeight: '400',
           }}>
             Please sign in to continue
           </p>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '20px' }}>
+          <div style={{ marginBottom: '24px' }}>
             <label style={{
               display: 'block',
               fontSize: '14px',
-              fontWeight: '500',
-              color: '#374151',
-              marginBottom: '6px',
+              fontWeight: '600',
+              color: 'rgba(255, 255, 255, 0.95)',
+              marginBottom: '8px',
+              textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
             }}>
               Username
             </label>
@@ -172,26 +229,45 @@ function LoginScreen() {
               required
               style={{
                 width: '100%',
-                padding: '12px 14px',
-                fontSize: '14px',
-                border: '1px solid #d1d5db',
-                borderRadius: '8px',
+                padding: '14px 16px',
+                fontSize: '15px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '12px',
                 outline: 'none',
                 boxSizing: 'border-box',
-                transition: 'border-color 0.2s',
+                transition: 'all 0.3s ease',
+                color: '#ffffff',
+                boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)',
               }}
-              onFocus={(e) => e.target.style.borderColor = '#2563eb'}
-              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+              onFocus={(e) => {
+                e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+                e.target.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+                e.target.style.boxShadow = '0 0 0 3px rgba(255, 255, 255, 0.1), inset 0 2px 4px rgba(0, 0, 0, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+                e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                e.target.style.boxShadow = 'inset 0 2px 4px rgba(0, 0, 0, 0.1)';
+              }}
             />
+            <style>{`
+              input::placeholder {
+                color: rgba(255, 255, 255, 0.6);
+              }
+            `}</style>
           </div>
 
-          <div style={{ marginBottom: '24px' }}>
+          <div style={{ marginBottom: '28px' }}>
             <label style={{
               display: 'block',
               fontSize: '14px',
-              fontWeight: '500',
-              color: '#374151',
-              marginBottom: '6px',
+              fontWeight: '600',
+              color: 'rgba(255, 255, 255, 0.95)',
+              marginBottom: '8px',
+              textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
             }}>
               Password
             </label>
@@ -203,28 +279,46 @@ function LoginScreen() {
               required
               style={{
                 width: '100%',
-                padding: '12px 14px',
-                fontSize: '14px',
-                border: '1px solid #d1d5db',
-                borderRadius: '8px',
+                padding: '14px 16px',
+                fontSize: '15px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '12px',
                 outline: 'none',
                 boxSizing: 'border-box',
-                transition: 'border-color 0.2s',
+                transition: 'all 0.3s ease',
+                color: '#ffffff',
+                boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)',
               }}
-              onFocus={(e) => e.target.style.borderColor = '#2563eb'}
-              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+              onFocus={(e) => {
+                e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+                e.target.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+                e.target.style.boxShadow = '0 0 0 3px rgba(255, 255, 255, 0.1), inset 0 2px 4px rgba(0, 0, 0, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+                e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                e.target.style.boxShadow = 'inset 0 2px 4px rgba(0, 0, 0, 0.1)';
+              }}
             />
           </div>
 
           {error && (
             <div style={{
-              backgroundColor: '#fef2f2',
-              color: '#dc2626',
-              padding: '12px',
-              borderRadius: '8px',
+              background: 'rgba(239, 68, 68, 0.2)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              color: '#ffffff',
+              padding: '14px',
+              borderRadius: '12px',
               fontSize: '14px',
-              marginBottom: '20px',
+              marginBottom: '24px',
               textAlign: 'center',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)',
+              fontWeight: '500',
             }}>
               {error}
             </div>
@@ -235,18 +329,38 @@ function LoginScreen() {
             disabled={isSubmitting}
             style={{
               width: '100%',
-              padding: '12px',
-              fontSize: '14px',
+              padding: '14px',
+              fontSize: '15px',
               fontWeight: '600',
-              backgroundColor: isSubmitting ? '#93c5fd' : '#2563eb',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
+              background: isSubmitting
+                ? 'rgba(255, 255, 255, 0.3)'
+                : 'linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.2) 100%)',
+              color: '#ffffff',
+              border: '1px solid rgba(255, 255, 255, 0.4)',
+              borderRadius: '12px',
               cursor: isSubmitting ? 'not-allowed' : 'pointer',
-              transition: 'background-color 0.2s',
+              transition: 'all 0.3s ease',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
+              textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+              position: 'relative',
+              overflow: 'hidden',
             }}
-            onMouseOver={(e) => !isSubmitting && (e.target.style.backgroundColor = '#1d4ed8')}
-            onMouseOut={(e) => !isSubmitting && (e.target.style.backgroundColor = '#2563eb')}
+            onMouseOver={(e) => {
+              if (!isSubmitting) {
+                e.target.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.3) 100%)';
+                e.target.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.3)';
+                e.target.style.transform = 'translateY(-2px)';
+              }
+            }}
+            onMouseOut={(e) => {
+              if (!isSubmitting) {
+                e.target.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.2) 100%)';
+                e.target.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
+                e.target.style.transform = 'translateY(0)';
+              }
+            }}
           >
             {isSubmitting ? 'Signing in...' : 'Sign In'}
           </button>
@@ -254,10 +368,11 @@ function LoginScreen() {
 
         <p style={{
           fontSize: '12px',
-          color: '#9ca3af',
+          color: 'rgba(255, 255, 255, 0.7)',
           textAlign: 'center',
-          marginTop: '24px',
+          marginTop: '28px',
           marginBottom: 0,
+          fontWeight: '400',
         }}>
           Protected access for authorized users only
         </p>
