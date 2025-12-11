@@ -31,7 +31,7 @@ from .database import (
 
 # Authentication imports
 from .auth.routes import router as auth_router
-from .file_upload import router as file_router, get_file_context, build_file_context_prompt
+from .file_upload import router as file_router, get_file_context_by_id, build_file_context_prompt
 from .auth.dependencies import (
     get_current_user,
     require_auth,

@@ -294,7 +294,7 @@ def build_file_context_prompt(question: str, file_contexts: List[Dict[str, Any]]
     return '\n'.join(context_parts)
 
 
-def get_file_context(file_id: str) -> Optional[Dict[str, str]]:
+def get_file_context_by_id(file_id: str) -> Optional[Dict[str, str]]:
     """Get file context by ID for query injection."""
     cleanup_expired()
     if file_id in _file_store:
