@@ -2752,6 +2752,80 @@ function App() {
               </div>
             </div>
           </div>
+
+          {/* Speed Dial FAB - always visible */}
+          <div className={`speed-dial-container ${speedDialOpen ? 'open' : ''}`}>
+            {/* Speed Dial Actions */}
+            <div className={`speed-dial-actions ${speedDialOpen ? 'visible' : ''}`}>
+              {/* Upload Document Action */}
+              <button
+                className="speed-dial-action"
+                onClick={() => {
+                  fileInputRef.current?.click()
+                  setSpeedDialOpen(false)
+                }}
+                title="Upload Document"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="12" y1="18" x2="12" y2="12"/>
+                  <line x1="9" y1="15" x2="12" y2="12"/>
+                  <line x1="15" y1="15" x2="12" y2="12"/>
+                </svg>
+                <span className="speed-dial-label">Upload</span>
+              </button>
+
+              {/* Clear Context (when there are attached files) */}
+              {attachedFiles.length > 0 && (
+                <button
+                  className="speed-dial-action danger"
+                  onClick={() => {
+                    setAttachedFiles([])
+                    setHealthContext(null)
+                    setSpeedDialOpen(false)
+                  }}
+                  title="Clear All Files"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                  <span className="speed-dial-label">Clear Files</span>
+                </button>
+              )}
+            </div>
+
+            {/* Main Speed Dial Button */}
+            <button
+              className={`speed-dial-fab ${speedDialOpen ? 'active' : ''}`}
+              onClick={() => setSpeedDialOpen(!speedDialOpen)}
+              aria-label="Open actions menu"
+            >
+              {speedDialOpen ? (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              ) : (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  {/* Sparkles/magic wand icon */}
+                  <path d="M12 3v1m0 16v1m-9-9h1m16 0h1m-2.636-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m11.314 11.314l.707.707"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              )}
+            </button>
+          </div>
+
+          {/* Hidden file input for Speed Dial */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept=".pdf,.docx,.txt,.xml,.json,.md"
+            onChange={(e) => handleFileUpload(Array.from(e.target.files))}
+            style={{ display: 'none' }}
+          />
         </div>
       )
     }
