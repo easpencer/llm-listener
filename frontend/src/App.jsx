@@ -3188,14 +3188,34 @@ function App() {
                         type="guidelines"
                       />
                     )}
-                    {evidence.literature && evidence.literature.count > 0 && (
+                    {evidence.research && evidence.research.count > 0 && (
                       <EvidenceCardChorus
                         title="Scientific Literature"
                         subtitle="Peer-reviewed research from Google Scholar"
                         icon="🔬"
                         color="#0ea5e9"
-                        data={evidence.literature}
+                        data={evidence.research}
                         type="literature"
+                      />
+                    )}
+                    {evidence.news && evidence.news.count > 0 && (
+                      <EvidenceCardChorus
+                        title="Health News"
+                        subtitle="Recent credible health news and reporting"
+                        icon="📰"
+                        color="#8b5cf6"
+                        data={evidence.news}
+                        type="news"
+                      />
+                    )}
+                    {evidence.patents && evidence.patents.count > 0 && (
+                      <EvidenceCardChorus
+                        title="Medical Patents"
+                        subtitle="Emerging technologies from USPTO"
+                        icon="💡"
+                        color="#f59e0b"
+                        data={evidence.patents}
+                        type="patents"
                       />
                     )}
                   </div>
@@ -3887,14 +3907,14 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
     const orgMap = {}
     links.forEach(l => {
       let org = 'Other'
-      if (l.url.includes('cdc.gov')) org = 'CDC'
-      else if (l.url.includes('who.int')) org = 'WHO'
-      else if (l.url.includes('fda.gov')) org = 'FDA'
-      else if (l.url.includes('nih.gov')) org = 'NIH'
-      else if (l.url.includes('heart.org')) org = 'AHA'
-      else if (l.url.includes('cancer.org')) org = 'ACS'
-      else if (l.url.includes('acog.org')) org = 'ACOG'
-      else if (l.url.includes('aap.org')) org = 'AAP'
+      if (l.url && l.url.includes('cdc.gov')) org = 'CDC'
+      else if (l.url && l.url.includes('who.int')) org = 'WHO'
+      else if (l.url && l.url.includes('fda.gov')) org = 'FDA'
+      else if (l.url && l.url.includes('nih.gov')) org = 'NIH'
+      else if (l.url && l.url.includes('heart.org')) org = 'AHA'
+      else if (l.url && l.url.includes('cancer.org')) org = 'ACS'
+      else if (l.url && l.url.includes('acog.org')) org = 'ACOG'
+      else if (l.url && l.url.includes('aap.org')) org = 'AAP'
       if (!orgMap[org]) orgMap[org] = 0
       orgMap[org]++
     })
@@ -3904,7 +3924,7 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
     // Extract key topics from titles
     const topics = links.slice(0, 5).map(l => {
       // Clean up the title to extract the main topic
-      const title = l.title
+      const title = (l.title || '')
         .split(' - ')[0]
         .split('|')[0]
         .replace(/\.\.\.$/, '')
@@ -3923,7 +3943,36 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
         summary += `- ${t}\n`
       })
       return summary
+    } else if (type === 'news') {
+      // News summary with credibility info
+      const credibleCount = links.filter(l =>
+        l.credibility_tier === 'highly_credible' || l.credibility_tier === 'credible'
+      ).length
+      let summary = `**${count} news articles** provide recent reporting on this topic`
+      if (credibleCount > 0) {
+        summary += ` (${credibleCount} from credible medical sources)`
+      }
+      summary += '.\n\n'
+      summary += '**Recent coverage includes:**\n'
+      topics.slice(0, 3).forEach(t => {
+        summary += `- ${t}\n`
+      })
+      return summary
+    } else if (type === 'patents') {
+      // Patents summary
+      const recentCount = links.filter(l => l.status === 'recent').length
+      let summary = `**${count} medical patents** show innovation in this area`
+      if (recentCount > 0) {
+        summary += ` (${recentCount} recently granted)`
+      }
+      summary += '.\n\n'
+      summary += '**Recent inventions include:**\n'
+      topics.slice(0, 3).forEach(t => {
+        summary += `- ${t}\n`
+      })
+      return summary
     } else {
+      // Literature (default)
       const totalCites = links.reduce((s, l) => s + (l.cited_by || 0), 0)
       let summary = `**${count} peer-reviewed studies** provide research evidence`
       if (totalCites > 0) {
@@ -3987,7 +4036,63 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
           </div>
         )}
 
-        {/* All sources - visible and scrollable, no snippets */}
+        {/* Credibility breakdown for news */}
+        {type === 'news' && data.by_credibility_tier && (
+          <div className="credibility-breakdown">
+            <h4>Source Credibility</h4>
+            <div className="cred-tags">
+              {data.by_credibility_tier.highly_credible?.length > 0 && (
+                <span className="cred-tag tier-1">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  {data.by_credibility_tier.highly_credible.length} Highly Credible
+                </span>
+              )}
+              {data.by_credibility_tier.credible?.length > 0 && (
+                <span className="cred-tag tier-2">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  {data.by_credibility_tier.credible.length} Credible
+                </span>
+              )}
+              {data.by_credibility_tier.general?.length > 0 && (
+                <span className="cred-tag tier-3">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                  </svg>
+                  {data.by_credibility_tier.general.length} General
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Patent notice and relevance breakdown */}
+        {type === 'patents' && (
+          <div className="patent-section">
+            <div className="patent-notice">
+              Patents represent innovations, not proven treatments. Consult clinical evidence before considering any treatment.
+            </div>
+            {data.by_clinical_relevance && (
+              <div className="relevance-breakdown">
+                {data.by_clinical_relevance.high?.length > 0 && (
+                  <span className="relevance-tag high">
+                    {data.by_clinical_relevance.high.length} High Relevance
+                  </span>
+                )}
+                {data.by_clinical_relevance.moderate?.length > 0 && (
+                  <span className="relevance-tag moderate">
+                    {data.by_clinical_relevance.moderate.length} Moderate
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* All sources - visible and scrollable */}
         {links.length > 0 && (
           <div className="all-sources">
             <h4>Sources ({links.length})</h4>
@@ -4002,6 +4107,25 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
                     <div className="source-meta">
                       {link.publication_info && <span className="publication-info">{link.publication_info}</span>}
                       {link.cited_by > 0 && <span className="cite-count">{link.cited_by} citations</span>}
+                      {/* News source and credibility */}
+                      {type === 'news' && link.source && (
+                        <span className="news-source">{link.source}</span>
+                      )}
+                      {type === 'news' && link.credibility_tier && (
+                        <span className={`cred-badge ${link.credibility_tier}`}>
+                          {link.credibility_tier === 'highly_credible' ? 'Verified' :
+                           link.credibility_tier === 'credible' ? 'Credible' : 'General'}
+                        </span>
+                      )}
+                      {/* Patent assignee and status */}
+                      {type === 'patents' && link.assignee && (
+                        <span className="patent-assignee">{link.assignee}</span>
+                      )}
+                      {type === 'patents' && link.status_description && (
+                        <span className={`patent-status ${link.status}`}>
+                          {link.status_description}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

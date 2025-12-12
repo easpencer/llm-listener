@@ -108,6 +108,8 @@ class QueryResponse(BaseModel):
     synthesis: Optional[ProviderResponse] = None
     guidelines: Optional[Dict[str, Any]] = None
     research: Optional[Dict[str, Any]] = None
+    news: Optional[Dict[str, Any]] = None
+    patents: Optional[Dict[str, Any]] = None
 
 
 class ProvidersResponse(BaseModel):
@@ -350,6 +352,8 @@ class EvidenceResponse(BaseModel):
     query: str
     guidelines: Dict[str, Any]
     literature: Dict[str, Any]
+    news: Optional[Dict[str, Any]] = None
+    patents: Optional[Dict[str, Any]] = None
 
 
 @asynccontextmanager
@@ -563,6 +567,8 @@ async def query_llms(request: QueryRequest):
         synthesis=synthesis,
         guidelines=evidence_results.get("guidelines") if evidence_results else None,
         research=evidence_results.get("literature") if evidence_results else None,
+        news=evidence_results.get("news") if evidence_results else None,
+        patents=evidence_results.get("patents") if evidence_results else None,
     )
 
 
@@ -740,8 +746,8 @@ Only respond with valid JSON."""
 async def search_evidence(request: EvidenceRequest):
     """Search for evidence using SERPAPI.
 
-    This endpoint searches government guidelines and scientific literature
-    to provide evidence-based context for health queries.
+    This endpoint searches government guidelines, scientific literature,
+    health news, and medical patents to provide comprehensive evidence.
     """
     settings = Settings.from_env()
 
@@ -753,13 +759,15 @@ async def search_evidence(request: EvidenceRequest):
 
     searcher = EvidenceSearcher(settings.serpapi_api_key)
 
-    # Search both guidelines and literature
+    # Search all evidence sources (guidelines, literature, news, patents)
     results = await searcher.search_all(request.query)
 
     return EvidenceResponse(
         query=request.query,
         guidelines=results["guidelines"],
         literature=results["literature"],
+        news=results.get("news"),
+        patents=results.get("patents"),
     )
 
 

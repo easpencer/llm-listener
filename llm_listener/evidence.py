@@ -467,43 +467,68 @@ class EvidenceSearcher:
         # Remove zero counts
         return {k: v for k, v in categories.items() if v > 0}
 
+    async def search_news(self, query: str, max_results: int = 20) -> Dict[str, Any]:
+        """Search health news with credibility scoring.
+
+        Args:
+            query: The health question to search for
+            max_results: Maximum number of results
+
+        Returns:
+            Dictionary with news articles and credibility data
+        """
+        from .news import HealthNewsSearcher
+        news_searcher = HealthNewsSearcher(self.api_key)
+        return await news_searcher.search(query, max_results)
+
+    async def search_patents(self, query: str, max_results: int = 15) -> Dict[str, Any]:
+        """Search medical patents via Google Patents (SERPAPI).
+
+        Args:
+            query: The medical technology to search for
+            max_results: Maximum number of results
+
+        Returns:
+            Dictionary with patents and clinical relevance data
+        """
+        from .patents import MedicalPatentSearcher
+        patent_searcher = MedicalPatentSearcher(self.api_key)
+        return await patent_searcher.search(query, max_results)
+
     async def search_all(self, query: str) -> Dict[str, Any]:
-        """Search both guidelines and literature.
+        """Search all evidence sources including news and patents.
 
         Args:
             query: The health question to search for
 
         Returns:
-            Dictionary with both guideline and literature results
+            Dictionary with guidelines, literature, news, and patents results
         """
-        # Run searches in parallel
         import asyncio
 
-        guidelines_task = self.search_government_guidelines(query)
-        literature_task = self.search_scholarly_literature(query)
+        # Run all searches in parallel
+        tasks = {
+            "guidelines": self.search_government_guidelines(query),
+            "literature": self.search_scholarly_literature(query),
+            "news": self.search_news(query),
+            "patents": self.search_patents(query),
+        }
 
-        guidelines, literature = await asyncio.gather(
-            guidelines_task, literature_task, return_exceptions=True
+        gathered = await asyncio.gather(
+            *tasks.values(), return_exceptions=True
         )
 
-        # Handle exceptions
-        if isinstance(guidelines, Exception):
-            guidelines = {
-                "count": 0,
-                "digest": f"Error: {str(guidelines)}",
-                "links": [],
-                "source_types": {},
-            }
+        # Map results and handle exceptions
+        results = {}
+        for key, result in zip(tasks.keys(), gathered):
+            if isinstance(result, Exception):
+                results[key] = {
+                    "count": 0,
+                    "digest": f"Error: {str(result)}",
+                    "links": [],
+                    "source_types": {},
+                }
+            else:
+                results[key] = result
 
-        if isinstance(literature, Exception):
-            literature = {
-                "count": 0,
-                "digest": f"Error: {str(literature)}",
-                "links": [],
-                "top_cited": [],
-            }
-
-        return {
-            "guidelines": guidelines,
-            "literature": literature,
-        }
+        return results

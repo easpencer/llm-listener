@@ -1574,3 +1574,173 @@ body {
     padding: 10px 12px 10px 24px;
   }
 }
+
+/* ==========================================
+   News & Patents Evidence Styles
+   ========================================== */
+
+/* Credibility breakdown for news sources */
+.credibility-breakdown {
+  margin-bottom: 16px;
+}
+
+.credibility-breakdown h4 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.cred-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cred-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.cred-tag.tier-1 {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.cred-tag.tier-2 {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.cred-tag.tier-3 {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+/* Patent section styling */
+.patent-section {
+  margin-bottom: 16px;
+}
+
+.patent-notice {
+  font-size: 11px;
+  color: #94a3b8;
+  font-style: italic;
+  padding: 10px 12px;
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: 6px;
+  border-left: 3px solid #f59e0b;
+  margin-bottom: 12px;
+}
+
+.relevance-breakdown {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.relevance-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.relevance-tag.high {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.relevance-tag.moderate {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Source metadata badges */
+.news-source {
+  font-size: 11px;
+  color: #a78bfa;
+  font-weight: 500;
+}
+
+.cred-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+  margin-left: 6px;
+}
+
+.cred-badge.highly_credible {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.cred-badge.credible {
+  background: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.cred-badge.general {
+  background: rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+}
+
+.patent-assignee {
+  font-size: 11px;
+  color: #fbbf24;
+  font-weight: 500;
+}
+
+.patent-status {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+  margin-left: 6px;
+}
+
+.patent-status.recent {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.patent-status.active {
+  background: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.patent-status.mature {
+  background: rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+}
+
+.patent-status.aging {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+/* Reference type badges for news/patents */
+.reference-type.news {
+  background: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+}
+
+.reference-type.patent {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
