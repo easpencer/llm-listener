@@ -216,7 +216,6 @@ function LoginScreen({ mode = 'prism' }) {
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        minHeight: '100vh',
         minHeight: '100dvh',
         padding: '20px',
         position: 'relative',

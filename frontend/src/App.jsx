@@ -2700,8 +2700,8 @@ function App() {
             <div className="landing-search-wrapper">
               <div className="landing-search-box">
                 <textarea
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault()
@@ -2714,7 +2714,7 @@ function App() {
                 />
                 <button
                   onClick={handleSubmit}
-                  disabled={!inputValue.trim()}
+                  disabled={!question.trim()}
                   className="landing-search-btn"
                 >
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
