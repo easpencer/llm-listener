@@ -29,8 +29,8 @@ class HealthPatent:
 MedicalPatent = HealthPatent
 
 
-class MedicalPatentSearcher:
-    """Search Google Patents via SERPAPI for health and life sciences patents."""
+class PatentSearcher:
+    """Search Google Patents via SERPAPI for relevant patents."""
 
     def __init__(self, api_key: str):
         """Initialize patent searcher with SERPAPI key."""
@@ -42,10 +42,10 @@ class MedicalPatentSearcher:
         query: str,
         max_results: int = 15,
     ) -> Dict[str, Any]:
-        """Search medical patents with simplified summaries.
+        """Search patents with simplified summaries.
 
         Args:
-            query: Medical technology to search
+            query: Topic or technology to search
             max_results: Maximum results to return
 
         Returns:
@@ -57,10 +57,11 @@ class MedicalPatentSearcher:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 # Use SERPAPI Google Patents engine
                 # Note: num must be 10-100 for Google Patents API
+                # Don't append terms - let the query speak for itself
                 params = {
                     "api_key": self.api_key,
                     "engine": "google_patents",
-                    "q": f"{query} medical health",
+                    "q": query,
                     "num": max(10, min(max_results, 100)),  # Must be 10-100
                     "status": "GRANT",  # Only granted patents
                 }
@@ -432,7 +433,7 @@ class MedicalPatentSearcher:
     def _create_digest(self, patents: List[HealthPatent]) -> str:
         """Create a meaningful digest summarizing the patent landscape."""
         if not patents:
-            return "No relevant health/science patents found for this topic."
+            return "No relevant patents found for this topic."
 
         # Count by category and relevance
         categories = {}
@@ -475,3 +476,7 @@ class MedicalPatentSearcher:
 
         # Fallback to titles
         return " | ".join(p.title[:60] + "..." if len(p.title) > 60 else p.title for p in patents[:3])
+
+
+# Keep old class name as alias for backwards compatibility
+MedicalPatentSearcher = PatentSearcher

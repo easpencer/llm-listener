@@ -105,10 +105,11 @@ class HealthNewsSearcher:
 
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
+                # Don't append "health" - let the query speak for itself
                 params = {
                     "api_key": self.api_key,
                     "engine": "google_news",
-                    "q": f"{query} health",
+                    "q": query,
                     "gl": "us",
                     "hl": "en",
                 }

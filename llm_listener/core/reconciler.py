@@ -52,7 +52,7 @@ Start with the message itself (no preamble), then briefly explain why this frami
 """
 
 
-HEALTH_RESEARCH_PROMPT = """You are a medical research analyst synthesizing multiple sources of health information to provide clear, actionable guidance. Your role is to critically evaluate AI model responses alongside official health guidance, scientific literature, recent health news, and emerging medical technologies (patents) to produce a structured summary that clinicians and patients can trust.
+HEALTH_RESEARCH_PROMPT = """You are a research analyst synthesizing multiple sources of information to provide clear, actionable guidance. Your role is to critically evaluate AI model responses alongside official guidance, scientific literature, recent news, and emerging technologies (patents) to produce a structured summary users can trust.
 
 Original Question:
 {question}
@@ -65,12 +65,12 @@ AI Model Responses:
 CRITICAL INSTRUCTIONS:
 1. Use EXACTLY the section headers specified below (## for main sections, ### for subsections)
 2. Lead with what is known and agreed upon, not with uncertainty
-3. Attribute every claim to its source (e.g., "CDC states...", "A meta-analysis of 12 RCTs found...", "All AI models agreed that...", "Recent coverage in STAT News reports...", "A recently granted patent by [company] describes...")
-4. Be honest about gaps - distinguish between "no guidance found in search" vs "organization has not issued guidance on this topic"
-5. Synthesize information hierarchically: official guidance takes precedence, then peer-reviewed literature, then credible news, then AI model outputs. Patents are informational only - they show research trends, not proven treatments.
+3. Attribute every claim to its source (e.g., "CDC states...", "A meta-analysis found...", "All AI models agreed that...", "Recent coverage in [Source] reports...", "A patent by [company] describes...")
+4. Be honest about gaps - distinguish between "no guidance found in search" vs "no official guidance exists on this topic"
+5. Synthesize information hierarchically: official guidance takes precedence, then peer-reviewed literature, then credible news, then AI model outputs. Patents are informational only - they show research trends, not proven solutions.
 6. When sources conflict, explicitly state WHO disagrees with WHOM about WHAT
-7. For health news: Only cite articles from highly credible or credible tiers. Flag any news that contradicts official guidance.
-8. For patents: Use patents to indicate emerging research directions and industry investment. NEVER present patents as evidence of treatment efficacy. Clearly distinguish between "companies are researching X" and "X is proven effective."
+7. For news: Only cite articles from highly credible or credible tiers. Flag any news that contradicts official guidance.
+8. For patents: Use patents to indicate emerging research directions and industry investment. NEVER present patents as evidence of efficacy. Clearly distinguish between "companies are researching X" and "X is proven effective."
 
 Generate your response in this EXACT format:
 
@@ -112,10 +112,10 @@ Generate your response in this EXACT format:
 
 ## RECENT DEVELOPMENTS
 ### In the News
-[If credible health news was found, summarize 2-3 key recent developments or stories. Focus on news from highly credible or credible sources. Include the source name. If news contradicts official guidance, flag it clearly. If no relevant news was found, state "No recent credible health news found on this topic."]
+[If credible news was found, summarize 2-3 key recent developments or stories. Focus on news from highly credible or credible sources. Include the source name. If news contradicts official guidance, flag it clearly. If no relevant news was found, state "No recent credible news found on this topic."]
 
 ### Emerging Research & Technologies
-[If relevant medical patents were found, summarize what they indicate about research directions and industry investment. Mention specific companies or institutions if notable. Be clear these are RESEARCH indicators, not proven treatments. Example: "Several recent patents from [Company] suggest active research into [approach]." If no relevant patents found, state "No relevant patent activity identified."]
+[If relevant patents were found, summarize what they indicate about research directions and industry investment. Mention specific companies or institutions if notable. Be clear these are RESEARCH indicators, not proven solutions. Example: "Several recent patents from [Company] suggest active research into [approach]." If no relevant patents found, state "No relevant patent activity identified."]
 
 ## DISCORDANCE
 [This section captures ANY disagreement between sources - official guidance vs literature vs news, one agency vs another, AI models vs evidence. Include any conflicts between news coverage and official guidance. Be explicit and specific. If no significant discordance, state "No significant discordance found - official guidance, scientific literature, news, and AI models are well-aligned."]
@@ -375,7 +375,7 @@ class ResponseReconciler:
                 parts.append(f"### Note: {len(low_quality)} additional papers with <{min_citations} citations were found but flagged as lower quality")
                 parts.append("")
 
-        # Format health news with credibility assessment
+        # Format news with credibility assessment
         news = evidence_data.get("news", {})
         if news.get("count", 0) > 0:
             metadata = news.get("metadata", {})
@@ -385,7 +385,7 @@ class ResponseReconciler:
 
             if parts:
                 parts.append("")  # Add spacing
-            parts.append("## Recent Health News")
+            parts.append("## Recent News Coverage")
             parts.append(f"({news.get('count', 0)} articles found, {highly_credible_count} highly credible, {credible_count} credible)")
             parts.append(f"Average credibility score: {avg_score:.1f}/10")
             parts.append("")
@@ -397,7 +397,7 @@ class ResponseReconciler:
             highly_credible = by_tier.get("highly_credible", [])
             if highly_credible:
                 parts.append(f"### Highly Credible Sources ({len(highly_credible)} articles)")
-                parts.append("(Government agencies, peer-reviewed journals, major medical centers)")
+                parts.append("(Government agencies, peer-reviewed journals, authoritative institutions)")
                 for article in highly_credible[:5]:
                     title = article.get("title", "Untitled")
                     source = article.get("source", "Unknown")
@@ -419,7 +419,7 @@ class ResponseReconciler:
             credible = by_tier.get("credible", [])
             if credible:
                 parts.append(f"### Credible Sources ({len(credible)} articles)")
-                parts.append("(Established medical news outlets, health sections of major newspapers)")
+                parts.append("(Established news outlets with editorial standards)")
                 for article in credible[:5]:
                     title = article.get("title", "Untitled")
                     source = article.get("source", "Unknown")
@@ -446,32 +446,35 @@ class ResponseReconciler:
                     parts.append(f"- **{source}**: {title}")
                 parts.append("")
 
-        # Format medical patents with clinical relevance assessment
+        # Format patents with relevance assessment
         patents = evidence_data.get("patents", {})
         if patents.get("count", 0) > 0:
             metadata = patents.get("metadata", {})
             high_relevance = metadata.get("high_relevance_count", 0)
             recent_patents = metadata.get("recent_patents", 0)
             avg_age = metadata.get("avg_age_years", 0)
+            categories = metadata.get("categories_found", [])
 
             if parts:
                 parts.append("")  # Add spacing
-            parts.append("## Medical Patents & Emerging Technologies")
-            parts.append(f"({patents.get('count', 0)} patents found, {high_relevance} clinically relevant, {recent_patents} recently granted)")
+            parts.append("## Patents & Emerging Technologies")
+            parts.append(f"({patents.get('count', 0)} patents found, {high_relevance} highly relevant, {recent_patents} recently granted)")
             parts.append(f"Average patent age: {avg_age:.1f} years")
+            if categories:
+                parts.append(f"Categories: {', '.join(categories)}")
             parts.append("")
-            parts.append("NOTE: Patents indicate research investment and emerging technologies, not proven treatments.")
-            parts.append("Patent claims may not be validated by clinical evidence.")
+            parts.append("NOTE: Patents indicate research investment and emerging technologies, not proven solutions.")
+            parts.append("Patent claims may not be validated by evidence.")
             parts.append("")
 
-            # Group by clinical relevance
+            # Group by relevance
             by_relevance = patents.get("by_clinical_relevance", {})
 
-            # High clinical relevance first
+            # High relevance first
             high_rel = by_relevance.get("high", [])
             if high_rel:
-                parts.append(f"### Clinically Relevant Patents ({len(high_rel)} patents)")
-                parts.append("(Contains clinical trial data, FDA mentions, or treatment efficacy data)")
+                parts.append(f"### Highly Relevant Patents ({len(high_rel)} patents)")
+                parts.append("(Contains strong relevance indicators)")
                 for patent in high_rel[:5]:
                     title = patent.get("title", "Untitled")
                     patent_num = patent.get("patent_number", "")
