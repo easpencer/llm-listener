@@ -28,6 +28,8 @@ from .database import (
     init_db,
     DATABASE_URL,
 )
+from .core.conflict_settings import ConflictSettings
+from .core.conflict_orchestrator import ConflictAnalysisOrchestrator
 
 # Authentication imports
 from .auth.routes import router as auth_router
@@ -92,6 +94,7 @@ class QueryRequest(BaseModel):
     include_synthesis: bool = True
     mode: str = "public_health"  # "public_health" or "health_research"
     health_context: Optional[HealthContext] = None  # De-identified health context
+    conflict_settings: Optional[Dict[str, Any]] = None
 
 
 class ProviderResponse(BaseModel):
@@ -102,6 +105,18 @@ class ProviderResponse(BaseModel):
     success: bool
 
 
+class ConflictAnalysisResponse(BaseModel):
+    has_conflicts: bool = False
+    conflict_severity: str = "none"
+    is_emerging_topic: bool = False
+    emerging_topic_reason: Optional[str] = None
+    requires_resolution: bool = False
+    resolution_context: Optional[str] = None
+    agreement_level: Optional[float] = None
+    areas_of_disagreement: List[str] = []
+    audit_log: List[Dict[str, Any]] = []
+
+
 class QueryResponse(BaseModel):
     question: str
     responses: list[ProviderResponse]
@@ -110,6 +125,7 @@ class QueryResponse(BaseModel):
     research: Optional[Dict[str, Any]] = None
     news: Optional[Dict[str, Any]] = None
     patents: Optional[Dict[str, Any]] = None
+    conflict_analysis: Optional[ConflictAnalysisResponse] = None
 
 
 class ProvidersResponse(BaseModel):
@@ -562,6 +578,40 @@ async def query_llms(request: QueryRequest):
                     success=synth_response.success,
                 )
 
+    # Perform conflict analysis if configured
+    conflict_analysis_response = None
+    try:
+        # Parse conflict settings if provided, otherwise use defaults
+        if request.conflict_settings:
+            conflict_settings = ConflictSettings.from_dict(request.conflict_settings)
+        else:
+            conflict_settings = ConflictSettings()
+
+        # Create conflict analysis orchestrator
+        conflict_orchestrator = ConflictAnalysisOrchestrator(conflict_settings)
+
+        # Analyze conflicts using AI responses and evidence
+        conflict_result = await conflict_orchestrator.analyze_all(responses, evidence_results)
+
+        # Convert result to response format
+        conflict_analysis_response = ConflictAnalysisResponse(
+            has_conflicts=conflict_result.has_conflicts,
+            conflict_severity=conflict_result.conflict_severity,
+            is_emerging_topic=conflict_result.is_emerging_topic,
+            emerging_topic_reason=conflict_result.emerging_topic_reason,
+            requires_resolution=conflict_result.requires_resolution,
+            resolution_context=conflict_result.resolution_context,
+            agreement_level=conflict_result.agreement_level,
+            areas_of_disagreement=conflict_result.areas_of_disagreement,
+            audit_log=conflict_result.audit_log,
+        )
+    except Exception as e:
+        # Log the error but continue - conflict analysis is optional
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Conflict analysis failed: {str(e)}", exc_info=True)
+        # conflict_analysis_response remains None
+
     return QueryResponse(
         question=request.question,
         responses=provider_responses,
@@ -570,6 +620,7 @@ async def query_llms(request: QueryRequest):
         research=evidence_results.get("literature") if evidence_results else None,
         news=evidence_results.get("news") if evidence_results else None,
         patents=evidence_results.get("patents") if evidence_results else None,
+        conflict_analysis=conflict_analysis_response,
     )
 
 

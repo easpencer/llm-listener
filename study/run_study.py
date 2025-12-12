@@ -99,7 +99,7 @@ class StudyRunner:
         async with httpx.AsyncClient(timeout=120.0) as client:
             response = await client.post(
                 f"{self.api_url}/api/query",
-                json={"question": question}
+                json={"question": question, "mode": "health_research"}
             )
             response.raise_for_status()
             return response.json()
