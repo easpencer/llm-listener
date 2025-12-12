@@ -2708,7 +2708,7 @@ function App() {
                       handleSubmit(e)
                     }
                   }}
-                  placeholder="Ask a health question..."
+                  placeholder="Ask any question, or drop in a file..."
                   className="landing-search-input"
                   rows={2}
                 />
