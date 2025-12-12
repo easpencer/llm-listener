@@ -4179,7 +4179,8 @@ styleSheet.textContent = `
 
   /* ===== PRISM STYLES ===== */
   .prism-app {
-    min-height: 100vh;
+    min-height: 100%;
+    min-height: 100dvh; /* Dynamic viewport height - works in iframes */
     position: relative;
     overflow-x: hidden;
     color: #e2e8f0;
@@ -4187,7 +4188,7 @@ styleSheet.textContent = `
 
   /* Prism Animated Background - Purple/Indigo theme */
   .prism-bg {
-    position: fixed;
+    position: absolute; /* Changed from fixed for iframe compatibility */
     top: 0;
     left: 0;
     right: 0;
@@ -4692,14 +4693,15 @@ styleSheet.textContent = `
 
   /* ===== CHORUS STYLES ===== */
   .chorus-app {
-    min-height: 100vh;
+    min-height: 100%;
+    min-height: 100dvh; /* Dynamic viewport height - works in iframes */
     position: relative;
     overflow-x: hidden;
   }
 
   /* Animated Background */
   .chorus-bg {
-    position: fixed;
+    position: absolute; /* Changed from fixed for iframe compatibility */
     top: 0;
     left: 0;
     right: 0;
@@ -6641,7 +6643,7 @@ styleSheet.textContent = `
     }
 
     .follow-up-panel {
-      width: calc(100vw - 2rem);
+      width: calc(100% - 2rem); /* Changed from 100vw for iframe compatibility */
       max-width: 340px;
     }
 
@@ -6723,7 +6725,8 @@ styleSheet.textContent = `
     max-width: 1400px;
     margin: 0 auto;
     padding: 1.5rem;
-    min-height: 100vh;
+    min-height: 100%;
+    min-height: 100dvh; /* Dynamic viewport height - works in iframes */
     display: flex;
     flex-direction: column;
   }
