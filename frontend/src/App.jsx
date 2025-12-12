@@ -929,6 +929,28 @@ function ChorusLogo({ size = 48, animated = true }) {
   )
 }
 
+// Image-based Chorus Logo - uses the actual logo images
+function ChorusImageLogo({ size = 64, withText = false }) {
+  const logoSrc = withText ? '/images/logo-2.png' : '/images/logo-1.png'
+  // For logo with text (logo-2), it's landscape so adjust dimensions
+  const height = size
+  const width = withText ? size * 2.5 : size
+
+  return (
+    <img
+      src={logoSrc}
+      alt="Chorus"
+      style={{
+        height: `${height}px`,
+        width: withText ? 'auto' : `${width}px`,
+        maxWidth: withText ? `${width}px` : undefined,
+        objectFit: 'contain'
+      }}
+      className="chorus-image-logo"
+    />
+  )
+}
+
 // Evidence Profile Panel - Multi-dimensional scoring: Quality (A-D) · Retrieval (I-III) · Agreement (%)
 function EvidenceProfilePanel({ confidence, compact = false }) {
   if (!confidence) return null
@@ -2650,6 +2672,90 @@ function App() {
 
   // Chorus renders a completely different UI
   if (isChorus) {
+    // Show landing page when no query has been made yet
+    const showLanding = !question && !loading && responses.length === 0
+
+    if (showLanding) {
+      return (
+        <div className="chorus-landing">
+          {/* Background image */}
+          <div className="chorus-landing-bg">
+            <img src="/images/login-bg.jpg" alt="" className="landing-bg-image" />
+            <div className="landing-bg-overlay"></div>
+          </div>
+
+          {/* Landing content */}
+          <div className="chorus-landing-content">
+            <div className="landing-logo-section">
+              <ChorusImageLogo size={80} withText={true} />
+            </div>
+
+            <h1 className="landing-headline">Where AI Meets Evidence-Based Answers</h1>
+            <p className="landing-subheadline">
+              Ask any health question. Get answers synthesized from multiple AI models,
+              verified against official guidelines and peer-reviewed research.
+            </p>
+
+            {/* Search box on landing */}
+            <div className="landing-search-wrapper">
+              <div className="landing-search-box">
+                <textarea
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      handleSubmit(e)
+                    }
+                  }}
+                  placeholder="Ask a health question..."
+                  className="landing-search-input"
+                  rows={2}
+                />
+                <button
+                  onClick={handleSubmit}
+                  disabled={!inputValue.trim()}
+                  className="landing-search-btn"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                  </svg>
+                  Search
+                </button>
+              </div>
+            </div>
+
+            {/* Trust indicators */}
+            <div className="landing-trust-indicators">
+              <div className="trust-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                <span>Evidence-Based</span>
+              </div>
+              <div className="trust-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span>Real-Time Sources</span>
+              </div>
+              <div className="trust-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span>Multi-AI Synthesis</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div className="chorus-app">
         {/* Animated background */}
@@ -2662,11 +2768,8 @@ function App() {
         {/* Header */}
         <header className="chorus-header">
           <div className="chorus-brand">
-            <ChorusLogo size={64} />
-            <div className="chorus-brand-text">
-              <h1 className="chorus-title">Chorus</h1>
-              <p className="chorus-tagline">Where AI Meets Evidence-Based Medicine</p>
-            </div>
+            <ChorusImageLogo size={56} withText={true} />
+            <p className="chorus-tagline">Where AI Meets Evidence-Based Answers</p>
           </div>
           <div className="chorus-trust-badges">
             <span className="trust-badge">
@@ -4692,6 +4795,206 @@ styleSheet.textContent = `
   }
 
   /* ===== CHORUS STYLES ===== */
+
+  /* ===== CHORUS LANDING PAGE ===== */
+  .chorus-landing {
+    min-height: 100%;
+    min-height: 100dvh;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .chorus-landing-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+  }
+
+  .landing-bg-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .landing-bg-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(12, 18, 34, 0.85) 0%,
+      rgba(26, 26, 46, 0.8) 50%,
+      rgba(15, 23, 42, 0.85) 100%
+    );
+  }
+
+  .chorus-landing-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+    max-width: 700px;
+    width: 100%;
+  }
+
+  .landing-logo-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .landing-headline {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin: 0 0 1rem 0;
+    line-height: 1.2;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+  }
+
+  .landing-subheadline {
+    font-size: 1.1rem;
+    color: #94a3b8;
+    margin: 0 0 2.5rem 0;
+    line-height: 1.6;
+    max-width: 560px;
+  }
+
+  .landing-search-wrapper {
+    width: 100%;
+    max-width: 560px;
+    margin-bottom: 2.5rem;
+  }
+
+  .landing-search-box {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    background: rgba(30, 41, 59, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 16px;
+    padding: 1.25rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+
+  .landing-search-input {
+    width: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    font-size: 1.1rem;
+    color: #f1f5f9;
+    resize: none;
+    font-family: inherit;
+    line-height: 1.5;
+    transition: all 0.2s ease;
+  }
+
+  .landing-search-input::placeholder {
+    color: #64748b;
+  }
+
+  .landing-search-input:focus {
+    outline: none;
+    border-color: rgba(6, 182, 212, 0.5);
+    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15);
+  }
+
+  .landing-search-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .landing-search-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(6, 182, 212, 0.4);
+  }
+
+  .landing-search-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .landing-trust-indicators {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+
+  .landing-trust-indicators .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #94a3b8;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .landing-trust-indicators .trust-item svg {
+    color: #06b6d4;
+  }
+
+  /* Landing page responsive */
+  @media (max-width: 640px) {
+    .chorus-landing-content {
+      padding: 1.5rem;
+    }
+
+    .landing-headline {
+      font-size: 1.75rem;
+    }
+
+    .landing-subheadline {
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .landing-search-box {
+      padding: 1rem;
+    }
+
+    .landing-search-input {
+      font-size: 1rem;
+      padding: 0.875rem 1rem;
+    }
+
+    .landing-search-btn {
+      padding: 0.875rem 1.5rem;
+      font-size: 1rem;
+    }
+
+    .landing-trust-indicators {
+      flex-direction: column;
+      gap: 1rem;
+    }
+  }
+
+  /* ===== CHORUS MAIN APP ===== */
   .chorus-app {
     min-height: 100%;
     min-height: 100dvh; /* Dynamic viewport height - works in iframes */

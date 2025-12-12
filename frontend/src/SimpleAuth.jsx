@@ -192,6 +192,7 @@ function LoginScreen({ mode = 'prism' }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const brand = BRANDS[mode] || BRANDS.prism;
+  const isChorus = mode === 'chorus';
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -207,6 +208,242 @@ function LoginScreen({ mode = 'prism' }) {
     }, 200);
   };
 
+  // Chorus gets a special login screen with background image
+  if (isChorus) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        minHeight: '100dvh',
+        padding: '20px',
+        position: 'relative',
+        overflow: 'hidden',
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+      }}>
+        {/* Background image with overlay */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 0,
+        }}>
+          <img
+            src="/images/login-bg.jpg"
+            alt=""
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center',
+            }}
+          />
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'linear-gradient(135deg, rgba(12, 18, 34, 0.88) 0%, rgba(26, 26, 46, 0.85) 50%, rgba(15, 23, 42, 0.88) 100%)',
+          }} />
+        </div>
+
+        {/* Content */}
+        <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '420px' }}>
+          {/* Logo */}
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <img
+              src="/images/logo-2.png"
+              alt="Chorus"
+              style={{
+                height: '60px',
+                width: 'auto',
+                marginBottom: '12px',
+              }}
+            />
+            <p style={{
+              fontSize: '15px',
+              color: '#94a3b8',
+              margin: 0,
+              fontWeight: '500',
+            }}>
+              Where AI Meets Evidence-Based Answers
+            </p>
+          </div>
+
+          {/* Login Card */}
+          <div style={{
+            background: 'rgba(30, 41, 59, 0.85)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            padding: '36px',
+            borderRadius: '16px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+            border: '1px solid rgba(148, 163, 184, 0.15)',
+          }}>
+            <div style={{ marginBottom: '24px' }}>
+              <h2 style={{
+                fontSize: '20px',
+                fontWeight: '600',
+                color: '#f1f5f9',
+                margin: '0 0 4px 0',
+              }}>
+                Sign in
+              </h2>
+              <p style={{
+                fontSize: '14px',
+                color: '#94a3b8',
+                margin: 0,
+              }}>
+                Enter your credentials to continue
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit}>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#e2e8f0',
+                  marginBottom: '6px',
+                }}>
+                  Username
+                </label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Enter username"
+                  required
+                  autoComplete="username"
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    fontSize: '15px',
+                    border: '1px solid rgba(148, 163, 184, 0.2)',
+                    borderRadius: '10px',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+                    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+                    color: '#f1f5f9',
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = 'rgba(6, 182, 212, 0.5)';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(6, 182, 212, 0.15)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'rgba(148, 163, 184, 0.2)';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#e2e8f0',
+                  marginBottom: '6px',
+                }}>
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter password"
+                  required
+                  autoComplete="current-password"
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    fontSize: '15px',
+                    border: '1px solid rgba(148, 163, 184, 0.2)',
+                    borderRadius: '10px',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+                    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+                    color: '#f1f5f9',
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = 'rgba(6, 182, 212, 0.5)';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(6, 182, 212, 0.15)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'rgba(148, 163, 184, 0.2)';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+              </div>
+
+              {error && (
+                <div style={{
+                  backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                  color: '#f87171',
+                  padding: '12px 14px',
+                  borderRadius: '10px',
+                  fontSize: '14px',
+                  marginBottom: '20px',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                }}>
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                style={{
+                  width: '100%',
+                  padding: '14px 16px',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  background: isSubmitting ? '#475569' : 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '10px',
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseOver={(e) => {
+                  if (!isSubmitting) {
+                    e.target.style.transform = 'translateY(-1px)';
+                    e.target.style.boxShadow = '0 6px 20px rgba(6, 182, 212, 0.4)';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = 'none';
+                }}
+              >
+                {isSubmitting ? 'Signing in...' : 'Sign in'}
+              </button>
+            </form>
+          </div>
+
+          {/* Footer */}
+          <p style={{
+            fontSize: '13px',
+            color: '#64748b',
+            textAlign: 'center',
+            marginTop: '24px',
+          }}>
+            AI-powered evidence synthesis for better decisions
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Default Prism login screen (unchanged)
   return (
     <div style={{
       display: 'flex',
