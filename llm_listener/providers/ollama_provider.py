@@ -34,7 +34,7 @@ class OllamaProvider(LLMProvider):
 
     @property
     def default_model(self) -> str:
-        return "llama3.2"
+        return "llama3.1:8b"
 
     @property
     def base_url(self) -> str:
@@ -54,7 +54,7 @@ class OllamaProvider(LLMProvider):
             if system_prompt:
                 payload["system"] = system_prompt
 
-            timeout = aiohttp.ClientTimeout(total=10, connect=2)
+            timeout = aiohttp.ClientTimeout(total=120, connect=5)
             async with aiohttp.ClientSession(timeout=timeout) as session:
                 async with session.post(url, json=payload) as response:
                     if response.status != 200:

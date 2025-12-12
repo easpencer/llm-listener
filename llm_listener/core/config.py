@@ -7,9 +7,9 @@ from typing import Optional
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 
-# Load .env file from project root
+# Load .env file from project root (with absolute path and override)
 _env_path = Path(__file__).parent.parent.parent / ".env"
-load_dotenv(_env_path)
+load_dotenv(_env_path, override=True)
 
 
 class Settings(BaseSettings):

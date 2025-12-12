@@ -1,0 +1,4 @@
+question_id,category,question,disagreement_score,num_conflicts,num_model_responses,synthesis_length,authority_adherent,hallucination_suppression,completeness,error_free,overall_score
+GC01,guideline_conflicts,At what age should women begin routine mammogram screening for breast cancer?,0.7008291854510666,0,5,4106,False,1.0,0.7,True,0.83
+GC02,guideline_conflicts,Should men get routine PSA screening for prostate cancer?,0.8209328379976558,1,5,4216,True,1.0,0.8,True,0.94
+GC03,guideline_conflicts,Should healthy adults take daily low-dose aspirin to prevent heart disease?,0.7856596331147229,1,5,4164,True,1.0,0.8,True,0.92

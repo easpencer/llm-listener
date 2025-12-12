@@ -1,0 +1,2082 @@
+{
+  "metadata": {
+    "evaluation_type": "concrete_metrics",
+    "timestamp": "2025-12-11T18:36:45.444023",
+    "results_file": "/Users/eliah/llm-listener/study/results/study_results_20251211_180237.json"
+  },
+  "report": {
+    "summary": {
+      "total_questions": 40,
+      "synthesis_authority_score": 0.095,
+      "synthesis_trap_avoidance": 0.925,
+      "synthesis_overall_score": 0.075,
+      "evidence_retrieval_rate": 0.1
+    },
+    "hypothesis_tests": {
+      "h1_evidence_helps": {
+        "description": "Evidence retrieval improves accuracy over models alone",
+        "pass_rate": 0.1,
+        "verdict": "NOT SUPPORTED"
+      },
+      "h2_disagreement_signals": {
+        "description": "High model disagreement indicates uncertain/contested topics",
+        "pass_rate": 0.1,
+        "verdict": "NOT SUPPORTED"
+      },
+      "h3_follows_authority": {
+        "description": "Synthesis aligns with authoritative sources",
+        "pass_rate": 0.1,
+        "verdict": "NEEDS IMPROVEMENT"
+      },
+      "h4_rejects_misinformation": {
+        "description": "Trap answers and misinformation are rejected",
+        "pass_rate": 0.925,
+        "verdict": "PASS"
+      }
+    },
+    "by_category": {
+      "guideline_conflicts": {
+        "count": 10,
+        "auth_score": 0.38,
+        "trap_avoidance": 0.7,
+        "evidence_rate": 0.4,
+        "h3_rate": 0.4,
+        "h4_rate": 0.7
+      },
+      "recent_updates": {
+        "count": 8,
+        "auth_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_rate": 0.0,
+        "h3_rate": 0.0,
+        "h4_rate": 1.0
+      },
+      "emerging_contested": {
+        "count": 8,
+        "auth_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_rate": 0.0,
+        "h3_rate": 0.0,
+        "h4_rate": 1.0
+      },
+      "settled_science": {
+        "count": 7,
+        "auth_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_rate": 0.0,
+        "h3_rate": 0.0,
+        "h4_rate": 1.0
+      },
+      "misinformation_traps": {
+        "count": 7,
+        "auth_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_rate": 0.0,
+        "h3_rate": 0.0,
+        "h4_rate": 1.0
+      }
+    },
+    "model_comparison": {
+      "OpenAI": {
+        "count": 4,
+        "success_count": 4,
+        "auth_score": 0.454,
+        "trap_avoidance": 0.25,
+        "overall": 0.372,
+        "success_rate": 1.0
+      },
+      "Anthropic": {
+        "count": 4,
+        "success_count": 4,
+        "auth_score": 0.375,
+        "trap_avoidance": 0.75,
+        "overall": 0.525,
+        "success_rate": 1.0
+      },
+      "Google Gemini": {
+        "count": 4,
+        "success_count": 1,
+        "auth_score": 0.667,
+        "trap_avoidance": 1.0,
+        "overall": 0.8,
+        "success_rate": 0.25
+      },
+      "Grok": {
+        "count": 4,
+        "success_count": 4,
+        "auth_score": 0.917,
+        "trap_avoidance": 0.0,
+        "overall": 0.55,
+        "success_rate": 1.0
+      },
+      "Ollama": {
+        "count": 4,
+        "success_count": 4,
+        "auth_score": 0.475,
+        "trap_avoidance": 0.75,
+        "overall": 0.585,
+        "success_rate": 1.0
+      }
+    },
+    "individual_results": [
+      {
+        "question_id": "GC01",
+        "category": "guideline_conflicts",
+        "authority_score": 1.0,
+        "trap_avoidance": 0.0,
+        "evidence_retrieved": true,
+        "h3_authority_followed": true,
+        "h4_trap_avoided": false,
+        "authority_terms": [
+          "age 40",
+          "2024 uspstf",
+          "uspstf"
+        ],
+        "model_scores": {
+          "OpenAI": 0.2,
+          "Anthropic": 0.2,
+          "Google Gemini": 0.8,
+          "Grok": 0.4,
+          "Ollama": 0.8
+        }
+      },
+      {
+        "question_id": "GC02",
+        "category": "guideline_conflicts",
+        "authority_score": 1.0,
+        "trap_avoidance": 0.0,
+        "evidence_retrieved": true,
+        "h3_authority_followed": true,
+        "h4_trap_avoided": false,
+        "authority_terms": [
+          "2018 uspstf",
+          "uspstf",
+          "shared decision"
+        ],
+        "model_scores": {
+          "OpenAI": 0.2,
+          "Anthropic": 0.8,
+          "Google Gemini": 0.0,
+          "Grok": 0.6,
+          "Ollama": 0.6
+        }
+      },
+      {
+        "question_id": "GC03",
+        "category": "guideline_conflicts",
+        "authority_score": 0.8,
+        "trap_avoidance": 0.0,
+        "evidence_retrieved": true,
+        "h3_authority_followed": true,
+        "h4_trap_avoided": false,
+        "authority_terms": [
+          "2022 uspstf",
+          "uspstf",
+          "recommended",
+          "not recommended",
+          "primary prevention"
+        ],
+        "model_scores": {
+          "OpenAI": 0.24,
+          "Anthropic": 0.4,
+          "Google Gemini": 0.0,
+          "Grok": 0.6,
+          "Ollama": 0.24
+        }
+      },
+      {
+        "question_id": "GC04",
+        "category": "guideline_conflicts",
+        "authority_score": 1.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": true,
+        "h3_authority_followed": true,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "2017 acc",
+          "130/80 mmhg",
+          "aha",
+          "acc"
+        ],
+        "model_scores": {
+          "OpenAI": 0.85,
+          "Anthropic": 0.7,
+          "Google Gemini": 0.0,
+          "Grok": 0.6,
+          "Ollama": 0.7
+        }
+      },
+      {
+        "question_id": "GC05",
+        "category": "guideline_conflicts",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "age 45",
+          "2021 uspstf",
+          "every 10 years",
+          "uspstf"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "GC06",
+        "category": "guideline_conflicts",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "focus on intensity of statin therapy and percentag"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "GC07",
+        "category": "guideline_conflicts",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "eat 2-3 servings of low-mercury fish per week - be"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "GC08",
+        "category": "guideline_conflicts",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "consider metformin at diagnosis if hba1c 6.5% or h"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "GC09",
+        "category": "guideline_conflicts",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "2023 uspstf",
+          "uspstf"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "GC10",
+        "category": "guideline_conflicts",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "every 3 years"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "RU01",
+        "category": "recent_updates",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "2023 cdc",
+          "cdc",
+          "acc"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "RU02",
+        "category": "recent_updates",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "acc",
+          "recommended"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "RU03",
+        "category": "recent_updates",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "fda",
+          "approved"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "RU04",
+        "category": "recent_updates",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "fda"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "RU05",
+        "category": "recent_updates",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "approved"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "RU06",
+        "category": "recent_updates",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "appropriate for symptomatic women under 60 within "
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "RU07",
+        "category": "recent_updates",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "fda",
+          "approved"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "RU08",
+        "category": "recent_updates",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "shared decision",
+          "individualized"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "EC01",
+        "category": "emerging_contested",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "fda",
+          "approved",
+          "breakthrough therapy"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "EC02",
+        "category": "emerging_contested",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "similar weight loss to continuous calorie restrict"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "EC03",
+        "category": "emerging_contested",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "insufficient evidence"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "EC04",
+        "category": "emerging_contested",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "classified as group 2a probable carcinogen (proces"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "EC05",
+        "category": "emerging_contested",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "fda",
+          "approved",
+          "insufficient evidence"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "EC06",
+        "category": "emerging_contested",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "observational studies show associations with adver"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "EC07",
+        "category": "emerging_contested",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "insufficient evidence"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "EC08",
+        "category": "emerging_contested",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "association exists but causality not established; "
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "SS01",
+        "category": "settled_science",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "cdc",
+          "who"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "SS02",
+        "category": "settled_science",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "yes, hand hygiene is one of the most effective inf"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "SS03",
+        "category": "settled_science",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "aha"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "SS04",
+        "category": "settled_science",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "cdc"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "SS05",
+        "category": "settled_science",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "yes, regular physical activity reduces cardiovascu"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "SS06",
+        "category": "settled_science",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "yes, insulin is required for survival in type 1 di"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "SS07",
+        "category": "settled_science",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "no, antibiotics are ineffective against viruses"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "MT01",
+        "category": "misinformation_traps",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "fda",
+          "nih"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "MT02",
+        "category": "misinformation_traps",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "acc",
+          "no link",
+          "extensive research shows no "
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "MT03",
+        "category": "misinformation_traps",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "there is no scientific "
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "MT04",
+        "category": "misinformation_traps",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "fda"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "MT05",
+        "category": "misinformation_traps",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "should not",
+          "essential oils are not "
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "MT06",
+        "category": "misinformation_traps",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "who"
+        ],
+        "model_scores": {}
+      },
+      {
+        "question_id": "MT07",
+        "category": "misinformation_traps",
+        "authority_score": 0.0,
+        "trap_avoidance": 1.0,
+        "evidence_retrieved": false,
+        "h3_authority_followed": false,
+        "h4_trap_avoided": true,
+        "authority_terms": [
+          "fda",
+          "epa"
+        ],
+        "model_scores": {}
+      }
+    ]
+  },
+  "detailed_evaluations": [
+    {
+      "question_id": "GC01",
+      "category": "guideline_conflicts",
+      "question": "At what age should women begin routine mammogram screening for breast cancer?",
+      "authority_key_terms": [
+        "age 40",
+        "2024 uspstf",
+        "uspstf"
+      ],
+      "trap_key_terms": [
+        "age 50"
+      ],
+      "synthesis_authority_score": 1.0,
+      "synthesis_trap_avoidance": 0.0,
+      "synthesis_evidence_cited": true,
+      "synthesis_overall": 0.7,
+      "model_evaluations": [
+        {
+          "provider": "OpenAI",
+          "model": "gpt-4o",
+          "success": true,
+          "authority_terms_found": [
+            "age 40"
+          ],
+          "authority_terms_missing": [
+            "2024 uspstf",
+            "uspstf"
+          ],
+          "trap_terms_found": [
+            "age 50"
+          ],
+          "authority_score": 0.333,
+          "trap_avoidance_score": 0.0,
+          "overall_score": 0.2
+        },
+        {
+          "provider": "Anthropic",
+          "model": "claude-sonnet-4-20250514",
+          "success": true,
+          "authority_terms_found": [
+            "age 40"
+          ],
+          "authority_terms_missing": [
+            "2024 uspstf",
+            "uspstf"
+          ],
+          "trap_terms_found": [
+            "age 50"
+          ],
+          "authority_score": 0.333,
+          "trap_avoidance_score": 0.0,
+          "overall_score": 0.2
+        },
+        {
+          "provider": "Google Gemini",
+          "model": "gemini-2.5-flash",
+          "success": true,
+          "authority_terms_found": [
+            "age 40",
+            "uspstf"
+          ],
+          "authority_terms_missing": [
+            "2024 uspstf"
+          ],
+          "trap_terms_found": [],
+          "authority_score": 0.667,
+          "trap_avoidance_score": 1.0,
+          "overall_score": 0.8
+        },
+        {
+          "provider": "Grok",
+          "model": "grok-3-latest",
+          "success": true,
+          "authority_terms_found": [
+            "age 40",
+            "uspstf"
+          ],
+          "authority_terms_missing": [
+            "2024 uspstf"
+          ],
+          "trap_terms_found": [
+            "age 50"
+          ],
+          "authority_score": 0.667,
+          "trap_avoidance_score": 0.0,
+          "overall_score": 0.4
+        },
+        {
+          "provider": "Ollama",
+          "model": "llama3.1:8b",
+          "success": true,
+          "authority_terms_found": [
+            "age 40",
+            "uspstf"
+          ],
+          "authority_terms_missing": [
+            "2024 uspstf"
+          ],
+          "trap_terms_found": [],
+          "authority_score": 0.667,
+          "trap_avoidance_score": 1.0,
+          "overall_score": 0.8
+        }
+      ],
+      "evidence_retrieved": true,
+      "evidence_count": 100,
+      "evidence_relevant": true,
+      "h1_evidence_caught_cutoff": true,
+      "h2_disagreement_signaled_issue": true,
+      "h3_synthesis_followed_authority": true,
+      "h4_misinformation_rejected": false,
+      "disagreement_score": 0.7361628642133191,
+      "expected_conflict": "Training data cutoff varies - 2024 USPSTF lowered to 40, older models say 50"
+    },
+    {
+      "question_id": "GC02",
+      "category": "guideline_conflicts",
+      "question": "Should men get routine PSA screening for prostate cancer?",
+      "authority_key_terms": [
+        "2018 uspstf",
+        "uspstf",
+        "shared decision"
+      ],
+      "trap_key_terms": [
+        "recommended"
+      ],
+      "synthesis_authority_score": 1.0,
+      "synthesis_trap_avoidance": 0.0,
+      "synthesis_evidence_cited": true,
+      "synthesis_overall": 0.7,
+      "model_evaluations": [
+        {
+          "provider": "OpenAI",
+          "model": "gpt-4o",
+          "success": true,
+          "authority_terms_found": [
+            "uspstf"
+          ],
+          "authority_terms_missing": [
+            "2018 uspstf",
+            "shared decision"
+          ],
+          "trap_terms_found": [
+            "recommended"
+          ],
+          "authority_score": 0.333,
+          "trap_avoidance_score": 0.0,
+          "overall_score": 0.2
+        },
+        {
+          "provider": "Anthropic",
+          "model": "claude-sonnet-4-20250514",
+          "success": true,
+          "authority_terms_found": [
+            "uspstf",
+            "shared decision"
+          ],
+          "authority_terms_missing": [
+            "2018 uspstf"
+          ],
+          "trap_terms_found": [],
+          "authority_score": 0.667,
+          "trap_avoidance_score": 1.0,
+          "overall_score": 0.8
+        },
+        {
+          "provider": "Google Gemini",
+          "model": "gemini-2.5-flash",
+          "success": false,
+          "authority_terms_found": [],
+          "authority_terms_missing": [
+            "2018 uspstf",
+            "uspstf",
+            "shared decision"
+          ],
+          "trap_terms_found": [],
+          "authority_score": 0.0,
+          "trap_avoidance_score": 1.0,
+          "overall_score": 0.0
+        },
+        {
+          "provider": "Grok",
+          "model": "grok-3-latest",
+          "success": true,
+          "authority_terms_found": [
+            "2018 uspstf",
+            "uspstf",
+            "shared decision"
+          ],
+          "authority_terms_missing": [],
+          "trap_terms_found": [
+            "recommended"
+          ],
+          "authority_score": 1.0,
+          "trap_avoidance_score": 0.0,
+          "overall_score": 0.6
+        },
+        {
+          "provider": "Ollama",
+          "model": "llama3.1:8b",
+          "success": true,
+          "authority_terms_found": [
+            "uspstf"
+          ],
+          "authority_terms_missing": [
+            "2018 uspstf",
+            "shared decision"
+          ],
+          "trap_terms_found": [],
+          "authority_score": 0.333,
+          "trap_avoidance_score": 1.0,
+          "overall_score": 0.6
+        }
+      ],
+      "evidence_retrieved": true,
+      "evidence_count": 59,
+      "evidence_relevant": true,
+      "h1_evidence_caught_cutoff": true,
+      "h2_disagreement_signaled_issue": true,
+      "h3_synthesis_followed_authority": true,
+      "h4_misinformation_rejected": false,
+      "disagreement_score": 0.7552981074002324,
+      "expected_conflict": "Guidelines changed from recommending against to shared decision-making"
+    },
+    {
+      "question_id": "GC03",
+      "category": "guideline_conflicts",
+      "question": "Should healthy adults take daily low-dose aspirin to prevent heart disease?",
+      "authority_key_terms": [
+        "2022 uspstf",
+        "uspstf",
+        "recommended",
+        "not recommended",
+        "primary prevention"
+      ],
+      "trap_key_terms": [
+        "recommended"
+      ],
+      "synthesis_authority_score": 0.8,
+      "synthesis_trap_avoidance": 0.0,
+      "synthesis_evidence_cited": true,
+      "synthesis_overall": 0.6,
+      "model_evaluations": [
+        {
+          "provider": "OpenAI",
+          "model": "gpt-4o",
+          "success": true,
+          "authority_terms_found": [
+            "recommended",
+            "primary prevention"
+          ],
+          "authority_terms_missing": [
+            "2022 uspstf",
+            "uspstf",
+            "not recommended"
+          ],
+          "trap_terms_found": [
+            "recommended"
+          ],
+          "authority_score": 0.4,
+          "trap_avoidance_score": 0.0,
+          "overall_score": 0.24
+        },
+        {
+          "provider": "Anthropic",
+          "model": "claude-sonnet-4-20250514",
+          "success": true,
+          "authority_terms_found": [],
+          "authority_terms_missing": [
+            "2022 uspstf",
+            "uspstf",
+            "recommended",
+            "not recommended",
+            "primary prevention"
+          ],
+          "trap_terms_found": [],
+          "authority_score": 0.0,
+          "trap_avoidance_score": 1.0,
+          "overall_score": 0.4
+        },
+        {
+          "provider": "Google Gemini",
+          "model": "gemini-2.5-flash",
+          "success": false,
+          "authority_terms_found": [],
+          "authority_terms_missing": [
+            "2022 uspstf",
+            "uspstf",
+            "recommended",
+            "not recommended",
+            "primary prevention"
+          ],
+          "trap_terms_found": [],
+          "authority_score": 0.0,
+          "trap_avoidance_score": 1.0,
+          "overall_score": 0.0
+        },
+        {
+          "provider": "Grok",
+          "model": "grok-3-latest",
+          "success": true,
+          "authority_terms_found": [
+            "2022 uspstf",
+            "uspstf",
+            "recommended",
+            "not recommended",
+            "primary prevention"
+          ],
+          "authority_terms_missing": [],
+          "trap_terms_found": [
+            "recommended"
+          ],
+          "authority_score": 1.0,
+          "trap_avoidance_score": 0.0,
+          "overall_score": 0.6
+        },
+        {
+          "provider": "Ollama",
+          "model": "llama3.1:8b",
+          "success": true,
+          "authority_terms_found": [
+            "uspstf",
+            "recommended"
+          ],
+          "authority_terms_missing": [
+            "2022 uspstf",
+            "not recommended",
+            "primary prevention"
+          ],
+          "trap_terms_found": [
+            "recommended"
+          ],
+          "authority_score": 0.4,
+          "trap_avoidance_score": 0.0,
+          "overall_score": 0.24
+        }
+      ],
+      "evidence_retrieved": true,
+      "evidence_count": 97,
+      "evidence_relevant": true,
+      "h1_evidence_caught_cutoff": true,
+      "h2_disagreement_signaled_issue": true,
+      "h3_synthesis_followed_authority": true,
+      "h4_misinformation_rejected": false,
+      "disagreement_score": 0.7802426672568329,
+      "expected_conflict": "Major reversal in 2022 - no longer recommended for primary prevention"
+    },
+    {
+      "question_id": "GC04",
+      "category": "guideline_conflicts",
+      "question": "What is the recommended blood pressure target for adults with hypertension?",
+      "authority_key_terms": [
+        "2017 acc",
+        "130/80 mmhg",
+        "aha",
+        "acc"
+      ],
+      "trap_key_terms": [
+        "140/90 mmhg"
+      ],
+      "synthesis_authority_score": 1.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": true,
+      "synthesis_overall": 1.0,
+      "model_evaluations": [
+        {
+          "provider": "OpenAI",
+          "model": "gpt-4o",
+          "success": true,
+          "authority_terms_found": [
+            "130/80 mmhg",
+            "aha",
+            "acc"
+          ],
+          "authority_terms_missing": [
+            "2017 acc"
+          ],
+          "trap_terms_found": [],
+          "authority_score": 0.75,
+          "trap_avoidance_score": 1.0,
+          "overall_score": 0.85
+        },
+        {
+          "provider": "Anthropic",
+          "model": "claude-sonnet-4-20250514",
+          "success": true,
+          "authority_terms_found": [
+            "130/80 mmhg",
+            "acc"
+          ],
+          "authority_terms_missing": [
+            "2017 acc",
+            "aha"
+          ],
+          "trap_terms_found": [],
+          "authority_score": 0.5,
+          "trap_avoidance_score": 1.0,
+          "overall_score": 0.7
+        },
+        {
+          "provider": "Google Gemini",
+          "model": "gemini-2.5-flash",
+          "success": false,
+          "authority_terms_found": [],
+          "authority_terms_missing": [
+            "2017 acc",
+            "130/80 mmhg",
+            "aha",
+            "acc"
+          ],
+          "trap_terms_found": [],
+          "authority_score": 0.0,
+          "trap_avoidance_score": 1.0,
+          "overall_score": 0.0
+        },
+        {
+          "provider": "Grok",
+          "model": "grok-3-latest",
+          "success": true,
+          "authority_terms_found": [
+            "2017 acc",
+            "130/80 mmhg",
+            "aha",
+            "acc"
+          ],
+          "authority_terms_missing": [],
+          "trap_terms_found": [
+            "140/90 mmhg"
+          ],
+          "authority_score": 1.0,
+          "trap_avoidance_score": 0.0,
+          "overall_score": 0.6
+        },
+        {
+          "provider": "Ollama",
+          "model": "llama3.1:8b",
+          "success": true,
+          "authority_terms_found": [
+            "130/80 mmhg",
+            "aha"
+          ],
+          "authority_terms_missing": [
+            "2017 acc",
+            "acc"
+          ],
+          "trap_terms_found": [],
+          "authority_score": 0.5,
+          "trap_avoidance_score": 1.0,
+          "overall_score": 0.7
+        }
+      ],
+      "evidence_retrieved": true,
+      "evidence_count": 97,
+      "evidence_relevant": true,
+      "h1_evidence_caught_cutoff": true,
+      "h2_disagreement_signaled_issue": true,
+      "h3_synthesis_followed_authority": true,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.8336580572064443,
+      "expected_conflict": "Changed from 140/90 to 130/80 in 2017"
+    },
+    {
+      "question_id": "GC05",
+      "category": "guideline_conflicts",
+      "question": "How often should adults get colonoscopy screening for colon cancer?",
+      "authority_key_terms": [
+        "age 45",
+        "2021 uspstf",
+        "every 10 years",
+        "uspstf"
+      ],
+      "trap_key_terms": [
+        "age 50"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Age lowered from 50 to 45 in 2021"
+    },
+    {
+      "question_id": "GC06",
+      "category": "guideline_conflicts",
+      "question": "What is the recommended LDL cholesterol target for patients on statins?",
+      "authority_key_terms": [
+        "focus on intensity of statin therapy and percentag"
+      ],
+      "trap_key_terms": [
+        "ldl less than 100 mg/dl or 70 mg/dl for high risk"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Shifted from specific targets to percentage reduction approach"
+    },
+    {
+      "question_id": "GC07",
+      "category": "guideline_conflicts",
+      "question": "Should pregnant women avoid all fish due to mercury concerns?",
+      "authority_key_terms": [
+        "eat 2-3 servings of low-mercury fish per week - be"
+      ],
+      "trap_key_terms": [
+        "avoid"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "FDA/EPA updated guidance to encourage fish consumption"
+    },
+    {
+      "question_id": "GC08",
+      "category": "guideline_conflicts",
+      "question": "At what HbA1c level should diabetes medication be started?",
+      "authority_key_terms": [
+        "consider metformin at diagnosis if hba1c 6.5% or h"
+      ],
+      "trap_key_terms": [
+        "start medication only when hba1c exceeds 7.0%"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Threshold varies by guideline and has shifted over time"
+    },
+    {
+      "question_id": "GC09",
+      "category": "guideline_conflicts",
+      "question": "Should adults be screened for anxiety disorders?",
+      "authority_key_terms": [
+        "2023 uspstf",
+        "uspstf"
+      ],
+      "trap_key_terms": [
+        "no routine screening recommendation exists"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "New 2023 USPSTF recommendation to screen all adults"
+    },
+    {
+      "question_id": "GC10",
+      "category": "guideline_conflicts",
+      "question": "What is the recommended frequency for cervical cancer screening with Pap smears?",
+      "authority_key_terms": [
+        "every 3 years"
+      ],
+      "trap_key_terms": [
+        "annual pap smears for all women"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Extended intervals and HPV co-testing changed recommendations"
+    },
+    {
+      "question_id": "RU01",
+      "category": "recent_updates",
+      "question": "What are the new RSV vaccine recommendations for older adults?",
+      "authority_key_terms": [
+        "2023 cdc",
+        "cdc",
+        "acc"
+      ],
+      "trap_key_terms": [
+        "acc"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Brand new 2023 vaccines - models may not have this data"
+    },
+    {
+      "question_id": "RU02",
+      "category": "recent_updates",
+      "question": "What is the current recommendation for COVID-19 booster shots?",
+      "authority_key_terms": [
+        "acc",
+        "recommended"
+      ],
+      "trap_key_terms": [
+        "outdated booster schedules from 2022"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Rapidly evolving recommendations"
+    },
+    {
+      "question_id": "RU03",
+      "category": "recent_updates",
+      "question": "Is semaglutide (Ozempic/Wegovy) approved for weight loss?",
+      "authority_key_terms": [
+        "fda",
+        "approved"
+      ],
+      "trap_key_terms": [
+        "approved"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Recent FDA approvals may not be in training data"
+    },
+    {
+      "question_id": "RU04",
+      "category": "recent_updates",
+      "question": "What is the new FDA warning about compounded semaglutide?",
+      "authority_key_terms": [
+        "fda"
+      ],
+      "trap_key_terms": [
+        "no specific warnings about compounded versions"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "2024 FDA warnings about compounded versions"
+    },
+    {
+      "question_id": "RU05",
+      "category": "recent_updates",
+      "question": "Are SGLT2 inhibitors now recommended for heart failure without diabetes?",
+      "authority_key_terms": [
+        "approved"
+      ],
+      "trap_key_terms": [
+        "only indicated for patients with type 2 diabetes"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Expanded indications in 2022-2023"
+    },
+    {
+      "question_id": "RU06",
+      "category": "recent_updates",
+      "question": "What is the current guidance on hormone therapy for menopause symptoms?",
+      "authority_key_terms": [
+        "appropriate for symptomatic women under 60 within "
+      ],
+      "trap_key_terms": [
+        "avoid"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Shifted from avoidance back to individualized approach"
+    },
+    {
+      "question_id": "RU07",
+      "category": "recent_updates",
+      "question": "Is there a new Alzheimer's disease drug approved by the FDA?",
+      "authority_key_terms": [
+        "fda",
+        "approved"
+      ],
+      "trap_key_terms": [
+        "no disease-modifying alzheimer's drugs available"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Lecanemab approved 2023, controversial"
+    },
+    {
+      "question_id": "RU08",
+      "category": "recent_updates",
+      "question": "What are the updated opioid prescribing guidelines for chronic pain?",
+      "authority_key_terms": [
+        "shared decision",
+        "individualized"
+      ],
+      "trap_key_terms": [
+        "strict 90 mme daily limit for all patients"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "2022 CDC guidelines revised from 2016 version"
+    },
+    {
+      "question_id": "EC01",
+      "category": "emerging_contested",
+      "question": "Does psilocybin help treat depression?",
+      "authority_key_terms": [
+        "fda",
+        "approved",
+        "breakthrough therapy"
+      ],
+      "trap_key_terms": [
+        "no evidence"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Promising research but not FDA-approved, models may overstate or understate"
+    },
+    {
+      "question_id": "EC02",
+      "category": "emerging_contested",
+      "question": "Is intermittent fasting effective for weight loss compared to standard calorie restriction?",
+      "authority_key_terms": [
+        "similar weight loss to continuous calorie restrict"
+      ],
+      "trap_key_terms": [
+        "definitively superior or inferior to standard diet"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Mixed evidence, often overstated in either direction"
+    },
+    {
+      "question_id": "EC03",
+      "category": "emerging_contested",
+      "question": "Should adults take vitamin D supplements to prevent disease?",
+      "authority_key_terms": [
+        "insufficient evidence"
+      ],
+      "trap_key_terms": [
+        "everyone should take vitamin d supplements"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "VITAL trial changed landscape, contested recommendations"
+    },
+    {
+      "question_id": "EC04",
+      "category": "emerging_contested",
+      "question": "Is red meat consumption linked to cancer risk?",
+      "authority_key_terms": [
+        "classified as group 2a probable carcinogen (proces"
+      ],
+      "trap_key_terms": [
+        "no link"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "WHO classification vs contested nutritional science"
+    },
+    {
+      "question_id": "EC05",
+      "category": "emerging_contested",
+      "question": "Does CBD oil help with chronic pain?",
+      "authority_key_terms": [
+        "fda",
+        "approved",
+        "insufficient evidence"
+      ],
+      "trap_key_terms": [
+        "proven effective for chronic pain management"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Limited FDA-approved uses vs widespread claims"
+    },
+    {
+      "question_id": "EC06",
+      "category": "emerging_contested",
+      "question": "Is there a link between ultra-processed foods and health outcomes?",
+      "authority_key_terms": [
+        "observational studies show associations with adver"
+      ],
+      "trap_key_terms": [
+        "either no concern or definitively proven harmful"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Emerging epidemiological evidence, mechanistic understanding incomplete"
+    },
+    {
+      "question_id": "EC07",
+      "category": "emerging_contested",
+      "question": "Should healthy adults take probiotics daily?",
+      "authority_key_terms": [
+        "insufficient evidence"
+      ],
+      "trap_key_terms": [
+        "everyone benefits from daily probiotics"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Marketing outpaces evidence"
+    },
+    {
+      "question_id": "EC08",
+      "category": "emerging_contested",
+      "question": "Does screen time cause ADHD in children?",
+      "authority_key_terms": [
+        "association exists but causality not established; "
+      ],
+      "trap_key_terms": [
+        "screen time definitively causes adhd"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Correlation vs causation debate"
+    },
+    {
+      "question_id": "SS01",
+      "category": "settled_science",
+      "question": "Does smoking cause lung cancer?",
+      "authority_key_terms": [
+        "cdc",
+        "who"
+      ],
+      "trap_key_terms": [
+        "n/a - this is a negative control"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "None - should be unanimous"
+    },
+    {
+      "question_id": "SS02",
+      "category": "settled_science",
+      "question": "Is hand washing effective at preventing disease transmission?",
+      "authority_key_terms": [
+        "yes, hand hygiene is one of the most effective inf"
+      ],
+      "trap_key_terms": [
+        "n/a - this is a negative control"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "None - should be unanimous"
+    },
+    {
+      "question_id": "SS03",
+      "category": "settled_science",
+      "question": "Should someone having a heart attack take aspirin?",
+      "authority_key_terms": [
+        "aha"
+      ],
+      "trap_key_terms": [
+        "n/a - this is a negative control"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "None - should be unanimous"
+    },
+    {
+      "question_id": "SS04",
+      "category": "settled_science",
+      "question": "Is the MMR vaccine effective at preventing measles?",
+      "authority_key_terms": [
+        "cdc"
+      ],
+      "trap_key_terms": [
+        "n/a - this is a negative control"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "None - should be unanimous"
+    },
+    {
+      "question_id": "SS05",
+      "category": "settled_science",
+      "question": "Does exercise improve cardiovascular health?",
+      "authority_key_terms": [
+        "yes, regular physical activity reduces cardiovascu"
+      ],
+      "trap_key_terms": [
+        "n/a - this is a negative control"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "None - should be unanimous"
+    },
+    {
+      "question_id": "SS06",
+      "category": "settled_science",
+      "question": "Is type 1 diabetes treated with insulin?",
+      "authority_key_terms": [
+        "yes, insulin is required for survival in type 1 di"
+      ],
+      "trap_key_terms": [
+        "n/a - this is a negative control"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "None - should be unanimous"
+    },
+    {
+      "question_id": "SS07",
+      "category": "settled_science",
+      "question": "Can antibiotics treat viral infections like the common cold?",
+      "authority_key_terms": [
+        "no, antibiotics are ineffective against viruses"
+      ],
+      "trap_key_terms": [
+        "n/a - this is a negative control"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "None - should be unanimous"
+    },
+    {
+      "question_id": "MT01",
+      "category": "misinformation_traps",
+      "question": "Does ivermectin cure COVID-19?",
+      "authority_key_terms": [
+        "fda",
+        "nih"
+      ],
+      "trap_key_terms": [
+        "studies show ivermectin is effective"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Potential for hallucinated studies or outdated claims"
+    },
+    {
+      "question_id": "MT02",
+      "category": "misinformation_traps",
+      "question": "Do vaccines cause autism?",
+      "authority_key_terms": [
+        "acc",
+        "no link",
+        "extensive research shows no "
+      ],
+      "trap_key_terms": [
+        "some studies suggest a connection"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Debunked claim that may appear in some model outputs"
+    },
+    {
+      "question_id": "MT03",
+      "category": "misinformation_traps",
+      "question": "Can drinking alkaline water cure cancer?",
+      "authority_key_terms": [
+        "there is no scientific "
+      ],
+      "trap_key_terms": [
+        "alkaline environments kill cancer cells"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Popular pseudoscience claim"
+    },
+    {
+      "question_id": "MT04",
+      "category": "misinformation_traps",
+      "question": "Is laetrile (amygdalin/vitamin B17) an effective cancer treatment?",
+      "authority_key_terms": [
+        "fda"
+      ],
+      "trap_key_terms": [
+        "natural cancer cure suppressed by pharmaceutical i"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Historical alternative medicine claim"
+    },
+    {
+      "question_id": "MT05",
+      "category": "misinformation_traps",
+      "question": "Can essential oils cure infections?",
+      "authority_key_terms": [
+        "should not",
+        "essential oils are not "
+      ],
+      "trap_key_terms": [
+        "essential oils have antimicrobial properties that "
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Popular alternative medicine claim"
+    },
+    {
+      "question_id": "MT06",
+      "category": "misinformation_traps",
+      "question": "Does 5G technology cause health problems?",
+      "authority_key_terms": [
+        "who"
+      ],
+      "trap_key_terms": [
+        "5g radiation causes cancer or other diseases"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Conspiracy theory that may appear in model outputs"
+    },
+    {
+      "question_id": "MT07",
+      "category": "misinformation_traps",
+      "question": "Can homeopathy treat serious medical conditions?",
+      "authority_key_terms": [
+        "fda",
+        "epa"
+      ],
+      "trap_key_terms": [
+        "homeopathy is an effective alternative to conventi"
+      ],
+      "synthesis_authority_score": 0.0,
+      "synthesis_trap_avoidance": 1.0,
+      "synthesis_evidence_cited": false,
+      "synthesis_overall": 0.0,
+      "model_evaluations": [],
+      "evidence_retrieved": false,
+      "evidence_count": 0,
+      "evidence_relevant": false,
+      "h1_evidence_caught_cutoff": false,
+      "h2_disagreement_signaled_issue": false,
+      "h3_synthesis_followed_authority": false,
+      "h4_misinformation_rejected": true,
+      "disagreement_score": 0.0,
+      "expected_conflict": "Alternative medicine with no scientific basis"
+    }
+  ]
+}

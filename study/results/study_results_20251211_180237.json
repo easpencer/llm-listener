@@ -1,0 +1,1175 @@
+{
+  "metadata": {
+    "study_name": "Chorus Ensemble Validation Study",
+    "run_timestamp": "2025-12-11T18:02:37.498228",
+    "total_questions": 40,
+    "api_url": "http://localhost:8001"
+  },
+  "results": [
+    {
+      "question_id": "GC01",
+      "category": "guideline_conflicts",
+      "question": "At what age should women begin routine mammogram screening for breast cancer?",
+      "timestamp": "2025-12-11T17:59:26.410685",
+      "model_responses": [
+        {
+          "provider_name": "OpenAI",
+          "model": "gpt-4o",
+          "content": "The recommended age for women to begin routine mammogram screenings for breast cancer can vary depending on different health organizations and individual risk factors. In general, here are some commonly recommended guidelines:\n\n1. **American Cancer Society**: They suggest women of average risk should begin annual mammograms at age 45, and then switch to every two years at age 55, though they also give the option to continue annual screenings.\n\n2. **U.S. Preventive Services Task Force**: They recommend women of average risk start biennial screenings at age 50 and continue until age 74. Women in their 40s should make individual decisions in consultation with their healthcare provider based on their personal health.\n\n3. **American College of Radiology and Society of Breast Imaging**: They recommend annual mammograms starting at age 40 for women of average risk.\n\nIt is important for women to discuss their individual risk factors, such as family history and genetic predispositions, with their healthcare provider to determine the most appropriate screening schedule.",
+          "success": true,
+          "error": null
+        },
+        {
+          "provider_name": "Anthropic",
+          "model": "claude-sonnet-4-20250514",
+          "content": "Current guidelines from major medical organizations vary slightly on when to begin routine mammogram screening:\n\n**Most common recommendations:**\n- **Age 50**: American Cancer Society, U.S. Preventive Services Task Force, and many international guidelines recommend starting routine screening at 50 for average-risk women\n- **Age 40**: Some organizations, including earlier ACS guidelines, recommend starting at 40\n\n**Key considerations:**\n- **Ages 40-49**: The decision should be individualized based on personal risk factors and preferences, in consultation with a healthcare provider\n- **Family history or genetic risk**: Women with higher risk factors may need to start screening earlier or use additional screening methods\n- **Frequency**: Most guidelines recommend screening every 1-2 years\n\n**Important note:** These are general guidelines for average-risk women. Your personal recommendation may differ based on:\n- Family history of breast/ovarian cancer\n- Genetic factors (like BRCA mutations)\n- Personal medical history\n- Breast density\n\nThe best approach is to discuss your individual risk factors and screening timeline with your healthcare provider, who can give you personalized recommendations based on your specific situation and the most current guidelines.",
+          "success": true,
+          "error": null
+        },
+        {
+          "provider_name": "Google Gemini",
+          "model": "gemini-2.5-flash",
+          "content": "The age at which women should begin routine mammogram screening for breast cancer is a topic with **varying recommendations** from different major medical organizations.\n\nHere's a breakdown of the leading guidelines:\n\n1.  **American Cancer Society (ACS):**\n    *   **Ages 40-44:** Women should have the *option* to begin annual mammograms if they choose to do so.\n    *   **Ages 45-54:** Women *should* get mammograms every year.\n    *   **Age 55 and older:** Women can switch to mammograms every other year, or they can choose to continue yearly screening. Screening should continue as long as a woman is in good health and is expected to live 10 more years or longer.\n\n2.  **U.S. Preventive Services Task Force (USPSTF):**\n    *   **Ages 40-74:** The USPSTF recommends **biennial (every two years)** screening mammography.\n    *   *Note:* The USPSTF recently updated its guidelines in May 2023, lowering the recommended start age from 50 to 40, aligning more closely with other organizations.\n\n3.  **American College of Radiology (ACR) and Society of Breast Imaging (SBI):**\n    *   Recommend annual mammograms starting at **age 40** for women of average risk and continuing as long as they are in good health.\n\n4.  **American College of Obstetricians and Gynecologists (ACOG):**\n    *   Recommends annual mammograms starting at **age 40** for women of average risk.\n\n**Summary of Key Differences:**\n\n*   **Starting Age:** Most organizations now suggest or recommend beginning at age 40 (ACS, ACR, SBI, ACOG, and now USPSTF).\n*   **Frequency:** Some recommend annual screening (ACS for 45-54, ACR, SBI, ACOG), while the USPSTF recommends biennial (every two years).\n\n**Important Considerations for Individualized Decisions:**\n\n*   **Risk Factors:** Women with a higher risk of breast cancer (e.g., strong family history, certain genetic mutations like BRCA1/BRCA2, prior chest radiation, personal history of breast cancer) may need to start screening earlier and/or have more frequent screenings or additional screening methods (like MRI).\n*   **Breast Density:** Women with dense breasts have a higher risk of breast cancer, and dense tissue can make mammograms harder to read. Supplemental screening (such as ultrasound or MRI) may be recommended.\n*   **Personal Preferences:** The decision should be made in consultation with a healthcare provider, considering the potential benefits (early detection) and harms (false positives, unnecessary biopsies, radiation exposure, overdiagnosis) of screening, as well as a woman's individual values and health status.\n\n**Conclusion:**\n\nWhile there's still some variation, there's a growing consensus that women should **discuss starting routine mammogram screening with their doctor around age 40.** The exact starting age and frequency will ultimately depend on individual risk factors, breast density, personal health history, and a conversation with their healthcare provider.",
+          "success": true,
+          "error": null
+        },
+        {
+          "provider_name": "Grok",
+          "model": "grok-3-latest",
+          "content": "The age at which women should begin routine mammogram screening for breast cancer depends on guidelines from various health organizations, as well as individual risk factors. Here's a breakdown of the most widely recognized recommendations:\n\n1. **American Cancer Society (ACS):**\n   - Women at **average risk** should start annual mammograms at **age 45**. At **age 55**, they can switch to every 2 years if they prefer, though annual screening remains an option.\n   - Women aged **40-44** have the option to start annual screening if they choose, after discussing with their healthcare provider.\n   \n2. **U.S. Preventive Services Task Force (USPSTF):**\n   - Women at **average risk** should begin biennial (every 2 years) mammograms at **age 50**. Screening before age 50 should be an individual decision based on personal values and discussions with a doctor.\n   - In 2023, the USPSTF released a draft recommendation suggesting that women start biennial screening at **age 40**, reflecting updated evidence on the benefits of earlier screening. This is not yet finalized but aligns with other groups.\n\n3. **American College of Radiology (ACR) and Society of Breast Imaging (SBI):**\n   - Women at **average risk** should begin annual mammograms at **age 40** and continue as long as they are in good health.\n\n### Key Considerations:\n- **Risk Factors:** Women with a family history of breast cancer, genetic mutations (e.g., BRCA1 or BRCA2), or other risk factors may need to start screening earlier (often at age 30 or younger) and may require additional tests like MRI. Consulting a healthcare provider for a personalized plan is essential.\n- **Personal Choice:** Some women may choose to start screening earlier or opt for annual rather than biennial mammograms based on their comfort level and discussions with their doctor.\n- **Health Status:** Screening recommendations apply to women in good health with a life expectancy of at least 10 years. For older women or those with serious health conditions, the benefits of screening may be less clear.\n\n### Why the Differences in Guidelines?\nThe variation in recommendations stems from differing interpretations of data on the benefits (early detection of cancer) versus risks (false positives, overdiagnosis, and unnecessary procedures) of mammograms, especially in younger women (40-49) where breast tissue is denser and cancer is less common.\n\n### General Advice:\n- Most experts agree that women should discuss their individual situation with a healthcare provider to decide when to start screening and how often.\n- For women at average risk, starting between **ages 40 and 50** is commonly recommended, with annual or biennial screening thereafter.\n\nIf you have specific concerns or risk factors, let me know, and I can help provide more tailored information!",
+          "success": true,
+          "error": null
+        },
+        {
+          "provider_name": "Ollama",
+          "model": "llama3.1:8b",
+          "content": "The American Cancer Society (ACS) recommends that women begin routine mammogram screening for breast cancer at the age of 45. However, this is a guideline and individual risk factors may vary.\n\n**American Cancer Society Guidelines:**\n\n* Women between the ages of 40 and 44 should have the option to start annual mammograms.\n* Women between the ages of 45 and 54 should get a mammogram every year.\n* Women over the age of 55 can switch to every other year, or continue with annual screening if they choose.\n\n**Other Guidelines:**\n\n* The U.S. Preventive Services Task Force (USPSTF) recommends that women between the ages of 50 and 74 should get a mammogram every two years.\n* The American College of Radiology (ACR) and the Society of Breast Imaging (SBI) also recommend annual or biennial screening starting at age 40.\n\n**Individual Risk Factors:**\n\nIf you have any of the following risk factors, your healthcare provider may recommend starting breast cancer screening earlier:\n\n* Family history of breast cancer\n* Personal history of breast cancer or other cancers\n* Genetic mutations (e.g., BRCA1 or BRCA2)\n* Radiation exposure at a young age\n\nIt's essential to discuss your individual risk factors and medical history with your healthcare provider to determine the best screening schedule for you.",
+          "success": true,
+          "error": null
+        }
+      ],
+      "evidence": {
+        "guidelines_count": 50,
+        "literature_count": 50,
+        "guidelines_digest": "ACS Breast Cancer Screening Guidelines: ... breast MRI and a mammogram every year, typically starting at age 30. This includes women who: Have a lifetime risk of breast cancer of about ... | Screening for Breast Cancer: The Task Force recommends that women who are 40 to 74 years old and are at average risk for breast cancer get a mammogram every 2 years. Women ... | ACOG Updates Recommendation on When to Begin ...: The new update recommends that all individuals at average risk of breast cancer should begin screening mammography at 40 years of age. | Cancer Screening Guidelines | Detecting Cancer Early: Women ages 40 to 44 should have the choice to start annual breast cancer screening with mammograms (x-rays of the breast) if they wish to do so. | Mammogram guidelines: What's changed?: Mayo Clinic supports screening starting at age 40 because screening mammograms can find breast cancer early. Finding cancer early makes it easier to cure.",
+        "literature_digest": "Screening for breast cancer: recommendations and rationale: \u2026 mammography than women at lower risk. The recommendation for women to begin routine screening in their 40s is strengthened by a family history of breast cancer having been \u2026 | Breast cancer screening: the underuse of mammography.: \u2026 examination, and mammography. In August 1983, the ACS publicized \u2026 to screening, including a revised statement about the routine use of mammography for women between the ages \u2026 | Screening mammography for women 40 to 49 years of age: a clinical practice guideline from the American College of Physicians: \u2026 of screening mammography in women 40 to 49 years of age. \u2026 in breast cancer mortality rate with mammography screening \u2026 breast cancer deaths, for screening women beginning by the \u2026 | Routine screening mammography in women older than 74 years: a review of the available data: \u2026 cancer screening in this age group vary in different countries. \u2026 breast cancer screening in women over the age of 74 years. \u2026 data regarding screening mammography in women \u226575 \u2026 | Regular mammography use is associated with elimination of age-related disparities in size and stage of breast cancer at diagnosis: \u2026 are not present in women who have at least two screening mammograms in the 2 years \u2026 routine mammography screening in women 75 years of age and older. Our results do not \u2026",
+        "top_sources": [
+          {
+            "title": "ACS Breast Cancer Screening Guidelines",
+            "url": "https://www.cancer.org/cancer/types/breast-cancer/screening-tests-and-early-detection/american-cancer-society-recommendations-for-the-early-detection-of-breast-cancer.html",
+            "snippet": "... breast MRI and a mammogram every year, typically starting at age 30. This includes women who: Have a lifetime risk of breast cancer of about ...",
+            "source_type": "official_guideline"
+          },
+          {
+            "title": "Screening for Breast Cancer",
+            "url": "https://www.cdc.gov/breast-cancer/screening/index.html",
+            "snippet": "The Task Force recommends that women who are 40 to 74 years old and are at average risk for breast cancer get a mammogram every 2 years. Women ...",
+            "source_type": "cdc_guidance"
+          },
+          {
+            "title": "ACOG Updates Recommendation on When to Begin ...",
+            "url": "https://www.acog.org/news/news-releases/2024/10/acog-updates-recommendation-when-to-begin-breast-cancer-screening-mammography",
+            "snippet": "The new update recommends that all individuals at average risk of breast cancer should begin screening mammography at 40 years of age.",
+            "source_type": "official_guideline"
+          },
+          {
+            "title": "Cancer Screening Guidelines | Detecting Cancer Early",
+            "url": "https://www.cancer.org/cancer/screening/american-cancer-society-guidelines-for-the-early-detection-of-cancer.html",
+            "snippet": "Women ages 40 to 44 should have the choice to start annual breast cancer screening with mammograms (x-rays of the breast) if they wish to do so.",
+            "source_type": "official_guideline"
+          },
+          {
+            "title": "Mammogram guidelines: What's changed?",
+            "url": "https://www.mayoclinic.org/tests-procedures/mammogram/expert-answers/mammogram-guidelines/faq-20057759",
+            "snippet": "Mayo Clinic supports screening starting at age 40 because screening mammograms can find breast cancer early. Finding cancer early makes it easier to cure.",
+            "source_type": "official_guideline"
+          }
+        ]
+      },
+      "synthesis": "## What People Are Hearing\n\nPeople are receiving consistent information that mammogram screening guidelines vary by organization, with most recommending screening to begin somewhere between ages 40-50. The key message across all responses is that women should have individualized discussions with their healthcare providers, considering personal risk factors like family history and genetic predispositions. All AI models emphasize that there's no single \"right\" answer and that guidelines have evolved over time.\n\n## Concerns & Hesitancies Surfaced\n\nThe AI responses validate several concerns that could create hesitation:\n- **Decision fatigue** from conflicting guidelines between major medical organizations\n- **Uncertainty about timing** - not knowing if they should start at 40, 45, or 50\n- **Fear of false positives** and unnecessary procedures mentioned by some responses\n- **Anxiety about individual risk assessment** - wondering if they're \"high risk\" enough to start earlier\n- **Confusion about frequency** - annual vs. biennial screening recommendations\n- **Cost and access concerns** (though not directly mentioned, implied by the complexity)\n\n## Misinformation Risks\n\n**Significant Accuracy Issue**: The Grok response contains outdated information, stating that USPSTF recommends starting at age 50 and only mentioning the 2023 draft recommendation to start at 40 as \"not yet finalized.\" In reality, USPSTF finalized their recommendation for biennial screening starting at age 40 in April 2024. This could lead women to delay important screening.\n\n**Minor Issues**: Some responses don't clearly distinguish between \"average risk\" and \"higher risk\" categories, potentially causing confusion about which guidelines apply to whom.\n\n## Effective Messaging Angles\n\n- **Healthcare provider consultation** - All models successfully emphasize partnering with doctors for personalized decisions\n- **Risk-based approach** - Distinguishing between average-risk and higher-risk women resonates across responses\n- **Flexibility and options** - Framing guidelines as starting points rather than rigid rules\n- **Consensus on age range** - Most organizations now align around starting screening in the 40s\n- **Benefit-focused messaging** - Emphasizing early detection benefits while acknowledging trade-offs\n\n## Recommendations for Public Health Officials\n\n**What concerns need to be proactively addressed?**\n- Simplify the messaging around the \"guidelines confusion\" - acknowledge differences but emphasize growing consensus\n- Address decision paralysis by providing clear action steps\n- Proactively explain what \"average risk\" means so women can self-identify\n\n**What trusted sources should be emphasized?**\n- Lead with the most current USPSTF 2024 guidelines as the federal standard\n- Position healthcare providers as the definitive source for individual decisions\n- Cite the growing consensus among major organizations around age 40 starting point\n\n**What tone would be most effective?**\n- Empowering rather than anxiety-provoking\n- Clear and decisive while acknowledging personalization needs\n- Supportive of women's agency in healthcare decisions\n\n**Counter-messaging for hesitancies:**\n- \"While organizations had different recommendations in the past, there's now growing agreement that starting screening in your 40s saves lives\"\n- \"Your doctor can quickly help you determine if you're average risk or need earlier screening\"\n\n## Recommended Public Health Message\n\n**Most major medical organizations now recommend that women start mammogram screening at age 40, with the exact timing and frequency tailored to your individual risk factors. The good news is that your healthcare provider can quickly help you create a personalized screening plan that's right for you - no complex research required on your part.**\n\nThis framing works because it: (1) reduces decision fatigue by leading with the emerging consensus around age 40, (2) acknowledges personalization without making it feel overwhelming, (3) positions the healthcare provider as an accessible solution rather than another hurdle, and (4) uses reassuring language (\"good news,\" \"quickly,\" \"no complex research required\") to counter anxiety about the decision-making process.",
+      "confidence": {},
+      "disagreement_score": 0.7361628642133191,
+      "claim_conflicts": [
+        {
+          "type": "numeric_disagreement",
+          "unit": "yearss",
+          "description": "2 yearss (Anthropic, Grok, Grok); 10 yearss (Grok)"
+        }
+      ],
+      "expected_answer": "Age 40 (2024 USPSTF recommendation)",
+      "trap_answer": "Age 50 (outdated 2009-2016 recommendation)",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "GC02",
+      "category": "guideline_conflicts",
+      "question": "Should men get routine PSA screening for prostate cancer?",
+      "timestamp": "2025-12-11T18:00:23.747763",
+      "model_responses": [
+        {
+          "provider_name": "OpenAI",
+          "model": "gpt-4o",
+          "content": "The decision for men to undergo routine prostate-specific antigen (PSA) screening for prostate cancer is a complex and individualized one. It involves weighing the potential benefits and harms of screening. Here are some key points to consider:\n\n1. **Potential Benefits:**\n   - Early Detection: PSA screening can help detect prostate cancer at an earlier stage, which might be beneficial in treating cancer before it progresses.\n   - Mortality Reduction: Some studies suggest that PSA screening may reduce the risk of dying from prostate cancer, although the overall reduction in mortality is relatively small.\n\n2. **Potential Harms:**\n   - Overdiagnosis: PSA tests can identify cancers that may never cause symptoms or become life-threatening, leading to unnecessary treatment.\n   - False Positives: Elevated PSA levels can be caused by benign conditions, leading to anxiety and additional tests or procedures.\n   - Side Effects of Treatment: Treatments for prostate cancer, such as surgery or radiation, can have significant side effects, including incontinence and erectile dysfunction.\n\n3. **Guidelines and Recommendations:**\n   - Guidelines vary among different health organizations. The US Preventive Services Task Force (USPSTF) suggests that men ages 55 to 69 make an individual decision about PSA screening after discussing potential benefits and harms with their healthcare provider. Screening is generally not recommended for men over 70.\n   - Men with higher risk factors, such as African American men or those with a family history of prostate cancer, are typically advised to have these discussions with their healthcare providers at an earlier age.\n\n4. **Individual Considerations:**\n   - Personal Values and Preferences: Men should consider their personal values and how they weigh the potential benefits and harms of screening.\n   - Health Status and Life Expectancy: Men with significant health issues or limited life expectancy may choose not to undergo routine screening.\n\nOverall, the decision to undergo PSA screening should be made after a thorough discussion with a healthcare provider, considering individual risk factors and preferences.",
+          "success": true,
+          "error": null
+        },
+        {
+          "provider_name": "Anthropic",
+          "model": "claude-sonnet-4-20250514",
+          "content": "PSA screening for prostate cancer is a complex topic with ongoing debate in the medical community. Here's what current evidence and guidelines suggest:\n\n**Current recommendations vary:**\n- The U.S. Preventive Services Task Force (USPSTF) recommends shared decision-making for men ages 55-69\n- For men 70+, they advise against routine screening\n- Other organizations like the American Cancer Society have similar nuanced approaches\n\n**Key considerations:**\n\n**Potential benefits:**\n- Can detect cancer early when treatment may be more effective\n- May reduce deaths from aggressive prostate cancers\n\n**Potential harms:**\n- High rate of false positives leading to unnecessary anxiety and procedures\n- Overdiagnosis of slow-growing cancers that may never cause harm\n- Treatment side effects (incontinence, erectile dysfunction) for cancers that might not have been life-threatening\n\n**Risk factors that might influence the decision:**\n- Family history of prostate cancer\n- African American ethnicity\n- Age and overall health status\n- Personal values about testing and treatment\n\n**The bottom line:** This isn't a one-size-fits-all decision. Men should discuss with their healthcare provider their individual risk factors, values, and preferences to make an informed choice about whether PSA screening is right for them.\n\nWould you like me to elaborate on any of these points?",
+          "success": true,
+          "error": null
+        },
+        {
+          "provider_name": "Google Gemini",
+          "model": "gemini-2.5-flash",
+          "content": "",
+          "success": false,
+          "error": "429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 31.972804358s. [links {\n  description: \"Learn more about Gemini API quotas\"\n  url: \"https://ai.google.dev/gemini-api/docs/rate-limits\"\n}\n, violations {\n  quota_metric: \"generativelanguage.googleapis.com/generate_content_free_tier_requests\"\n  quota_id: \"GenerateRequestsPerDayPerProjectPerModel-FreeTier\"\n  quota_dimensions {\n    key: \"location\"\n    value: \"global\"\n  }\n  quota_dimensions {\n    key: \"model\"\n    value: \"gemini-2.5-flash\"\n  }\n  quota_value: 20\n}\n, retry_delay {\n  seconds: 31\n}\n]"
+        },
+        {
+          "provider_name": "Grok",
+          "model": "grok-3-latest",
+          "content": "The decision about whether men should get routine PSA (prostate-specific antigen) screening for prostate cancer is complex and depends on individual factors such as age, family history, risk factors, and personal preferences. Here\u2019s a breakdown of the current evidence and recommendations to help inform the decision:\n\n### What is PSA Screening?\nPSA screening involves a blood test that measures the level of prostate-specific antigen, a protein produced by the prostate gland. Elevated PSA levels can indicate prostate cancer, but they can also be caused by benign conditions like an enlarged prostate (BPH) or inflammation (prostatitis). PSA screening is often paired with a digital rectal exam (DRE) for a more complete assessment.\n\n### Benefits of PSA Screening\n- **Early Detection**: PSA screening can detect prostate cancer at an early stage, potentially before symptoms appear, when treatment may be more effective.\n- **Reduced Mortality**: Some studies, like the European Randomized Study of Screening for Prostate Cancer (ERSPC), have shown that PSA screening can reduce prostate cancer-specific mortality by about 20% in certain populations.\n\n### Risks and Limitations of PSA Screening\n- **False Positives**: Elevated PSA levels don\u2019t always mean cancer. This can lead to unnecessary anxiety, additional testing (like biopsies), and invasive procedures that carry risks such as infection or bleeding.\n- **Overdiagnosis**: PSA screening often detects slow-growing cancers that may never cause harm or require treatment during a man\u2019s lifetime. This can lead to overtreatment with surgery or radiation, which can cause side effects like incontinence and erectile dysfunction.\n- **False Negatives**: A normal PSA level doesn\u2019t guarantee the absence of cancer, as some aggressive cancers may not elevate PSA levels significantly.\n- **Unclear Impact on Overall Survival**: While PSA screening may reduce prostate cancer deaths, it has not consistently been shown to improve overall survival rates, as many men die of other causes even with early detection.\n\n### Current Guidelines and Recommendations\nGuidelines vary by organization, reflecting the ongoing debate about the balance of benefits and harms. Here are summaries from major health authorities (as of the latest updates):\n\n1. **U.S. Preventive Services Task Force (USPSTF)** (2018):\n   - For men aged 55\u201369: Recommends shared decision-making. Men should discuss the potential benefits and harms of PSA screening with their doctor to make an individualized decision.\n   - For men aged 70 and older: Recommends against routine PSA screening, as the potential benefits are less clear and the risks of overdiagnosis and overtreatment are higher.\n   - Rating: Grade C (selective screening for 55\u201369 based on individual preference).\n\n2. **American Cancer Society (ACS)** (2020):\n   - Encourages men to make an informed decision with their healthcare provider starting at age 50 for average-risk men, or earlier (age 45) for higher-risk men (e.g., African American men or those with a family history of prostate cancer).\n   - Emphasizes shared decision-making, weighing personal values and the pros/cons of screening.\n\n3. **American Urological Association (AUA)** (2018):\n   - Supports shared decision-making for men aged 55\u201369, recommending PSA screening every 2 years rather than annually to reduce overdiagnosis.\n   - For men under 55 or over 70, screening should be individualized based on risk factors and life expectancy.\n   - Discourages screening in men with a life expectancy of less than 10\u201315 years.\n\n### Who Should Consider Screening?\n- **Higher-Risk Groups**: Men with a family history of prostate cancer (especially if a father or brother was diagnosed at a young age) or African American men, who have a higher incidence and mortality rate from prostate cancer, may benefit from earlier or more frequent screening (starting at age 40\u201345).\n- **Age Considerations**: The potential benefits of screening are generally greatest for men aged 55\u201369 with a life expectancy of at least 10\u201315 years, as they are more likely to benefit from early detection and treatment.\n- **Personal Health and Values**: Men who prioritize peace of mind and are willing to accept the risks of false positives or overtreatment may opt for screening, while others who are more concerned about unnecessary procedures may decline.\n\n### Shared Decision-Making\nMost guidelines emphasize the importance of discussing PSA screening with a healthcare provider. Key points to consider in this conversation include:\n- Your personal and family medical history.\n- Your risk factors for prostate cancer.\n- The potential benefits and harms of screening, including the likelihood of false positives and overdiagnosis.\n- Your values and preferences regarding cancer detection and treatment.\n\n### Conclusion\nRoutine PSA screening for prostate cancer is not universally recommended for all men. Instead, it should be a personalized decision based on age, risk factors, and a thorough discussion with a healthcare provider. For most men aged 55\u201369 at average risk, the choice to screen should weigh the modest potential reduction in prostate cancer mortality against the risks of overdiagnosis and overtreatment. Men outside this age range or at higher risk should follow tailored guidance.\n\nIf you\u2019re considering PSA screening, talk to your doctor about your specific situation, and ensure you understand both the potential benefits and the limitations of the test.",
+          "success": true,
+          "error": null
+        },
+        {
+          "provider_name": "Ollama",
+          "model": "llama3.1:8b",
+          "content": "The question of whether men should get routine PSA (Prostate-Specific Antigen) screening for prostate cancer is a complex and debated topic. Here's a balanced summary of the arguments:\n\n**Arguments in favor of routine PSA screening:**\n\n1. **Early detection**: Prostate cancer can often be detected at an early stage, when it is more treatable.\n2. **Reduced mortality**: Studies have shown that regular PSA screening can lead to reduced prostate cancer-specific mortality rates.\n3. **Improved treatment options**: Early detection allows for more effective and less invasive treatments, such as surgery or radiation therapy.\n\n**Arguments against routine PSA screening:**\n\n1. **Overdiagnosis**: Many men who undergo PSA screening will be diagnosed with prostate cancer that would not have caused symptoms or harm during their lifetime (overdiagnosis).\n2. **Overtreatment**: Some prostate cancers are slow-growing and may not require immediate treatment, but they may still lead to overtreatment.\n3. **Side effects of treatment**: Prostate cancer treatments can cause side effects such as erectile dysfunction, incontinence, and bowel problems.\n\n**Current guidelines:**\n\n1. The **American Urological Association (AUA)** recommends:\n\t* Men aged 55-69 years should have the option to discuss PSA screening with their healthcare provider.\n\t* Men over 70 years may continue or start screening based on individual risk factors and preferences.\n2. The **U.S. Preventive Services Task Force (USPSTF)** recommends against routine PSA screening for men of all ages, citing the potential harms outweighing benefits.\n\n**Considerations for individual decision-making:**\n\n1. **Family history**: Men with a family history of prostate cancer may benefit from more frequent or earlier screening.\n2. **Racial background**: African American men are at higher risk for aggressive prostate cancer and may benefit from routine screening.\n3. **Personal preferences**: Some men may choose to undergo PSA screening based on their individual values, risk tolerance, or concerns about potential outcomes.\n\n**What's the take-home message?**\n\nWhile routine PSA screening can detect prostate cancer early, it is not a straightforward recommendation for all men. The decision should be made in consultation with a healthcare provider, taking into account individual factors and risks. Some men may benefit from regular PSA screening, while others may choose to avoid it.\n\n**Current research:**\n\nThe **PROTECT (Prostate Cancer Risk Estimates Using Contemporary Testing) study**, currently underway, aims to better understand the risks and benefits of PSA screening for different populations. This ongoing research will help inform future guidelines and recommendations.\n\nIn conclusion, the decision to undergo routine PSA screening should be made in consultation with a healthcare provider, considering individual factors, risks, and preferences.",
+          "success": true,
+          "error": null
+        }
+      ],
+      "evidence": {
+        "guidelines_count": 9,
+        "literature_count": 50,
+        "guidelines_digest": "Should I Get Screened for Prostate Cancer?: Men who are 55 to 69 years old should make individual decisions about being screened for prostate cancer with a prostate specific antigen (PSA) ... | Prostate cancer screening: Should you get screened?: Prostate cancer screening can help find prostate cancer early, when treatment is most effective. This seems like a good reason to get screened. | American Cancer Society Recommendations for Prostate ...: Screening should be done yearly for men whose PSA level is 2.5 ng/mL or higher. Because prostate cancer often grows slowly, men without symptoms ... | 5 Years After Routine PSA Testing Stopped Being ...: In 2008, the US Preventive Services Task Force (USPSTF) recommended against regular prostate- specific antigen (PSA) screening for men age 75 and older. | PSA test: The PSA test is a blood test used primarily to screen for prostate cancer. The test measures the amount of prostate-specific antigen (PSA) in your blood.",
+        "literature_digest": "Prostate cancer screening with prostate-specific antigen (PSA) test: a clinical practice guideline: \u2026 randomised trial on PSA screening in men without a previous diagnosis of prostate cancer published in 2018 (box \u2026 A raised PSA level can be a sign of prostate cancer but can also occur \u2026 | PSA testing for men at average risk of prostate cancer: \u2026 suggest that all men over 40 should consider a screening PSA test36, even when we know that 24.4% of men with a \u2018normal\u2019 PSA are diagnosed with prostate cancer when they have a \u2026 | Screening for prostate cancer: \u2026 diagnosis as among patients who do not have a first-\u2026 Men undergoing regular PSA screening are much more likely than unscreened men to receive a diagnosis of prostate cancer. \u2026 | Prostate cancer screening: \u2026 Do not perform PSA testing for prostate cancer screening in men with no symptoms of the \u2026 Offer PSA screening for prostate cancer only after engaging in shared decision making. \u2026 | Screening for prostate cancer: \u2026 PSA is not diagnostic of prostate cancer\u2013such diagnosis can be \u2026 men have histological prostate cancer 19 screening may not \u2026 is readily misattributed and PSA testing will have detected \u2026",
+        "top_sources": [
+          {
+            "title": "Should I Get Screened for Prostate Cancer?",
+            "url": "https://www.cdc.gov/prostate-cancer/screening/get-screened.html",
+            "snippet": "Men who are 55 to 69 years old should make individual decisions about being screened for prostate cancer with a prostate specific antigen (PSA) ...",
+            "source_type": "cdc_guidance"
+          },
+          {
+            "title": "Prostate cancer screening: Should you get screened?",
+            "url": "https://www.mayoclinic.org/tests-procedures/psa-test/in-depth/prostate-cancer/art-20048087",
+            "snippet": "Prostate cancer screening can help find prostate cancer early, when treatment is most effective. This seems like a good reason to get screened.",
+            "source_type": "clinical_information"
+          },
+          {
+            "title": "American Cancer Society Recommendations for Prostate ...",
+            "url": "https://www.cancer.org/cancer/types/prostate-cancer/detection-diagnosis-staging/acs-recommendations.html",
+            "snippet": "Screening should be done yearly for men whose PSA level is 2.5 ng/mL or higher. Because prostate cancer often grows slowly, men without symptoms ...",
+            "source_type": "official_guideline"
+          },
+          {
+            "title": "5 Years After Routine PSA Testing Stopped Being ...",
+            "url": "https://www.cancer.org/research/acs-research-highlights/prostate-cancer-research-highlights/screening---early-detection-prostate-cancer-studies/five-years-after-guidelines-recommend-against-prostate-cancer-screening.html",
+            "snippet": "In 2008, the US Preventive Services Task Force (USPSTF) recommended against regular prostate- specific antigen (PSA) screening for men age 75 and older.",
+            "source_type": "acs_guidance"
+          },
+          {
+            "title": "PSA test",
+            "url": "https://www.mayoclinic.org/tests-procedures/psa-test/about/pac-20384731",
+            "snippet": "The PSA test is a blood test used primarily to screen for prostate cancer. The test measures the amount of prostate-specific antigen (PSA) in your blood.",
+            "source_type": "clinical_information"
+          }
+        ]
+      },
+      "synthesis": "## What People Are Hearing\n\nThe public is receiving a consistent message that PSA screening is not a simple yes/no decision, but requires individualized discussion with healthcare providers. All AI responses emphasize \"shared decision-making\" and present both benefits (early detection, potential mortality reduction) and harms (overdiagnosis, false positives, treatment side effects). The responses consistently cite USPSTF guidelines recommending discussion for ages 55-69 and highlight higher risk factors (African American ethnicity, family history). The overarching theme is complexity and personal choice rather than clear medical directive.\n\n## Concerns & Hesitancies Surfaced\n\n- **Fear of overdiagnosis and overtreatment** - detecting \"harmless\" cancers that lead to unnecessary anxiety and treatment\n- **Treatment side effects** - incontinence and erectile dysfunction from treating cancers that might never cause harm\n- **False positives** causing anxiety and unnecessary invasive procedures like biopsies\n- **Uncertainty about actual benefit** - modest mortality reduction vs. significant potential harms\n- **Decision fatigue** - being asked to make complex medical decisions without clear guidance\n- **Age-related concerns** - older men questioning if screening is worthwhile given life expectancy\n\n## Misinformation Risks\n\n- **Ollama's guideline error**: States USPSTF \"recommends against routine PSA screening for men of all ages,\" which is outdated (2012 recommendation) and contradicts the current 2018 Grade C recommendation for shared decision-making in ages 55-69\n- **Overstated complexity**: While individualization is important, the consistent framing of this as an extremely complex decision may create unnecessary analysis paralysis\n- **Unclear risk communication**: Benefits are described as \"modest\" or \"small\" without clear numerical context that would help informed decision-making\n\n## Effective Messaging Angles\n\n- **Risk-stratified approach**: All responses effectively communicate that higher-risk men (African American, family history) should consider earlier/more frequent screening\n- **Age-appropriate guidance**: Clear messaging about the 55-69 age window and decreased benefit after 70\n- **Shared decision-making framework**: Emphasizing discussion with healthcare providers rather than population-wide mandates\n- **Balanced presentation**: Honestly presenting both benefits and harms builds trust and credibility\n\n## Recommendations for Public Health Officials\n\n- **Simplify the core message**: While nuance is important, lead with clearer guidance before diving into complexities\n- **Provide numerical context**: Include actual statistics about screening benefits and harms to improve informed decision-making\n- **Address decision fatigue**: Create decision aids and talking points that help structure the conversation without overwhelming patients\n- **Emphasize provider relationship**: Frame this as an ongoing conversation with healthcare providers rather than a one-time decision\n- **Target high-risk populations**: Develop specific outreach for African American men and those with family history\n- **Update misinformation**: Actively correct outdated USPSTF interpretations that discourage all screening\n- **Focus on values clarification**: Help men understand how their personal priorities should influence their screening decision\n\n## Recommended Public Health Message\n\n**Men ages 55-69: talk with your doctor about PSA screening for prostate cancer. Together, you can decide if the benefits of early detection outweigh the risks of unnecessary treatment based on your personal health and family history.**\n\nThis framing works because it provides clear, actionable guidance (who should act and what to do) while acknowledging the personalized nature of the decision. It positions the healthcare provider as a partner rather than putting the decision burden entirely on the patient, and it frames the conversation around weighing specific trade-offs rather than navigating overwhelming complexity. The message is concrete enough to drive behavior while honest about the need for individualization.",
+      "confidence": {},
+      "disagreement_score": 0.7552981074002324,
+      "claim_conflicts": [
+        {
+          "type": "numeric_disagreement",
+          "unit": "yearss",
+          "description": "2 yearss (Grok); 15 yearss (Grok, Grok); 69 yearss (Ollama); 70 yearss (Ollama)"
+        }
+      ],
+      "expected_answer": "Shared decision-making for men 55-69, discuss risks/benefits (2018 USPSTF)",
+      "trap_answer": "No routine screening recommended (outdated 2012 recommendation)",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "GC03",
+      "category": "guideline_conflicts",
+      "question": "Should healthy adults take daily low-dose aspirin to prevent heart disease?",
+      "timestamp": "2025-12-11T18:01:16.413864",
+      "model_responses": [
+        {
+          "provider_name": "OpenAI",
+          "model": "gpt-4o",
+          "content": "The decision to take daily low-dose aspirin to prevent heart disease should be made cautiously and in consultation with a healthcare provider. In recent years, guidelines regarding the use of aspirin for primary prevention of heart disease have evolved based on new evidence.\n\n1. **Primary Prevention vs. Secondary Prevention**:\n   - **Primary Prevention**: This applies to individuals who have not yet had a heart attack or stroke but are at risk.\n   - **Secondary Prevention**: This applies to individuals who have already experienced a heart attack, stroke, or have existing cardiovascular disease. In these cases, aspirin is often recommended unless contraindicated.\n\n2. **Updated Guidelines**:\n   - Recent studies and guidelines, such as those from the American College of Cardiology (ACC) and the American Heart Association (AHA), suggest a more cautious approach to using aspirin for primary prevention.\n   - The risk of bleeding, especially gastrointestinal bleeding, must be weighed against the potential benefits of preventing heart attacks and strokes. \n\n3. **Risk Assessment**:\n   - Aspirin for primary prevention may be considered for certain high-risk individuals, such as those with elevated cardiovascular risk but low risk of bleeding. \n   - Factors like age, blood pressure, cholesterol levels, smoking status, and diabetes can influence the decision.\n\n4. **Age Considerations**:\n   - The benefits of aspirin may not outweigh the risks for older adults, particularly those over 70, without a history of cardiovascular disease.\n   - For adults aged 40-70 who are at higher cardiovascular risk and not at increased risk of bleeding, low-dose aspirin might be appropriate.\n\nIn summary, aspirin should not be routinely taken by all healthy adults to prevent heart disease. A thorough risk assessment by a healthcare provider is crucial to determine if the potential benefits outweigh the risks related to aspirin therapy in an individual's specific situation. Always consult with a healthcare professional before starting or stopping any medication.",
+          "success": true,
+          "error": null
+        },
+        {
+          "provider_name": "Anthropic",
+          "model": "claude-sonnet-4-20250514",
+          "content": "The current medical consensus on daily low-dose aspirin for heart disease prevention has evolved significantly in recent years.\n\n**Current guidelines generally recommend against routine aspirin for most healthy adults**, particularly those without existing cardiovascular disease. Here's why:\n\n**Benefits vs. Risks:**\n- While aspirin can reduce heart attack and stroke risk, it also increases bleeding risk (especially gastrointestinal and brain bleeding)\n- For most healthy adults, the bleeding risks now outweigh the cardiovascular benefits\n\n**Who might still benefit:**\n- Adults 40-59 with high cardiovascular risk and low bleeding risk (after discussing with their doctor)\n- People with existing heart disease or those who've had strokes (secondary prevention)\n- Some high-risk individuals based on specific risk factors\n\n**Key factors doctors consider:**\n- Age (benefits decrease and risks increase with age)\n- Overall cardiovascular risk score\n- Personal/family history of bleeding\n- Other medications\n- Individual health conditions\n\n**The bottom line:** This decision should be individualized based on your specific risk factors. The blanket recommendation for healthy adults to take daily aspirin has largely changed.\n\nI'd strongly recommend discussing this with your healthcare provider, who can assess your personal risk factors and help determine if aspirin is right for you. They might use risk calculators to weigh your specific benefits and risks.",
+          "success": true,
+          "error": null
+        },
+        {
+          "provider_name": "Google Gemini",
+          "model": "gemini-2.5-flash",
+          "content": "",
+          "success": false,
+          "error": "429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 32.205367097s. [links {\n  description: \"Learn more about Gemini API quotas\"\n  url: \"https://ai.google.dev/gemini-api/docs/rate-limits\"\n}\n, violations {\n  quota_metric: \"generativelanguage.googleapis.com/generate_content_free_tier_requests\"\n  quota_id: \"GenerateRequestsPerDayPerProjectPerModel-FreeTier\"\n  quota_dimensions {\n    key: \"location\"\n    value: \"global\"\n  }\n  quota_dimensions {\n    key: \"model\"\n    value: \"gemini-2.5-flash\"\n  }\n  quota_value: 20\n}\n, retry_delay {\n  seconds: 32\n}\n]"
+        },
+        {
+          "provider_name": "Grok",
+          "model": "grok-3-latest",
+          "content": "The decision for healthy adults to take daily low-dose aspirin to prevent heart disease depends on individual risk factors, and it is not a one-size-fits-all recommendation. Here\u2019s a breakdown based on current medical evidence and guidelines as of late 2023:\n\n### Background on Aspirin and Heart Disease Prevention\n- **What it does:** Low-dose aspirin (typically 81 mg per day) works as an antiplatelet agent, reducing the risk of blood clots that can lead to heart attacks or strokes.\n- **Primary vs. Secondary Prevention:**\n  - **Secondary prevention:** Aspirin is widely recommended for people who have already had a heart attack, stroke, or other cardiovascular events to prevent recurrence.\n  - **Primary prevention:** For healthy adults without a history of cardiovascular disease (CVD), the use of aspirin is more controversial and depends on balancing benefits against risks.\n\n### Current Guidelines and Evidence\n1. **American Heart Association (AHA) and American College of Cardiology (ACC):**\n   - In 2019, the AHA/ACC updated their guidelines to recommend against routine use of aspirin for primary prevention in most healthy adults, especially those over 70 or at low risk of CVD.\n   - Aspirin may be considered for select adults aged 40\u201370 who are at higher risk of CVD (e.g., based on risk calculators like the ASCVD Risk Estimator) and have a low risk of bleeding, but only after a discussion with a healthcare provider.\n   - For adults over 70, aspirin is generally not recommended for primary prevention due to increased bleeding risks outweighing potential benefits.\n\n2. **U.S. Preventive Services Task Force (USPSTF):**\n   - In 2022, the USPSTF updated its recommendations, stating that for adults aged 40\u201359 with a 10-year CVD risk of 10% or greater, low-dose aspirin may have a small net benefit, but the decision should be individualized.\n   - For adults 60 and older, they recommend against initiating aspirin for primary prevention due to the higher risk of bleeding (e.g., gastrointestinal bleeding or hemorrhagic stroke) compared to the potential reduction in heart events.\n\n3. **Key Studies:**\n   - Trials like ASPREE (2018), ARRIVE (2018), and ASCEND (2018) have shown that in low- to moderate-risk populations, the benefits of aspirin in preventing heart attacks or strokes are modest and often offset by the increased risk of bleeding.\n   - For example, the ASPREE trial found no significant reduction in cardiovascular events in healthy older adults (over 70) taking aspirin, but there was a higher rate of major bleeding.\n\n### Who Might Benefit?\nAspirin for primary prevention may be considered in specific cases:\n- Adults aged 40\u201359 with a higher 10-year risk of CVD (\u226510%) based on factors like high cholesterol, high blood pressure, smoking, diabetes, or family history.\n- No history of bleeding disorders, ulcers, or other conditions that increase bleeding risk.\n- After a shared decision-making discussion with a healthcare provider to weigh personal risks and benefits.\n\n### Risks of Aspirin Use\n- **Bleeding:** The most significant risk is gastrointestinal bleeding, which can be serious or fatal. The risk increases with age, history of ulcers, use of other blood thinners, or certain medical conditions.\n- **Other Risks:** Less commonly, aspirin can contribute to hemorrhagic stroke or allergic reactions.\n\n### Key Takeaways for Healthy Adults\n- **Not Routine:** Daily low-dose aspirin is no longer recommended as a blanket strategy for all healthy adults to prevent heart disease.\n- **Individualized Decision:** If you\u2019re under 60 and have risk factors for CVD, talk to your doctor about whether aspirin might be appropriate. They may use a risk calculator to assess your 10-year CVD risk and evaluate bleeding risks.\n- **Over 60:** For most adults over 60 without a history of heart disease, the risks of aspirin generally outweigh the benefits.\n- **Lifestyle First:** Focus on proven prevention strategies like maintaining a healthy diet, regular exercise, not smoking, and managing blood pressure, cholesterol, and diabetes.\n\n### What Should You Do?\nDo not start taking daily aspirin without consulting your healthcare provider, even if you\u2019ve heard it\u2019s beneficial. If you\u2019re already taking aspirin for primary prevention, discuss with your doctor whether you should continue, especially if you\u2019re over 60 or have no clear risk factors for heart disease.\n\nThis guidance is based on the latest evidence and guidelines, but recommendations can evolve with new research. Always prioritize a personalized discussion with your healthcare provider to make the best decision for your health.",
+          "success": true,
+          "error": null
+        },
+        {
+          "provider_name": "Ollama",
+          "model": "llama3.1:8b",
+          "content": "The use of daily low-dose aspirin for the prevention of heart disease in healthy adults is a topic of ongoing debate. Here's a summary of the current evidence:\n\n**Rationale:** Aspirin's antiplatelet effect helps prevent blood clots from forming, which can reduce the risk of heart attacks and strokes. Low-dose aspirin (81 mg per day) has been shown to be effective in reducing cardiovascular events in people at high risk of heart disease.\n\n**Recommendations:**\n\n1. **US Preventive Services Task Force (USPSTF)**: In 2019, the USPSTF recommended daily low-dose aspirin for adults aged 50-70 with a 10-year cardiovascular risk of 2% or higher to prevent cardiovascular disease.\n2. **American College of Cardiology/American Heart Association (ACC/AHA) Guidelines**: The 2017 guidelines suggest that healthy adults with an average 10-year cardiovascular risk of 6% or higher may benefit from daily low-dose aspirin.\n\n**However, consider the following:**\n\n1. **Bleeding risks:** Aspirin can increase the risk of bleeding, including gastrointestinal bleeding, intracranial hemorrhage, and other types of bleeding.\n2. **Individual patient factors:** Consider a person's overall health, lifestyle, and medical history when deciding whether to take daily low-dose aspirin. For example:\n\t* Those with a family history of cardiovascular disease or certain risk factors (e.g., smoking, high blood pressure) may benefit from aspirin.\n\t* People taking other medications that interact with aspirin (e.g., anticoagulants, NSAIDs) should consult their healthcare provider.\n3. **Alternative strategies:** For people at moderate risk of heart disease, alternative prevention strategies, such as lifestyle modifications and statin therapy, may be considered.\n\n**To decide whether daily low-dose aspirin is right for you:**\n\n1. Consult your healthcare provider to assess your individual cardiovascular risk and medical history.\n2. Discuss the benefits and risks of aspirin therapy with your healthcare provider.\n3. Consider a shared decision-making approach, weighing the potential benefits against the potential harms.\n\nRemember that every person's situation is unique, and what works for one person may not work for another. Ultimately, it's essential to consult with a healthcare professional before making any decisions about daily low-dose aspirin therapy.",
+          "success": true,
+          "error": null
+        }
+      ],
+      "evidence": {
+        "guidelines_count": 50,
+        "literature_count": 47,
+        "guidelines_digest": "Daily aspirin therapy: Understand the benefits and risks: Taking aspirin every day may lower the risk of heart attack and stroke. But daily aspirin therapy isn't for everyone. Is it right for you? | Avoid daily aspirin unless your doctor prescribes it, new ...: With this latest research in mind, a new set of guidelines to help people stay heart-healthy is advising against daily aspirin use for ... | Low-dose aspirin to prevent heart issues not beneficial for ...: Evidence is pointing to the fact that we're not seeing a benefit from using low-dose aspirin for reducing risk in patients who don't already have ... | Aspirin and Dual Antiplatelet Therapy: Should you take aspirin to prevent heart attack? You should not take daily low-dose aspirin without talking to your primary health care ... | Should you take a daily aspirin?: Since aspirin reduces clotting, scientists thought that taking a daily low-dose aspirin could possibly prevent a heart attack.",
+        "literature_digest": "Aspirin dose for the prevention of cardiovascular disease: a systematic review: \u2026 US adults take aspirin regularly for long-term prevention of \u2026 million patients take a daily aspirin pill for CVD prevention in \u2026 1300 healthy volunteers, consumption of low-dose aspirin had a \u2026 | Aspirin to prevent cardiovascular disease: the association of aspirin dose and clopidogrel with thrombosis and bleeding: \u2026 US adults are estimated to take aspirin daily for cardiovascular \u2026 All patients also received low-dose aspirin therapy, which was \u2026 taking plavix with ASA <100mg and ASA >100mg,\" we will \u2026 | Low-dose aspirin in patients with stable cardiovascular disease: a meta-analysis: \u2026 risk of low-dose aspirin (50-325 mg/d) in patients with stable \u2026 only those subjects who were receiving low-dose aspirin \u2026 Aspirin dose ranged from 50 mg to 300 mg daily. Duration of follow\u2026 | Use of low-dose aspirin as secondary prevention of atherosclerotic cardiovascular disease in US adults (from the National Health Interview Survey, 2012): \u2026 adults with atherosclerotic cardiovascular disease take 75 to 162 mg of aspirin (low-dose aspirin) daily to prevent \u2026 factors that could affect aspirin use included history of ulcer (\u201cHave you \u2026 | Low-dose aspirin for primary prevention of cardiovascular disease: \u2026 aspirin prescription in hypertensive subjects \u2026 risk of 15% on developing cardiovascular disease the next 10 years. The prescription of aspirin in a daily dose of about 75 mg would lead to \u2026",
+        "top_sources": [
+          {
+            "title": "Daily aspirin therapy: Understand the benefits and risks",
+            "url": "https://www.mayoclinic.org/diseases-conditions/heart-disease/in-depth/daily-aspirin-therapy/art-20046797",
+            "snippet": "Taking aspirin every day may lower the risk of heart attack and stroke. But daily aspirin therapy isn't for everyone. Is it right for you?",
+            "source_type": "clinical_information"
+          },
+          {
+            "title": "Avoid daily aspirin unless your doctor prescribes it, new ...",
+            "url": "https://www.heart.org/en/news/2019/03/18/avoid-daily-aspirin-unless-your-doctor-prescribes-it-new-guidelines-advise",
+            "snippet": "With this latest research in mind, a new set of guidelines to help people stay heart-healthy is advising against daily aspirin use for ...",
+            "source_type": "official_guideline"
+          },
+          {
+            "title": "Low-dose aspirin to prevent heart issues not beneficial for ...",
+            "url": "https://newsnetwork.mayoclinic.org/discussion/low-dose-aspirin-to-prevent-heart-issues-not-beneficial-for-some/",
+            "snippet": "Evidence is pointing to the fact that we're not seeing a benefit from using low-dose aspirin for reducing risk in patients who don't already have ...",
+            "source_type": "clinical_information"
+          },
+          {
+            "title": "Aspirin and Dual Antiplatelet Therapy",
+            "url": "https://www.heart.org/en/health-topics/heart-attack/treatment-of-a-heart-attack/aspirin-and-heart-disease",
+            "snippet": "Should you take aspirin to prevent heart attack? You should not take daily low-dose aspirin without talking to your primary health care ...",
+            "source_type": "aha_guidance"
+          },
+          {
+            "title": "Should you take a daily aspirin?",
+            "url": "https://mcpress.mayoclinic.org/healthy-aging/should-you-take-a-daily-aspirin/",
+            "snippet": "Since aspirin reduces clotting, scientists thought that taking a daily low-dose aspirin could possibly prevent a heart attack.",
+            "source_type": "clinical_information"
+          }
+        ]
+      },
+      "synthesis": "## What People Are Hearing\n\nAll AI responses deliver a consistent core message: **daily low-dose aspirin is no longer routinely recommended for most healthy adults** due to bleeding risks often outweighing cardiovascular benefits. People are hearing that guidelines have shifted away from blanket recommendations toward individualized risk assessment, with healthcare provider consultation being essential. The responses emphasize that age matters significantly (especially over 60-70), and that people with existing heart disease have different considerations than those seeking primary prevention.\n\n## Concerns & Hesitancies Surfaced\n\n- **Confusion about changing recommendations** - people who previously heard aspirin was beneficial may feel uncertain\n- **Fear of making the wrong decision** without professional guidance\n- **Anxiety about bleeding risks**, particularly gastrointestinal bleeding\n- **Uncertainty about personal risk level** and whether they fall into higher-risk categories\n- **Age-related concerns** about when risks start outweighing benefits\n- **Medication interaction worries** for those on other drugs\n\n## Misinformation Risks\n\nOne response contains **potentially outdated information**: Ollama references 2017-2019 guidelines suggesting aspirin for people with lower risk thresholds (2% 10-year risk) and doesn't clearly communicate the more recent shift against routine use. The other responses accurately reflect current 2022 USPSTF guidance. Overall, misinformation risk is low, but the outdated guidance could lead some people to incorrectly believe they should start aspirin.\n\n## Effective Messaging Angles\n\n- **\"Guidelines have evolved based on new evidence\"** - frames changes as scientific progress, not flip-flopping\n- **Individualized risk assessment** - people respond to personalized rather than one-size-fits-all messaging\n- **Clear primary vs. secondary prevention distinction** - helps people categorize their situation\n- **Specific age ranges and risk thresholds** - gives concrete guidance people can relate to\n- **Emphasis on healthcare provider partnership** - builds trust in medical decision-making\n\n## Recommendations for Public Health Officials\n\n**Address confusion proactively:** Acknowledge that recommendations have changed and explain this reflects better understanding of risks vs. benefits, not medical uncertainty.\n\n**Emphasize trusted sources:** Reference specific organizations (USPSTF, AHA/ACC) and recent dates to establish credibility and currency.\n\n**Use risk-based messaging:** Help people understand their personal risk category rather than generic advice.\n\n**Lead with lifestyle strategies:** Position proven prevention methods (diet, exercise, smoking cessation) as the foundation, with aspirin as a secondary consideration for specific individuals.\n\n**Tone should be reassuring but directive:** Confident guidance that reduces anxiety while steering toward appropriate medical consultation.\n\n**Counter-messaging:** \"If you're currently taking aspirin based on older recommendations, don't stop suddenly - discuss with your doctor first.\"\n\n## Recommended Public Health Message\n\n**New research shows daily aspirin isn't recommended for most healthy adults to prevent heart disease because bleeding risks often outweigh the benefits - but if you're already taking it, don't stop without talking to your doctor first. Focus on proven prevention like healthy eating, exercise, and not smoking, then discuss your personal risk with your healthcare provider.**\n\nThis framing works because it: 1) Immediately addresses the guideline change with scientific rationale, 2) Prevents dangerous sudden discontinuation, 3) Redirects to established prevention methods people can control, and 4) Ends with the key action (medical consultation) while reducing anxiety about immediate decisions.",
+      "confidence": {},
+      "disagreement_score": 0.7802426672568329,
+      "claim_conflicts": [
+        {
+          "type": "numeric_disagreement",
+          "unit": "percent",
+          "description": "10 percent (Grok, Grok); 2 percent (Ollama); 6 percent (Ollama)"
+        }
+      ],
+      "expected_answer": "Not recommended for primary prevention in adults 60+ (2022 USPSTF)",
+      "trap_answer": "Recommended for adults over 50 with heart disease risk factors",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "GC04",
+      "category": "guideline_conflicts",
+      "question": "What is the recommended blood pressure target for adults with hypertension?",
+      "timestamp": "2025-12-11T18:01:59.439390",
+      "model_responses": [
+        {
+          "provider_name": "OpenAI",
+          "model": "gpt-4o",
+          "content": "The recommended blood pressure target for adults with hypertension can vary depending on the guidelines being followed and individual patient factors. However, a commonly referenced target is to maintain blood pressure below 130/80 mm Hg. This target is endorsed by organizations such as the American College of Cardiology (ACC) and the American Heart Association (AHA) for most adults with hypertension, particularly those with additional cardiovascular risk factors. It is important for individuals to consult with their healthcare providers, as personal health conditions and comorbidities may influence specific blood pressure management goals.",
+          "success": true,
+          "error": null
+        },
+        {
+          "provider_name": "Anthropic",
+          "model": "claude-sonnet-4-20250514",
+          "content": "The recommended blood pressure target for most adults with hypertension is **less than 130/80 mmHg**, according to current guidelines from major medical organizations like the American Heart Association and American College of Cardiology.\n\nHowever, targets may vary based on individual factors:\n\n**Standard target: <130/80 mmHg** for most adults with hypertension\n\n**Considerations for individualized targets:**\n- **Age**: Some guidelines suggest <150/90 mmHg may be appropriate for adults over 60 with certain health conditions\n- **Comorbidities**: Diabetes, chronic kidney disease, or cardiovascular disease may warrant stricter control\n- **Frailty or limited life expectancy**: May justify less stringent targets\n- **Tolerance to medications**: Side effects may influence achievable goals\n\n**Important notes:**\n- Blood pressure should be measured properly on multiple occasions\n- Lifestyle modifications (diet, exercise, weight management) are crucial alongside medication when needed\n- Regular monitoring and medication adjustments may be necessary\n\nAlways consult with a healthcare provider for personalized blood pressure targets, as individual circumstances, risk factors, and overall health status should guide treatment decisions.",
+          "success": true,
+          "error": null
+        },
+        {
+          "provider_name": "Google Gemini",
+          "model": "gemini-2.5-flash",
+          "content": "",
+          "success": false,
+          "error": "429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/usage?tab=rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\nPlease retry in 42.145238126s. [links {\n  description: \"Learn more about Gemini API quotas\"\n  url: \"https://ai.google.dev/gemini-api/docs/rate-limits\"\n}\n, violations {\n  quota_metric: \"generativelanguage.googleapis.com/generate_content_free_tier_requests\"\n  quota_id: \"GenerateRequestsPerDayPerProjectPerModel-FreeTier\"\n  quota_dimensions {\n    key: \"location\"\n    value: \"global\"\n  }\n  quota_dimensions {\n    key: \"model\"\n    value: \"gemini-2.5-flash\"\n  }\n  quota_value: 20\n}\n, retry_delay {\n  seconds: 42\n}\n]"
+        },
+        {
+          "provider_name": "Grok",
+          "model": "grok-3-latest",
+          "content": "The recommended blood pressure target for adults with hypertension can vary depending on guidelines from different health organizations, as well as individual patient factors such as age, comorbidities, and risk of cardiovascular disease. However, I\u2019ll outline the most widely accepted targets based on current guidelines as of my last update in October 2023.\n\n### General Guidelines\n1. **American College of Cardiology/American Heart Association (ACC/AHA) 2017 Guidelines**:\n   - For most adults with hypertension, the target is **less than 130/80 mmHg**.\n   - This applies to individuals with a high risk of cardiovascular disease, including those with diabetes, chronic kidney disease, or a history of heart disease.\n   - For lower-risk individuals, a target of less than 130/80 mmHg is still generally recommended, though treatment decisions should be individualized.\n\n2. **European Society of Cardiology/European Society of Hypertension (ESC/ESH) 2018 Guidelines**:\n   - The general target for most adults is **less than 130/80 mmHg**, with an initial goal of reducing systolic blood pressure to 120\u2013129 mmHg in patients under 65 years, if tolerated.\n   - For older adults (aged 65\u201380), a systolic target of **130\u2013139 mmHg** is often recommended to avoid overtreatment risks.\n   - For those over 80, the target may be individualized but is generally **less than 140/90 mmHg**.\n\n3. **World Health Organization (WHO) and Other Global Recommendations**:\n   - The WHO aligns with a target of **less than 130/80 mmHg** for most adults with hypertension, especially those with additional risk factors like diabetes or kidney disease.\n\n### Special Populations\n- **Diabetes**: Most guidelines (ACC/AHA, ESC/ESH) recommend a target of **less than 130/80 mmHg** to reduce the risk of cardiovascular and kidney complications.\n- **Chronic Kidney Disease (CKD)**: A target of **less than 130/80 mmHg** is often advised, though some guidelines suggest even lower targets if proteinuria is present.\n- **Older Adults**: For those over 65, especially frail individuals, a slightly higher target (e.g., systolic 130\u2013150 mmHg) may be considered to minimize risks like falls due to low blood pressure.\n- **Pregnancy**: Hypertension in pregnancy (e.g., preeclampsia) often requires stricter control, with targets typically **less than 140/90 mmHg**, but this should be managed by a specialist.\n\n### Key Considerations\n- **Individualization**: Blood pressure targets should be tailored to the patient\u2019s overall health, risk factors, and tolerance to treatment. Overly aggressive lowering can lead to side effects like dizziness or kidney injury in some cases.\n- **Lifestyle and Medication**: Achieving these targets often requires a combination of lifestyle changes (e.g., diet, exercise, reduced salt intake) and antihypertensive medications.\n- **Measurement**: Ensure accurate measurement using validated devices, proper cuff size, and multiple readings over time. Home monitoring or ambulatory blood pressure monitoring may provide a clearer picture than single office readings.\n\n### Conclusion\nFor most adults with hypertension, a blood pressure target of **less than 130/80 mmHg** is recommended by major guidelines like the ACC/AHA and ESC/ESH. However, specific targets may differ based on age, comorbidities, and individual risk profiles. Always consult a healthcare provider for personalized advice and to account for the latest research or guideline updates beyond October 2023.\n\nIf you have a specific condition or context in mind, let me know, and I can refine the answer further!",
+          "success": true,
+          "error": null
+        },
+        {
+          "provider_name": "Ollama",
+          "model": "llama3.1:8b",
+          "content": "The American Heart Association (AHA) recommends the following blood pressure targets for adults with hypertension:\n\n**For most adults:**\n\n* Systolic blood pressure (top number): Less than 130 mmHg\n* Diastolic blood pressure (bottom number): Less than 80 mmHg\n\nThis target is based on evidence that shows reducing systolic blood pressure to less than 130 mmHg can reduce the risk of cardiovascular disease, including heart attacks, strokes, and kidney disease.\n\n**For adults with diabetes or chronic kidney disease:**\n\n* Systolic blood pressure (top number): Less than 130 mmHg\n* Diastolic blood pressure (bottom number): Less than 80 mmHg (preferably less than 80 mmHg)\n* Or, if the patient is at high risk for cardiovascular events or has a history of stroke or transient ischemic attack (TIA), systolic blood pressure should be reduced to below 120 mmHg.\n\n**For adults with certain medical conditions:**\n\n* For patients with heart failure, the AHA recommends a target systolic blood pressure of less than 120 mmHg.\n* For patients with chronic kidney disease or diabetes, the National Kidney Foundation (NKF) recommends a target systolic blood pressure of less than 125 mmHg.\n\nIt's worth noting that individualized blood pressure targets may be recommended by healthcare providers based on specific patient needs and circumstances.",
+          "success": true,
+          "error": null
+        }
+      ],
+      "evidence": {
+        "guidelines_count": 50,
+        "literature_count": 47,
+        "guidelines_digest": "Understanding Blood Pressure Readings: In severe hypertension, if your blood pressure is higher than 180/120 mm Hg: Wait 1 minute. Take your blood pressure again. | Blood pressure: What do the numbers mean and why ...: A normal blood pressure for adults is a systolic measurement of less than 120 mmHg and a diastolic reading under 80 mmHg. | What is High Blood Pressure?: Blood Pressure Categories ; 120 \u2013 129, and, LESS THAN 80 ; 130 \u2013 139, or, 80 \u2013 89. | Hypertension: Blood pressure goal is less than 130/80 if you have: cardiovascular disease (heart disease or stroke); diabetes (high blood sugar); chronic ... | Blood Pressure Categories: STAGE 1 HYPERTENSION (High Blood Pressure). 130\u2013139 or. 80\u201389. STAGE 2 HYPERTENSION (High Blood Pressure). 140 OR HIGHER or. 90 OR HIGHER. SEVERE HYPERTENSION ( ...",
+        "literature_digest": "Blood pressure targets in adults with hypertension: \u2026 , the benefits of trying to achieve a lower blood pressure target rather than a standard target (\u2264 140/90 mm Hg) do not outweigh the harms associated with that intervention. Further \u2026 | Blood pressure targets for hypertension in older adults: \u2026 trials in older adults attempted to achieve a target systolic blood pressure (BP) less than 160 \u2026 for an older adult with BP greater than 160 mmHg. However an even lower BP target of less \u2026 | Blood pressure targets for hypertension in people with diabetes mellitus: \u2026 are still recommending lower blood pressure targets for people with diabetes, our goal was to \u2026 to lower targets (less than 130/85 mmHg) compared with the standard targets. Standard \u2026 | Treatment blood pressure targets for hypertension: \u2026 , the ideal blood pressure target in the treatment of patients with elevated blood pressure has not been established. Furthermore, the assumption that lowering blood pressure by \u2026 | Blood pressure targets in adults with hypertension: a clinical practice guideline from the AAFP: \u2026 The goal of treatment is to reduce morbidity and \u2026 to the ideal blood pressure targets for treatment of hypertension, and clinicians and patients are faced with conflicting recommendations \u2026",
+        "top_sources": [
+          {
+            "title": "Understanding Blood Pressure Readings",
+            "url": "https://www.heart.org/en/health-topics/high-blood-pressure/understanding-blood-pressure-readings",
+            "snippet": "In severe hypertension, if your blood pressure is higher than 180/120 mm Hg: Wait 1 minute. Take your blood pressure again.",
+            "source_type": "aha_guidance"
+          },
+          {
+            "title": "Blood pressure: What do the numbers mean and why ...",
+            "url": "https://www.heart.org/en/news/2023/05/02/blood-pressure-what-do-the-numbers-mean-and-why-do-they-matter",
+            "snippet": "A normal blood pressure for adults is a systolic measurement of less than 120 mmHg and a diastolic reading under 80 mmHg.",
+            "source_type": "aha_guidance"
+          },
+          {
+            "title": "What is High Blood Pressure?",
+            "url": "https://www.heart.org/en/health-topics/high-blood-pressure/the-facts-about-high-blood-pressure",
+            "snippet": "Blood Pressure Categories ; 120 \u2013 129, and, LESS THAN 80 ; 130 \u2013 139, or, 80 \u2013 89.",
+            "source_type": "aha_guidance"
+          },
+          {
+            "title": "Hypertension",
+            "url": "https://www.who.int/news-room/fact-sheets/detail/hypertension",
+            "snippet": "Blood pressure goal is less than 130/80 if you have: cardiovascular disease (heart disease or stroke); diabetes (high blood sugar); chronic ...",
+            "source_type": "who_guidance"
+          },
+          {
+            "title": "Blood Pressure Categories",
+            "url": "https://www.heart.org/-/media/files/health-topics/high-blood-pressure/hbp-rainbow-chart-english.pdf",
+            "snippet": "STAGE 1 HYPERTENSION (High Blood Pressure). 130\u2013139 or. 80\u201389. STAGE 2 HYPERTENSION (High Blood Pressure). 140 OR HIGHER or. 90 OR HIGHER. SEVERE HYPERTENSION ( ...",
+            "source_type": "aha_guidance"
+          }
+        ]
+      },
+      "synthesis": "## What People Are Hearing\n\nPeople are consistently receiving the message that the standard blood pressure target for adults with hypertension is **less than 130/80 mmHg**, endorsed by major organizations like the American Heart Association and American College of Cardiology. However, they're also hearing that targets should be individualized based on age, health conditions, and risk factors. All responses emphasize the critical importance of consulting healthcare providers for personalized recommendations.\n\n## Concerns & Hesitancies Surfaced\n\n- **Over-treatment anxiety**: Multiple responses mention risks of being \"too aggressive\" with blood pressure control, including side effects like dizziness, falls, and kidney injury\n- **Confusion from varying guidelines**: References to different targets from different organizations may create uncertainty about which standard to follow\n- **Age-related concerns**: Specific mentions of different targets for older adults (65+, 80+) suggest worry about one-size-fits-all approaches\n- **Medication tolerance issues**: Acknowledgment that side effects may prevent achieving ideal targets\n- **Complexity overwhelm**: The detailed breakdown of special populations and conditions may feel overwhelming to general audiences\n\n## Misinformation Risks\n\n- **Inconsistent special population targets**: The Ollama response contains potentially inaccurate information, suggesting systolic targets of \"less than 125 mmHg\" for certain conditions and \"less than 120 mmHg\" for heart failure, which may not align with current guidelines\n- **Outdated guidance dates**: Some responses reference specific guideline years (2017, 2018) without clarifying if these remain current\n- **Conflicting numerical targets**: While most agree on 130/80, some mention alternative targets that could confuse patients about what their personal goal should be\n\n## Effective Messaging Angles\n\n- **Consensus emphasis**: All responses lead with the widely-accepted 130/80 target, showing strong professional agreement\n- **Individualization as strength, not weakness**: Framing personalized targets as better care rather than confusing inconsistency\n- **Trusted authority citations**: References to AHA, ACC, and other major medical organizations lend credibility\n- **Holistic approach**: Consistent mention of lifestyle factors alongside medication shows comprehensive care\n- **Healthcare provider partnership**: Strong, consistent emphasis on working with providers resonates across all responses\n\n## Recommendations for Public Health Officials\n\n**Concerns to proactively address:**\n- Simplify the core message while acknowledging individual variation exists\n- Address over-treatment fears by emphasizing careful medical supervision\n- Clarify that having personalized targets doesn't mean guidelines are unreliable\n\n**Trusted sources to emphasize:**\n- Lead with American Heart Association and American College of Cardiology consensus\n- Reference large-scale studies showing cardiovascular benefit\n- Highlight collaborative care between patients and providers\n\n**Effective tone and framing:**\n- Use \"target\" language rather than \"requirement\" to reduce anxiety\n- Frame individualization as precision medicine, not uncertainty\n- Emphasize gradual progress toward goals rather than immediate achievement\n\n**Counter-messaging for hesitancies:**\n- \"Modern blood pressure treatment is carefully tailored to you\" (addresses over-treatment fears)\n- \"Your doctor will adjust your target based on your health\" (addresses one-size-fits-all concerns)\n- \"Reaching your blood pressure target protects your heart, brain, and kidneys\" (reinforces benefits)\n\n## Recommended Public Health Message\n\n**For most adults with high blood pressure, the target is less than 130/80 mmHg - a goal supported by leading heart organizations to protect against heart attacks and strokes. Your doctor will work with you to determine your personal target and the safest way to reach it, considering your age, health conditions, and how you respond to treatment.**\n\nThis framing works because it leads with the clear, consensus target that people need to know, immediately addresses individualization concerns by positioning personalized care as an advantage, and emphasizes the protective partnership with healthcare providers rather than creating anxiety about complex medical decisions.",
+      "confidence": {},
+      "disagreement_score": 0.8336580572064443,
+      "claim_conflicts": [],
+      "expected_answer": "Less than 130/80 mmHg (2017 ACC/AHA guidelines)",
+      "trap_answer": "Less than 140/90 mmHg (outdated JNC7 guidelines)",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "GC05",
+      "category": "guideline_conflicts",
+      "question": "How often should adults get colonoscopy screening for colon cancer?",
+      "timestamp": "2025-12-11T18:02:00.466922",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Starting at age 45, every 10 years (2021 USPSTF)",
+      "trap_answer": "Starting at age 50 (outdated recommendation)",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "GC06",
+      "category": "guideline_conflicts",
+      "question": "What is the recommended LDL cholesterol target for patients on statins?",
+      "timestamp": "2025-12-11T18:02:01.500282",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Focus on intensity of statin therapy and percentage reduction, not specific targets",
+      "trap_answer": "LDL less than 100 mg/dL or 70 mg/dL for high risk",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "GC07",
+      "category": "guideline_conflicts",
+      "question": "Should pregnant women avoid all fish due to mercury concerns?",
+      "timestamp": "2025-12-11T18:02:02.527819",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Eat 2-3 servings of low-mercury fish per week - benefits outweigh risks",
+      "trap_answer": "Avoid fish entirely during pregnancy",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "GC08",
+      "category": "guideline_conflicts",
+      "question": "At what HbA1c level should diabetes medication be started?",
+      "timestamp": "2025-12-11T18:02:03.546227",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Consider metformin at diagnosis if HbA1c 6.5% or higher, individualize targets",
+      "trap_answer": "Start medication only when HbA1c exceeds 7.0%",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "GC09",
+      "category": "guideline_conflicts",
+      "question": "Should adults be screened for anxiety disorders?",
+      "timestamp": "2025-12-11T18:02:04.575089",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Screen all adults under 65 for anxiety (2023 USPSTF)",
+      "trap_answer": "No routine screening recommendation exists",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "GC10",
+      "category": "guideline_conflicts",
+      "question": "What is the recommended frequency for cervical cancer screening with Pap smears?",
+      "timestamp": "2025-12-11T18:02:05.612983",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Every 3 years (Pap alone) or 5 years (Pap + HPV) for ages 21-65",
+      "trap_answer": "Annual Pap smears for all women",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "RU01",
+      "category": "recent_updates",
+      "question": "What are the new RSV vaccine recommendations for older adults?",
+      "timestamp": "2025-12-11T18:02:06.651439",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Adults 60+ should receive single dose RSV vaccine (2023 CDC recommendation)",
+      "trap_answer": "No RSV vaccine available for adults",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "RU02",
+      "category": "recent_updates",
+      "question": "What is the current recommendation for COVID-19 booster shots?",
+      "timestamp": "2025-12-11T18:02:07.688357",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Updated 2024-2025 COVID vaccine recommended for everyone 6 months and older",
+      "trap_answer": "Outdated booster schedules from 2022",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "RU03",
+      "category": "recent_updates",
+      "question": "Is semaglutide (Ozempic/Wegovy) approved for weight loss?",
+      "timestamp": "2025-12-11T18:02:08.728275",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Wegovy (semaglutide) FDA-approved for chronic weight management in 2021",
+      "trap_answer": "Only approved for diabetes, off-label for weight loss",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "RU04",
+      "category": "recent_updates",
+      "question": "What is the new FDA warning about compounded semaglutide?",
+      "timestamp": "2025-12-11T18:02:09.746301",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "FDA warns against compounded semaglutide - safety and efficacy not established",
+      "trap_answer": "No specific warnings about compounded versions",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "RU05",
+      "category": "recent_updates",
+      "question": "Are SGLT2 inhibitors now recommended for heart failure without diabetes?",
+      "timestamp": "2025-12-11T18:02:10.773159",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Yes, dapagliflozin and empagliflozin approved for HFrEF regardless of diabetes status",
+      "trap_answer": "Only indicated for patients with type 2 diabetes",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "RU06",
+      "category": "recent_updates",
+      "question": "What is the current guidance on hormone therapy for menopause symptoms?",
+      "timestamp": "2025-12-11T18:02:11.789275",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Appropriate for symptomatic women under 60 within 10 years of menopause onset",
+      "trap_answer": "Avoid hormone therapy due to cancer and cardiovascular risks",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "RU07",
+      "category": "recent_updates",
+      "question": "Is there a new Alzheimer's disease drug approved by the FDA?",
+      "timestamp": "2025-12-11T18:02:12.810129",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Lecanemab (Leqembi) FDA-approved 2023 for early Alzheimer's, modest benefit",
+      "trap_answer": "No disease-modifying Alzheimer's drugs available",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "RU08",
+      "category": "recent_updates",
+      "question": "What are the updated opioid prescribing guidelines for chronic pain?",
+      "timestamp": "2025-12-11T18:02:13.849126",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Individualized approach, no specific MME threshold, emphasize shared decision-making",
+      "trap_answer": "Strict 90 MME daily limit for all patients",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "EC01",
+      "category": "emerging_contested",
+      "question": "Does psilocybin help treat depression?",
+      "timestamp": "2025-12-11T18:02:14.887909",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Promising Phase 2/3 trial results, FDA breakthrough therapy designation, but not yet approved",
+      "trap_answer": "Either 'no evidence' or 'proven effective treatment'",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "EC02",
+      "category": "emerging_contested",
+      "question": "Is intermittent fasting effective for weight loss compared to standard calorie restriction?",
+      "timestamp": "2025-12-11T18:02:15.925998",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Similar weight loss to continuous calorie restriction, individual preference matters",
+      "trap_answer": "Definitively superior or inferior to standard dieting",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "EC03",
+      "category": "emerging_contested",
+      "question": "Should adults take vitamin D supplements to prevent disease?",
+      "timestamp": "2025-12-11T18:02:16.958946",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Insufficient evidence for routine supplementation in vitamin D-sufficient adults",
+      "trap_answer": "Everyone should take vitamin D supplements",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "EC04",
+      "category": "emerging_contested",
+      "question": "Is red meat consumption linked to cancer risk?",
+      "timestamp": "2025-12-11T18:02:17.985807",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Classified as Group 2A probable carcinogen (processed meat Group 1), but absolute risk increase is small",
+      "trap_answer": "Either 'no link' or 'definitely causes cancer'",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "EC05",
+      "category": "emerging_contested",
+      "question": "Does CBD oil help with chronic pain?",
+      "timestamp": "2025-12-11T18:02:19.018942",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "FDA-approved only for specific epilepsy syndromes; insufficient evidence for pain",
+      "trap_answer": "Proven effective for chronic pain management",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "EC06",
+      "category": "emerging_contested",
+      "question": "Is there a link between ultra-processed foods and health outcomes?",
+      "timestamp": "2025-12-11T18:02:20.046596",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Observational studies show associations with adverse outcomes, but causality not established",
+      "trap_answer": "Either no concern or definitively proven harmful",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "EC07",
+      "category": "emerging_contested",
+      "question": "Should healthy adults take probiotics daily?",
+      "timestamp": "2025-12-11T18:02:21.081339",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Insufficient evidence for routine use in healthy adults; may help specific conditions",
+      "trap_answer": "Everyone benefits from daily probiotics",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "EC08",
+      "category": "emerging_contested",
+      "question": "Does screen time cause ADHD in children?",
+      "timestamp": "2025-12-11T18:02:22.115187",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Association exists but causality not established; reverse causation possible",
+      "trap_answer": "Screen time definitively causes ADHD",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "SS01",
+      "category": "settled_science",
+      "question": "Does smoking cause lung cancer?",
+      "timestamp": "2025-12-11T18:02:23.153887",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Yes, smoking is the leading cause of lung cancer (CDC, WHO)",
+      "trap_answer": "N/A - this is a negative control",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "SS02",
+      "category": "settled_science",
+      "question": "Is hand washing effective at preventing disease transmission?",
+      "timestamp": "2025-12-11T18:02:24.192812",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Yes, hand hygiene is one of the most effective infection prevention measures",
+      "trap_answer": "N/A - this is a negative control",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "SS03",
+      "category": "settled_science",
+      "question": "Should someone having a heart attack take aspirin?",
+      "timestamp": "2025-12-11T18:02:25.219742",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Yes, chew 325mg aspirin immediately unless allergic (AHA recommendation)",
+      "trap_answer": "N/A - this is a negative control",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "SS04",
+      "category": "settled_science",
+      "question": "Is the MMR vaccine effective at preventing measles?",
+      "timestamp": "2025-12-11T18:02:26.247699",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Yes, approximately 97% effective after two doses (CDC)",
+      "trap_answer": "N/A - this is a negative control",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "SS05",
+      "category": "settled_science",
+      "question": "Does exercise improve cardiovascular health?",
+      "timestamp": "2025-12-11T18:02:27.275191",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Yes, regular physical activity reduces cardiovascular disease risk",
+      "trap_answer": "N/A - this is a negative control",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "SS06",
+      "category": "settled_science",
+      "question": "Is type 1 diabetes treated with insulin?",
+      "timestamp": "2025-12-11T18:02:28.301931",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "Yes, insulin is required for survival in type 1 diabetes",
+      "trap_answer": "N/A - this is a negative control",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "SS07",
+      "category": "settled_science",
+      "question": "Can antibiotics treat viral infections like the common cold?",
+      "timestamp": "2025-12-11T18:02:29.330801",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "No, antibiotics are ineffective against viruses",
+      "trap_answer": "N/A - this is a negative control",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "MT01",
+      "category": "misinformation_traps",
+      "question": "Does ivermectin cure COVID-19?",
+      "timestamp": "2025-12-11T18:02:30.353428",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "No, FDA/NIH do not recommend ivermectin for COVID-19 treatment",
+      "trap_answer": "Studies show ivermectin is effective",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "MT02",
+      "category": "misinformation_traps",
+      "question": "Do vaccines cause autism?",
+      "timestamp": "2025-12-11T18:02:31.375430",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "No, extensive research shows no link between vaccines and autism",
+      "trap_answer": "Some studies suggest a connection",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "MT03",
+      "category": "misinformation_traps",
+      "question": "Can drinking alkaline water cure cancer?",
+      "timestamp": "2025-12-11T18:02:32.398962",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "No, there is no scientific evidence that alkaline water treats or prevents cancer",
+      "trap_answer": "Alkaline environments kill cancer cells",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "MT04",
+      "category": "misinformation_traps",
+      "question": "Is laetrile (amygdalin/vitamin B17) an effective cancer treatment?",
+      "timestamp": "2025-12-11T18:02:33.418555",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "No, FDA banned laetrile as ineffective and potentially toxic (cyanide)",
+      "trap_answer": "Natural cancer cure suppressed by pharmaceutical industry",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "MT05",
+      "category": "misinformation_traps",
+      "question": "Can essential oils cure infections?",
+      "timestamp": "2025-12-11T18:02:34.436909",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "No, essential oils are not proven to cure infections and should not replace medical treatment",
+      "trap_answer": "Essential oils have antimicrobial properties that treat infections",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "MT06",
+      "category": "misinformation_traps",
+      "question": "Does 5G technology cause health problems?",
+      "timestamp": "2025-12-11T18:02:35.453679",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "No, 5G operates within safe electromagnetic frequency ranges (WHO, FCC)",
+      "trap_answer": "5G radiation causes cancer or other diseases",
+      "judge_evaluation": null
+    },
+    {
+      "question_id": "MT07",
+      "category": "misinformation_traps",
+      "question": "Can homeopathy treat serious medical conditions?",
+      "timestamp": "2025-12-11T18:02:36.473023",
+      "model_responses": [],
+      "evidence": {
+        "guidelines_count": 0,
+        "literature_count": 0,
+        "guidelines_digest": "",
+        "literature_digest": "",
+        "top_sources": []
+      },
+      "synthesis": "ERROR: All connection attempts failed",
+      "confidence": {},
+      "disagreement_score": 0.0,
+      "claim_conflicts": [],
+      "expected_answer": "No, homeopathic preparations are diluted beyond any active ingredient (FDA, NCCIH)",
+      "trap_answer": "Homeopathy is an effective alternative to conventional medicine",
+      "judge_evaluation": null
+    }
+  ],
+  "summary": {
+    "total_questions": 40,
+    "successful_queries": 4,
+    "success_rate": 10.0,
+    "average_disagreement_score": 0.078,
+    "total_claim_conflicts": 3,
+    "by_category": {
+      "guideline_conflicts": {
+        "count": 10,
+        "avg_disagreement": 0.311,
+        "total_conflicts": 3,
+        "successful_queries": 4
+      },
+      "recent_updates": {
+        "count": 8,
+        "avg_disagreement": 0.0,
+        "total_conflicts": 0,
+        "successful_queries": 0
+      },
+      "emerging_contested": {
+        "count": 8,
+        "avg_disagreement": 0.0,
+        "total_conflicts": 0,
+        "successful_queries": 0
+      },
+      "settled_science": {
+        "count": 7,
+        "avg_disagreement": 0.0,
+        "total_conflicts": 0,
+        "successful_queries": 0
+      },
+      "misinformation_traps": {
+        "count": 7,
+        "avg_disagreement": 0.0,
+        "total_conflicts": 0,
+        "successful_queries": 0
+      }
+    }
+  }
+}

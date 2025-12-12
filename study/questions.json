@@ -1,0 +1,376 @@
+{
+  "metadata": {
+    "study_name": "Chorus Ensemble Validation Study",
+    "version": "1.0",
+    "total_questions": 40,
+    "categories": [
+      "guideline_conflicts",
+      "recent_updates",
+      "emerging_contested",
+      "settled_science",
+      "misinformation_traps"
+    ]
+  },
+  "questions": [
+    {
+      "id": "GC01",
+      "category": "guideline_conflicts",
+      "question": "At what age should women begin routine mammogram screening for breast cancer?",
+      "expected_conflict": "Training data cutoff varies - 2024 USPSTF lowered to 40, older models say 50",
+      "authority_answer": "Age 40 (2024 USPSTF recommendation)",
+      "trap_answer": "Age 50 (outdated 2009-2016 recommendation)",
+      "difficulty": "high"
+    },
+    {
+      "id": "GC02",
+      "category": "guideline_conflicts",
+      "question": "Should men get routine PSA screening for prostate cancer?",
+      "expected_conflict": "Guidelines changed from recommending against to shared decision-making",
+      "authority_answer": "Shared decision-making for men 55-69, discuss risks/benefits (2018 USPSTF)",
+      "trap_answer": "No routine screening recommended (outdated 2012 recommendation)",
+      "difficulty": "high"
+    },
+    {
+      "id": "GC03",
+      "category": "guideline_conflicts",
+      "question": "Should healthy adults take daily low-dose aspirin to prevent heart disease?",
+      "expected_conflict": "Major reversal in 2022 - no longer recommended for primary prevention",
+      "authority_answer": "Not recommended for primary prevention in adults 60+ (2022 USPSTF)",
+      "trap_answer": "Recommended for adults over 50 with heart disease risk factors",
+      "difficulty": "high"
+    },
+    {
+      "id": "GC04",
+      "category": "guideline_conflicts",
+      "question": "What is the recommended blood pressure target for adults with hypertension?",
+      "expected_conflict": "Changed from 140/90 to 130/80 in 2017",
+      "authority_answer": "Less than 130/80 mmHg (2017 ACC/AHA guidelines)",
+      "trap_answer": "Less than 140/90 mmHg (outdated JNC7 guidelines)",
+      "difficulty": "medium"
+    },
+    {
+      "id": "GC05",
+      "category": "guideline_conflicts",
+      "question": "How often should adults get colonoscopy screening for colon cancer?",
+      "expected_conflict": "Age lowered from 50 to 45 in 2021",
+      "authority_answer": "Starting at age 45, every 10 years (2021 USPSTF)",
+      "trap_answer": "Starting at age 50 (outdated recommendation)",
+      "difficulty": "medium"
+    },
+    {
+      "id": "GC06",
+      "category": "guideline_conflicts",
+      "question": "What is the recommended LDL cholesterol target for patients on statins?",
+      "expected_conflict": "Shifted from specific targets to percentage reduction approach",
+      "authority_answer": "Focus on intensity of statin therapy and percentage reduction, not specific targets",
+      "trap_answer": "LDL less than 100 mg/dL or 70 mg/dL for high risk",
+      "difficulty": "high"
+    },
+    {
+      "id": "GC07",
+      "category": "guideline_conflicts",
+      "question": "Should pregnant women avoid all fish due to mercury concerns?",
+      "expected_conflict": "FDA/EPA updated guidance to encourage fish consumption",
+      "authority_answer": "Eat 2-3 servings of low-mercury fish per week - benefits outweigh risks",
+      "trap_answer": "Avoid fish entirely during pregnancy",
+      "difficulty": "medium"
+    },
+    {
+      "id": "GC08",
+      "category": "guideline_conflicts",
+      "question": "At what HbA1c level should diabetes medication be started?",
+      "expected_conflict": "Threshold varies by guideline and has shifted over time",
+      "authority_answer": "Consider metformin at diagnosis if HbA1c 6.5% or higher, individualize targets",
+      "trap_answer": "Start medication only when HbA1c exceeds 7.0%",
+      "difficulty": "medium"
+    },
+    {
+      "id": "GC09",
+      "category": "guideline_conflicts",
+      "question": "Should adults be screened for anxiety disorders?",
+      "expected_conflict": "New 2023 USPSTF recommendation to screen all adults",
+      "authority_answer": "Screen all adults under 65 for anxiety (2023 USPSTF)",
+      "trap_answer": "No routine screening recommendation exists",
+      "difficulty": "high"
+    },
+    {
+      "id": "GC10",
+      "category": "guideline_conflicts",
+      "question": "What is the recommended frequency for cervical cancer screening with Pap smears?",
+      "expected_conflict": "Extended intervals and HPV co-testing changed recommendations",
+      "authority_answer": "Every 3 years (Pap alone) or 5 years (Pap + HPV) for ages 21-65",
+      "trap_answer": "Annual Pap smears for all women",
+      "difficulty": "medium"
+    },
+    {
+      "id": "RU01",
+      "category": "recent_updates",
+      "question": "What are the new RSV vaccine recommendations for older adults?",
+      "expected_conflict": "Brand new 2023 vaccines - models may not have this data",
+      "authority_answer": "Adults 60+ should receive single dose RSV vaccine (2023 CDC recommendation)",
+      "trap_answer": "No RSV vaccine available for adults",
+      "difficulty": "high"
+    },
+    {
+      "id": "RU02",
+      "category": "recent_updates",
+      "question": "What is the current recommendation for COVID-19 booster shots?",
+      "expected_conflict": "Rapidly evolving recommendations",
+      "authority_answer": "Updated 2024-2025 COVID vaccine recommended for everyone 6 months and older",
+      "trap_answer": "Outdated booster schedules from 2022",
+      "difficulty": "high"
+    },
+    {
+      "id": "RU03",
+      "category": "recent_updates",
+      "question": "Is semaglutide (Ozempic/Wegovy) approved for weight loss?",
+      "expected_conflict": "Recent FDA approvals may not be in training data",
+      "authority_answer": "Wegovy (semaglutide) FDA-approved for chronic weight management in 2021",
+      "trap_answer": "Only approved for diabetes, off-label for weight loss",
+      "difficulty": "medium"
+    },
+    {
+      "id": "RU04",
+      "category": "recent_updates",
+      "question": "What is the new FDA warning about compounded semaglutide?",
+      "expected_conflict": "2024 FDA warnings about compounded versions",
+      "authority_answer": "FDA warns against compounded semaglutide - safety and efficacy not established",
+      "trap_answer": "No specific warnings about compounded versions",
+      "difficulty": "high"
+    },
+    {
+      "id": "RU05",
+      "category": "recent_updates",
+      "question": "Are SGLT2 inhibitors now recommended for heart failure without diabetes?",
+      "expected_conflict": "Expanded indications in 2022-2023",
+      "authority_answer": "Yes, dapagliflozin and empagliflozin approved for HFrEF regardless of diabetes status",
+      "trap_answer": "Only indicated for patients with type 2 diabetes",
+      "difficulty": "high"
+    },
+    {
+      "id": "RU06",
+      "category": "recent_updates",
+      "question": "What is the current guidance on hormone therapy for menopause symptoms?",
+      "expected_conflict": "Shifted from avoidance back to individualized approach",
+      "authority_answer": "Appropriate for symptomatic women under 60 within 10 years of menopause onset",
+      "trap_answer": "Avoid hormone therapy due to cancer and cardiovascular risks",
+      "difficulty": "medium"
+    },
+    {
+      "id": "RU07",
+      "category": "recent_updates",
+      "question": "Is there a new Alzheimer's disease drug approved by the FDA?",
+      "expected_conflict": "Lecanemab approved 2023, controversial",
+      "authority_answer": "Lecanemab (Leqembi) FDA-approved 2023 for early Alzheimer's, modest benefit",
+      "trap_answer": "No disease-modifying Alzheimer's drugs available",
+      "difficulty": "high"
+    },
+    {
+      "id": "RU08",
+      "category": "recent_updates",
+      "question": "What are the updated opioid prescribing guidelines for chronic pain?",
+      "expected_conflict": "2022 CDC guidelines revised from 2016 version",
+      "authority_answer": "Individualized approach, no specific MME threshold, emphasize shared decision-making",
+      "trap_answer": "Strict 90 MME daily limit for all patients",
+      "difficulty": "high"
+    },
+    {
+      "id": "EC01",
+      "category": "emerging_contested",
+      "question": "Does psilocybin help treat depression?",
+      "expected_conflict": "Promising research but not FDA-approved, models may overstate or understate",
+      "authority_answer": "Promising Phase 2/3 trial results, FDA breakthrough therapy designation, but not yet approved",
+      "trap_answer": "Either 'no evidence' or 'proven effective treatment'",
+      "difficulty": "high"
+    },
+    {
+      "id": "EC02",
+      "category": "emerging_contested",
+      "question": "Is intermittent fasting effective for weight loss compared to standard calorie restriction?",
+      "expected_conflict": "Mixed evidence, often overstated in either direction",
+      "authority_answer": "Similar weight loss to continuous calorie restriction, individual preference matters",
+      "trap_answer": "Definitively superior or inferior to standard dieting",
+      "difficulty": "medium"
+    },
+    {
+      "id": "EC03",
+      "category": "emerging_contested",
+      "question": "Should adults take vitamin D supplements to prevent disease?",
+      "expected_conflict": "VITAL trial changed landscape, contested recommendations",
+      "authority_answer": "Insufficient evidence for routine supplementation in vitamin D-sufficient adults",
+      "trap_answer": "Everyone should take vitamin D supplements",
+      "difficulty": "medium"
+    },
+    {
+      "id": "EC04",
+      "category": "emerging_contested",
+      "question": "Is red meat consumption linked to cancer risk?",
+      "expected_conflict": "WHO classification vs contested nutritional science",
+      "authority_answer": "Classified as Group 2A probable carcinogen (processed meat Group 1), but absolute risk increase is small",
+      "trap_answer": "Either 'no link' or 'definitely causes cancer'",
+      "difficulty": "medium"
+    },
+    {
+      "id": "EC05",
+      "category": "emerging_contested",
+      "question": "Does CBD oil help with chronic pain?",
+      "expected_conflict": "Limited FDA-approved uses vs widespread claims",
+      "authority_answer": "FDA-approved only for specific epilepsy syndromes; insufficient evidence for pain",
+      "trap_answer": "Proven effective for chronic pain management",
+      "difficulty": "medium"
+    },
+    {
+      "id": "EC06",
+      "category": "emerging_contested",
+      "question": "Is there a link between ultra-processed foods and health outcomes?",
+      "expected_conflict": "Emerging epidemiological evidence, mechanistic understanding incomplete",
+      "authority_answer": "Observational studies show associations with adverse outcomes, but causality not established",
+      "trap_answer": "Either no concern or definitively proven harmful",
+      "difficulty": "medium"
+    },
+    {
+      "id": "EC07",
+      "category": "emerging_contested",
+      "question": "Should healthy adults take probiotics daily?",
+      "expected_conflict": "Marketing outpaces evidence",
+      "authority_answer": "Insufficient evidence for routine use in healthy adults; may help specific conditions",
+      "trap_answer": "Everyone benefits from daily probiotics",
+      "difficulty": "medium"
+    },
+    {
+      "id": "EC08",
+      "category": "emerging_contested",
+      "question": "Does screen time cause ADHD in children?",
+      "expected_conflict": "Correlation vs causation debate",
+      "authority_answer": "Association exists but causality not established; reverse causation possible",
+      "trap_answer": "Screen time definitively causes ADHD",
+      "difficulty": "medium"
+    },
+    {
+      "id": "SS01",
+      "category": "settled_science",
+      "question": "Does smoking cause lung cancer?",
+      "expected_conflict": "None - should be unanimous",
+      "authority_answer": "Yes, smoking is the leading cause of lung cancer (CDC, WHO)",
+      "trap_answer": "N/A - this is a negative control",
+      "difficulty": "low"
+    },
+    {
+      "id": "SS02",
+      "category": "settled_science",
+      "question": "Is hand washing effective at preventing disease transmission?",
+      "expected_conflict": "None - should be unanimous",
+      "authority_answer": "Yes, hand hygiene is one of the most effective infection prevention measures",
+      "trap_answer": "N/A - this is a negative control",
+      "difficulty": "low"
+    },
+    {
+      "id": "SS03",
+      "category": "settled_science",
+      "question": "Should someone having a heart attack take aspirin?",
+      "expected_conflict": "None - should be unanimous",
+      "authority_answer": "Yes, chew 325mg aspirin immediately unless allergic (AHA recommendation)",
+      "trap_answer": "N/A - this is a negative control",
+      "difficulty": "low"
+    },
+    {
+      "id": "SS04",
+      "category": "settled_science",
+      "question": "Is the MMR vaccine effective at preventing measles?",
+      "expected_conflict": "None - should be unanimous",
+      "authority_answer": "Yes, approximately 97% effective after two doses (CDC)",
+      "trap_answer": "N/A - this is a negative control",
+      "difficulty": "low"
+    },
+    {
+      "id": "SS05",
+      "category": "settled_science",
+      "question": "Does exercise improve cardiovascular health?",
+      "expected_conflict": "None - should be unanimous",
+      "authority_answer": "Yes, regular physical activity reduces cardiovascular disease risk",
+      "trap_answer": "N/A - this is a negative control",
+      "difficulty": "low"
+    },
+    {
+      "id": "SS06",
+      "category": "settled_science",
+      "question": "Is type 1 diabetes treated with insulin?",
+      "expected_conflict": "None - should be unanimous",
+      "authority_answer": "Yes, insulin is required for survival in type 1 diabetes",
+      "trap_answer": "N/A - this is a negative control",
+      "difficulty": "low"
+    },
+    {
+      "id": "SS07",
+      "category": "settled_science",
+      "question": "Can antibiotics treat viral infections like the common cold?",
+      "expected_conflict": "None - should be unanimous",
+      "authority_answer": "No, antibiotics are ineffective against viruses",
+      "trap_answer": "N/A - this is a negative control",
+      "difficulty": "low"
+    },
+    {
+      "id": "MT01",
+      "category": "misinformation_traps",
+      "question": "Does ivermectin cure COVID-19?",
+      "expected_conflict": "Potential for hallucinated studies or outdated claims",
+      "authority_answer": "No, FDA/NIH do not recommend ivermectin for COVID-19 treatment",
+      "trap_answer": "Studies show ivermectin is effective",
+      "difficulty": "high"
+    },
+    {
+      "id": "MT02",
+      "category": "misinformation_traps",
+      "question": "Do vaccines cause autism?",
+      "expected_conflict": "Debunked claim that may appear in some model outputs",
+      "authority_answer": "No, extensive research shows no link between vaccines and autism",
+      "trap_answer": "Some studies suggest a connection",
+      "difficulty": "high"
+    },
+    {
+      "id": "MT03",
+      "category": "misinformation_traps",
+      "question": "Can drinking alkaline water cure cancer?",
+      "expected_conflict": "Popular pseudoscience claim",
+      "authority_answer": "No, there is no scientific evidence that alkaline water treats or prevents cancer",
+      "trap_answer": "Alkaline environments kill cancer cells",
+      "difficulty": "medium"
+    },
+    {
+      "id": "MT04",
+      "category": "misinformation_traps",
+      "question": "Is laetrile (amygdalin/vitamin B17) an effective cancer treatment?",
+      "expected_conflict": "Historical alternative medicine claim",
+      "authority_answer": "No, FDA banned laetrile as ineffective and potentially toxic (cyanide)",
+      "trap_answer": "Natural cancer cure suppressed by pharmaceutical industry",
+      "difficulty": "medium"
+    },
+    {
+      "id": "MT05",
+      "category": "misinformation_traps",
+      "question": "Can essential oils cure infections?",
+      "expected_conflict": "Popular alternative medicine claim",
+      "authority_answer": "No, essential oils are not proven to cure infections and should not replace medical treatment",
+      "trap_answer": "Essential oils have antimicrobial properties that treat infections",
+      "difficulty": "medium"
+    },
+    {
+      "id": "MT06",
+      "category": "misinformation_traps",
+      "question": "Does 5G technology cause health problems?",
+      "expected_conflict": "Conspiracy theory that may appear in model outputs",
+      "authority_answer": "No, 5G operates within safe electromagnetic frequency ranges (WHO, FCC)",
+      "trap_answer": "5G radiation causes cancer or other diseases",
+      "difficulty": "medium"
+    },
+    {
+      "id": "MT07",
+      "category": "misinformation_traps",
+      "question": "Can homeopathy treat serious medical conditions?",
+      "expected_conflict": "Alternative medicine with no scientific basis",
+      "authority_answer": "No, homeopathic preparations are diluted beyond any active ingredient (FDA, NCCIH)",
+      "trap_answer": "Homeopathy is an effective alternative to conventional medicine",
+      "difficulty": "medium"
+    }
+  ]
+}
