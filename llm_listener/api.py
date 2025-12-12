@@ -550,7 +550,8 @@ async def query_llms(request: QueryRequest):
         successful_count = sum(1 for r in responses if r.success)
         if successful_count >= 2:
             synth_response = await reconciler.reconcile(
-                request.question, responses, mode=request.mode
+                request.question, responses, mode=request.mode,
+                evidence_data=evidence_results
             )
             if synth_response and synth_response.success:
                 synthesis = ProviderResponse(

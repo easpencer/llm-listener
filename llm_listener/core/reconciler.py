@@ -52,7 +52,7 @@ Start with the message itself (no preamble), then briefly explain why this frami
 """
 
 
-HEALTH_RESEARCH_PROMPT = """You are a medical research analyst synthesizing multiple sources of health information to provide clear, actionable guidance. Your role is to critically evaluate AI model responses alongside official health guidance and scientific literature to produce a structured summary that clinicians and patients can trust.
+HEALTH_RESEARCH_PROMPT = """You are a medical research analyst synthesizing multiple sources of health information to provide clear, actionable guidance. Your role is to critically evaluate AI model responses alongside official health guidance, scientific literature, recent health news, and emerging medical technologies (patents) to produce a structured summary that clinicians and patients can trust.
 
 Original Question:
 {question}
@@ -65,10 +65,12 @@ AI Model Responses:
 CRITICAL INSTRUCTIONS:
 1. Use EXACTLY the section headers specified below (## for main sections, ### for subsections)
 2. Lead with what is known and agreed upon, not with uncertainty
-3. Attribute every claim to its source (e.g., "CDC states...", "A meta-analysis of 12 RCTs found...", "All AI models agreed that...")
+3. Attribute every claim to its source (e.g., "CDC states...", "A meta-analysis of 12 RCTs found...", "All AI models agreed that...", "Recent coverage in STAT News reports...", "A recently granted patent by [company] describes...")
 4. Be honest about gaps - distinguish between "no guidance found in search" vs "organization has not issued guidance on this topic"
-5. Synthesize information hierarchically: official guidance takes precedence, then peer-reviewed literature, then AI model outputs
+5. Synthesize information hierarchically: official guidance takes precedence, then peer-reviewed literature, then credible news, then AI model outputs. Patents are informational only - they show research trends, not proven treatments.
 6. When sources conflict, explicitly state WHO disagrees with WHOM about WHAT
+7. For health news: Only cite articles from highly credible or credible tiers. Flag any news that contradicts official guidance.
+8. For patents: Use patents to indicate emerging research directions and industry investment. NEVER present patents as evidence of treatment efficacy. Clearly distinguish between "companies are researching X" and "X is proven effective."
 
 Generate your response in this EXACT format:
 
@@ -108,8 +110,15 @@ Generate your response in this EXACT format:
 ### Points of Divergence
 [Identify where AI models differed meaningfully. Be specific about which model said what. If no significant divergence, state "No significant divergence - all models provided similar information."]
 
+## RECENT DEVELOPMENTS
+### In the News
+[If credible health news was found, summarize 2-3 key recent developments or stories. Focus on news from highly credible or credible sources. Include the source name. If news contradicts official guidance, flag it clearly. If no relevant news was found, state "No recent credible health news found on this topic."]
+
+### Emerging Research & Technologies
+[If relevant medical patents were found, summarize what they indicate about research directions and industry investment. Mention specific companies or institutions if notable. Be clear these are RESEARCH indicators, not proven treatments. Example: "Several recent patents from [Company] suggest active research into [approach]." If no relevant patents found, state "No relevant patent activity identified."]
+
 ## DISCORDANCE
-[This section captures ANY disagreement between sources - official guidance vs literature, one agency vs another, AI models vs evidence. Be explicit and specific. If no significant discordance, state "No significant discordance found - official guidance, scientific literature, and AI models are well-aligned."]
+[This section captures ANY disagreement between sources - official guidance vs literature vs news, one agency vs another, AI models vs evidence. Include any conflicts between news coverage and official guidance. Be explicit and specific. If no significant discordance, state "No significant discordance found - official guidance, scientific literature, news, and AI models are well-aligned."]
 
 ## BOTTOM LINE
 ### For Patients
@@ -364,6 +373,149 @@ class ResponseReconciler:
             low_quality = literature.get("low_quality_results", [])
             if low_quality:
                 parts.append(f"### Note: {len(low_quality)} additional papers with <{min_citations} citations were found but flagged as lower quality")
+                parts.append("")
+
+        # Format health news with credibility assessment
+        news = evidence_data.get("news", {})
+        if news.get("count", 0) > 0:
+            metadata = news.get("metadata", {})
+            highly_credible_count = metadata.get("highly_credible_count", 0)
+            credible_count = metadata.get("credible_count", 0)
+            avg_score = metadata.get("avg_credibility_score", 0)
+
+            if parts:
+                parts.append("")  # Add spacing
+            parts.append("## Recent Health News")
+            parts.append(f"({news.get('count', 0)} articles found, {highly_credible_count} highly credible, {credible_count} credible)")
+            parts.append(f"Average credibility score: {avg_score:.1f}/10")
+            parts.append("")
+
+            # Group by credibility tier
+            by_tier = news.get("by_credibility_tier", {})
+
+            # Highly credible sources first
+            highly_credible = by_tier.get("highly_credible", [])
+            if highly_credible:
+                parts.append(f"### Highly Credible Sources ({len(highly_credible)} articles)")
+                parts.append("(Government agencies, peer-reviewed journals, major medical centers)")
+                for article in highly_credible[:5]:
+                    title = article.get("title", "Untitled")
+                    source = article.get("source", "Unknown")
+                    snippet = article.get("snippet", "")
+                    published = article.get("published_date", "")
+                    url = article.get("url", "")
+                    reason = article.get("credibility_reason", "")
+
+                    parts.append(f"- **{source}**: {title}")
+                    if snippet:
+                        parts.append(f"  Summary: {snippet}")
+                    if published:
+                        parts.append(f"  Published: {published}")
+                    parts.append(f"  Source quality: {reason}")
+                    parts.append(f"  URL: {url}")
+                parts.append("")
+
+            # Credible sources
+            credible = by_tier.get("credible", [])
+            if credible:
+                parts.append(f"### Credible Sources ({len(credible)} articles)")
+                parts.append("(Established medical news outlets, health sections of major newspapers)")
+                for article in credible[:5]:
+                    title = article.get("title", "Untitled")
+                    source = article.get("source", "Unknown")
+                    snippet = article.get("snippet", "")
+                    published = article.get("published_date", "")
+                    url = article.get("url", "")
+
+                    parts.append(f"- **{source}**: {title}")
+                    if snippet:
+                        parts.append(f"  Summary: {snippet}")
+                    if published:
+                        parts.append(f"  Published: {published}")
+                    parts.append(f"  URL: {url}")
+                parts.append("")
+
+            # General news (brief summary only)
+            general = by_tier.get("general", [])
+            if general:
+                parts.append(f"### General News Sources ({len(general)} articles)")
+                parts.append("(Verify with primary sources)")
+                for article in general[:3]:  # Limit general news
+                    title = article.get("title", "Untitled")
+                    source = article.get("source", "Unknown")
+                    parts.append(f"- **{source}**: {title}")
+                parts.append("")
+
+        # Format medical patents with clinical relevance assessment
+        patents = evidence_data.get("patents", {})
+        if patents.get("count", 0) > 0:
+            metadata = patents.get("metadata", {})
+            high_relevance = metadata.get("high_relevance_count", 0)
+            recent_patents = metadata.get("recent_patents", 0)
+            avg_age = metadata.get("avg_age_years", 0)
+
+            if parts:
+                parts.append("")  # Add spacing
+            parts.append("## Medical Patents & Emerging Technologies")
+            parts.append(f"({patents.get('count', 0)} patents found, {high_relevance} clinically relevant, {recent_patents} recently granted)")
+            parts.append(f"Average patent age: {avg_age:.1f} years")
+            parts.append("")
+            parts.append("NOTE: Patents indicate research investment and emerging technologies, not proven treatments.")
+            parts.append("Patent claims may not be validated by clinical evidence.")
+            parts.append("")
+
+            # Group by clinical relevance
+            by_relevance = patents.get("by_clinical_relevance", {})
+
+            # High clinical relevance first
+            high_rel = by_relevance.get("high", [])
+            if high_rel:
+                parts.append(f"### Clinically Relevant Patents ({len(high_rel)} patents)")
+                parts.append("(Contains clinical trial data, FDA mentions, or treatment efficacy data)")
+                for patent in high_rel[:5]:
+                    title = patent.get("title", "Untitled")
+                    patent_num = patent.get("patent_number", "")
+                    assignee = patent.get("assignee", "Unknown")
+                    date_pub = patent.get("date_published", "")
+                    summary = patent.get("simplified_summary", patent.get("abstract", ""))
+                    status_desc = patent.get("status_description", "")
+                    url = patent.get("url", "")
+
+                    parts.append(f"- **{title}** ({patent_num})")
+                    parts.append(f"  Assignee: {assignee}")
+                    if summary:
+                        parts.append(f"  Summary: {summary}")
+                    parts.append(f"  Status: {status_desc} ({date_pub})")
+                    parts.append(f"  URL: {url}")
+                parts.append("")
+
+            # Moderate clinical relevance
+            moderate_rel = by_relevance.get("moderate", [])
+            if moderate_rel:
+                parts.append(f"### Moderately Relevant Patents ({len(moderate_rel)} patents)")
+                for patent in moderate_rel[:4]:
+                    title = patent.get("title", "Untitled")
+                    patent_num = patent.get("patent_number", "")
+                    assignee = patent.get("assignee", "Unknown")
+                    date_pub = patent.get("date_published", "")
+                    summary = patent.get("simplified_summary", "")
+                    status_desc = patent.get("status_description", "")
+
+                    parts.append(f"- **{title}** ({patent_num})")
+                    parts.append(f"  Assignee: {assignee}, Status: {status_desc} ({date_pub})")
+                    if summary:
+                        parts.append(f"  Summary: {summary}")
+                parts.append("")
+
+            # Early-stage (brief only)
+            early_stage = by_relevance.get("early-stage", [])
+            if early_stage:
+                parts.append(f"### Early-Stage Research Patents ({len(early_stage)} patents)")
+                parts.append("(May be far from clinical application)")
+                for patent in early_stage[:3]:
+                    title = patent.get("title", "Untitled")
+                    assignee = patent.get("assignee", "Unknown")
+                    parts.append(f"- {title} ({assignee})")
                 parts.append("")
 
         if not parts:
