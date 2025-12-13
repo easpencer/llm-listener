@@ -2679,7 +2679,9 @@ function App() {
   // States: initial (centered), typing (slides up), searching (loading), results (showing)
   if (isChorus) {
     const hasResults = synthesis || responses.length > 0
-    const isSearching = loading || clarifying
+    // Include clarifyConvo state - when there's a clarification conversation active
+    const hasClarifyConversation = clarification && clarifyConvo.length > 0
+    const isSearching = loading || clarifying || hasClarifyConversation
     const isTyping = question.trim().length > 0 && !isSearching && !hasResults
 
     // Compute the UI state class
@@ -3449,7 +3451,7 @@ function App() {
 
           {/* Follow-up Panel (shown when followUpOpen is true) */}
           {followUpOpen && (
-            <div className="follow-up-panel glass-card animate-slide-up">
+            <div className="follow-up-panel glass-card">
               <div className="follow-up-panel-header">
                 <div className="follow-up-panel-title">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
