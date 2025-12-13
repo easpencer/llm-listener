@@ -1055,7 +1055,7 @@ function EvidenceProfilePanel({ confidence, compact = false }) {
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
               </svg>
             </span>
-            <span className="interp-text">{agreement >= 85 ? 'Strong' : agreement >= 65 ? 'Moderate' : 'Limited'} Consensus</span>
+            <span className="interp-text">{agreement >= 85 ? 'Strong' : agreement >= 65 ? 'Moderate' : 'Limited'} Source Agreement</span>
           </div>
         </div>
       </div>
@@ -1199,12 +1199,12 @@ function EvidenceProfilePanel({ confidence, compact = false }) {
           </svg>
         </span>
         <span className="statement-text">
-          {quality === 'A' && agreement >= 85 && "We are highly confident in this evidence. Multiple high-quality sources strongly agree."}
-          {quality === 'A' && agreement < 85 && "High-quality evidence available, though sources show some variation in recommendations."}
-          {quality === 'B' && agreement >= 70 && "We are moderately confident. Good evidence with reasonable consensus across sources."}
-          {quality === 'B' && agreement < 70 && "Moderate evidence quality with notable disagreement between sources."}
-          {quality === 'C' && "Limited evidence available. Findings should be interpreted with caution."}
-          {quality === 'D' && "Very limited evidence. Recommendations are largely based on AI synthesis or expert opinion."}
+          {quality === 'A' && agreement >= 85 && "Multiple high-quality sources report consistent findings on this topic."}
+          {quality === 'A' && agreement < 85 && "High-quality sources available, though they show some variation in recommendations."}
+          {quality === 'B' && agreement >= 70 && "Good evidence available with reasonable alignment across sources."}
+          {quality === 'B' && agreement < 70 && "Moderate evidence available with notable differences between sources."}
+          {quality === 'C' && "Limited sources available. Findings should be interpreted with caution."}
+          {quality === 'D' && "Very limited sources. Synthesis primarily reflects AI analysis rather than external evidence."}
         </span>
       </div>
     </div>
@@ -2198,7 +2198,7 @@ function App() {
         briefContent = intro
 
         if (parsed.sections['CONSENSUS']) {
-          briefContent += '### What We Know\n\n' + parsed.sections['CONSENSUS'] + '\n\n'
+          briefContent += '### What Sources Report\n\n' + parsed.sections['CONSENSUS'] + '\n\n'
         }
 
         // Extract "For Patients" from BOTTOM LINE
@@ -2221,7 +2221,7 @@ function App() {
 
         // Consensus section
         if (parsed.sections['CONSENSUS']) {
-          detailedContent += '### Consensus\n\n' + parsed.sections['CONSENSUS'] + '\n\n'
+          detailedContent += '### Areas of Agreement\n\n' + parsed.sections['CONSENSUS'] + '\n\n'
         }
 
         // Official Guidance section
@@ -2246,7 +2246,7 @@ function App() {
 
         // Bottom Line section
         if (parsed.sections['BOTTOM LINE']) {
-          detailedContent += '---\n\n### Bottom Line\n\n' + parsed.sections['BOTTOM LINE'] + '\n\n'
+          detailedContent += '---\n\n### Summary\n\n' + parsed.sections['BOTTOM LINE'] + '\n\n'
         }
 
         // Add evidence quality assessment
@@ -2717,7 +2717,7 @@ function App() {
           {/* Hero section - shrinks and moves up as state changes */}
           <header className="chorus-hero">
             <div className="chorus-logo-area">
-              <ChorusImageLogo size={uiState === 'initial' ? 72 : 40} withText={true} />
+              <ChorusImageLogo size={uiState === 'initial' ? 120 : 48} withText={true} />
             </div>
             <h1 className="chorus-headline">Where AI Meets Verified Knowledge</h1>
             <p className="chorus-tagline">
@@ -4978,8 +4978,9 @@ styleSheet.textContent = `
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: center;
     padding: 2rem;
-    max-width: 800px;
+    max-width: 900px;
     width: 100%;
     margin: 0 auto;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -4996,31 +4997,45 @@ styleSheet.textContent = `
   /* Hero section - shrinks and fades based on state */
   .chorus-hero {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .chorus-logo-area {
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     transition: all 0.3s ease;
+    display: flex;
+    justify-content: center;
+  }
+
+  .chorus-image-logo {
+    /* Ensure logo displays properly */
+    display: block;
+    max-width: 100%;
+    height: auto;
   }
 
   .chorus-headline {
-    font-size: 2.25rem;
+    font-size: 2.5rem;
     font-weight: 700;
     color: #f1f5f9;
-    margin: 0 0 0.75rem 0;
+    margin: 0 0 1rem 0;
     line-height: 1.2;
     text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
     transition: all 0.4s ease;
+    letter-spacing: -0.02em;
   }
 
   .chorus-tagline {
-    font-size: 1rem;
-    color: #94a3b8;
+    font-size: 1.125rem;
+    color: #cbd5e1;
     margin: 0;
-    line-height: 1.5;
-    max-width: 500px;
+    line-height: 1.6;
+    max-width: 580px;
     margin: 0 auto;
     transition: all 0.4s ease;
   }
@@ -5320,12 +5335,27 @@ styleSheet.textContent = `
       padding-top: 1rem;
     }
 
+    .chorus-hero {
+      margin-bottom: 1.5rem;
+    }
+
+    .chorus-logo-area {
+      margin-bottom: 1rem;
+    }
+
+    /* Adjust logo size for mobile - initial state smaller but still prominent */
+    .chorus-image-logo {
+      max-height: 80px;
+    }
+
     .chorus-headline {
       font-size: 1.75rem;
+      padding: 0 0.5rem;
     }
 
     .chorus-tagline {
-      font-size: 0.9rem;
+      font-size: 0.95rem;
+      padding: 0 0.5rem;
     }
 
     .chorus-search-box {
@@ -5373,8 +5403,16 @@ styleSheet.textContent = `
       padding: 1rem 0.75rem;
     }
 
+    .chorus-logo-area {
+      margin-bottom: 0.75rem;
+    }
+
+    .chorus-image-logo {
+      max-height: 64px;
+    }
+
     .chorus-headline {
-      font-size: 1.5rem;
+      font-size: 1.35rem;
     }
 
     .chorus-tagline {
@@ -5387,7 +5425,7 @@ styleSheet.textContent = `
 
     .sample-btn {
       font-size: 0.75rem;
-      padding: 0.3rem 0.6rem;
+      padding: 0.4rem 0.6rem;
     }
 
     .chorus-trust-row {
