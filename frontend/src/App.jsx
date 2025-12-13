@@ -3259,7 +3259,7 @@ function App() {
                     )}
                     {evidence.patents && evidence.patents.count > 0 && (
                       <EvidenceCardChorus
-                        title="Medical Patents"
+                        title="Patents"
                         subtitle="Emerging technologies from USPTO"
                         icon="💡"
                         color="#f59e0b"
