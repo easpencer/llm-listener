@@ -1498,26 +1498,6 @@ body {
   gap: 8px;
 }
 
-.evidence-info-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(100, 116, 139, 0.2);
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  color: #94a3b8;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.evidence-info-btn:hover {
-  background: rgba(100, 116, 139, 0.3);
-  color: #e2e8f0;
-  border-color: rgba(148, 163, 184, 0.3);
-}
-
 /* Evidence links in content */
 .evidence-link {
   color: #60a5fa;
