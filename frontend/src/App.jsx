@@ -2675,7 +2675,8 @@ function App() {
     // Show landing page until user submits a search (not just when they start typing)
     // This prevents jarring UI transition while user types their question
     const hasResults = synthesis || responses.length > 0
-    const showLanding = !loading && !hasResults
+    const isSearching = loading || clarifying
+    const showLanding = !isSearching && !hasResults
 
     if (showLanding) {
       return (
