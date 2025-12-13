@@ -23,6 +23,7 @@ class HealthPatent:
     relevance_reason: str
     category: str  # clinical, wellness, biotech, device, nutrition, environmental
     url: str
+    thumbnail: str = ""  # Patent figure/diagram thumbnail if available
 
 
 # Keep old name as alias for backwards compatibility
@@ -94,6 +95,9 @@ class PatentSearcher:
                     # Simplify snippet for user-friendly display
                     simplified = self._simplify_abstract(snippet)
 
+                    # Extract thumbnail/figure if available
+                    thumbnail = p.get("thumbnail", "") or p.get("figure", "")
+
                     patents.append(HealthPatent(
                         patent_number=patent_id,
                         title=title,
@@ -108,6 +112,7 @@ class PatentSearcher:
                         relevance_reason=status_info["relevance_reason"],
                         category=status_info["category"],
                         url=url,
+                        thumbnail=thumbnail,
                     ))
 
             # Categorize by relevance tier

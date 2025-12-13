@@ -233,11 +233,21 @@ class EvidenceSearcher:
                             continue
 
                         metadata.included += 1
+
+                        # Extract thumbnail/image if available
+                        thumbnail = result.get("thumbnail", "")
+                        # Also check for rich snippet images
+                        if not thumbnail:
+                            rich_snippet = result.get("rich_snippet", {})
+                            if rich_snippet:
+                                thumbnail = rich_snippet.get("top", {}).get("detected_extensions", {}).get("thumbnail", "")
+
                         links.append({
                             "title": title,
                             "url": link,
                             "snippet": snippet,
                             "source_type": source_type,
+                            "thumbnail": thumbnail,
                         })
                         snippets.append(f"{title}: {snippet}")
 
@@ -335,6 +345,16 @@ class EvidenceSearcher:
                         publication_info = result.get("publication_info", {})
                         cited_by = result.get("inline_links", {}).get("cited_by", {}).get("total", 0)
 
+                        # Extract thumbnail if available (some results have them)
+                        thumbnail = result.get("thumbnail", "")
+                        # Check resources for PDF thumbnails
+                        if not thumbnail:
+                            resources = result.get("resources", [])
+                            for resource in resources:
+                                if resource.get("file_format") == "PDF":
+                                    thumbnail = resource.get("thumbnail", "")
+                                    break
+
                         # Build article data
                         article_data = {
                             "title": title,
@@ -342,6 +362,7 @@ class EvidenceSearcher:
                             "snippet": snippet,
                             "publication_info": publication_info.get("summary", ""),
                             "cited_by": cited_by,
+                            "thumbnail": thumbnail,
                         }
 
                         # Quality checks
@@ -546,6 +567,9 @@ class EvidenceSearcher:
         import asyncio
 
         # Run all standard searches in parallel
+        # Note: Images/thumbnails are now extracted from each source directly
+        # (news articles have thumbnails, guidelines may have diagrams, etc.)
+        # rather than doing a separate media-only search
         tasks = {
             "guidelines": self.search_government_guidelines(query),
             "literature": self.search_scholarly_literature(query),
@@ -553,11 +577,6 @@ class EvidenceSearcher:
             "patents": self.search_patents(query),
             "reference": self.search_reference(query),  # Wikipedia, MedlinePlus, textbooks, etc.
         }
-
-        # Add media search if query is visual/video in nature
-        is_media = self._is_media_query(query)
-        if is_media:
-            tasks["media"] = self.search_media(query)
 
         gathered = await asyncio.gather(
             *tasks.values(), return_exceptions=True

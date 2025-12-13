@@ -4189,6 +4189,39 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
           </div>
         )}
 
+        {/* Source images/thumbnails - show if any sources have them */}
+        {(() => {
+          const sourcesWithThumbnails = links.filter(l => l.thumbnail)
+          if (sourcesWithThumbnails.length === 0) return null
+          return (
+            <div className="source-thumbnails">
+              <h4>Visual References ({sourcesWithThumbnails.length})</h4>
+              <div className="thumbnail-grid">
+                {sourcesWithThumbnails.slice(0, 6).map((link, i) => (
+                  <a
+                    key={i}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="source-thumbnail-item"
+                    title={link.title}
+                  >
+                    <img
+                      src={link.thumbnail}
+                      alt={link.title}
+                      loading="lazy"
+                      onError={(e) => { e.target.style.display = 'none' }}
+                    />
+                    <span className="thumbnail-source">
+                      {link.source || link.source_name || (link.url?.match(/\/\/([^\/]+)/)?.[1]?.replace('www.', '') || 'Source')}
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
+
         {/* All sources - visible and scrollable */}
         {links.length > 0 && (
           <div className="all-sources">

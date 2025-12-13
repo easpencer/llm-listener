@@ -206,6 +206,9 @@ class ReferenceSearcher:
                     classification = self._classify_source(url)
                     content_type = self._detect_content_type(title, snippet, url)
 
+                    # Extract thumbnail if available
+                    thumbnail = result.get("thumbnail", "")
+
                     source_data = {
                         "title": title,
                         "url": url,
@@ -214,6 +217,7 @@ class ReferenceSearcher:
                         "source_type": classification["source_type"],
                         "quality_tier": classification["quality_tier"],
                         "content_type": content_type,
+                        "thumbnail": thumbnail,
                     }
 
                     sources.append(source_data)
@@ -232,6 +236,13 @@ class ReferenceSearcher:
                 knowledge_graph = data.get("knowledge_graph", {})
                 kg_data = None
                 if knowledge_graph:
+                    # Knowledge graph often has header_images or image
+                    kg_image = ""
+                    if knowledge_graph.get("header_images"):
+                        kg_image = knowledge_graph["header_images"][0].get("image", "")
+                    elif knowledge_graph.get("image"):
+                        kg_image = knowledge_graph.get("image", "")
+
                     kg_data = {
                         "title": knowledge_graph.get("title", ""),
                         "type": knowledge_graph.get("type", ""),
@@ -239,6 +250,7 @@ class ReferenceSearcher:
                         "source": knowledge_graph.get("source", {}).get("name", ""),
                         "source_url": knowledge_graph.get("source", {}).get("link", ""),
                         "attributes": knowledge_graph.get("attributes", {}),
+                        "image": kg_image,
                     }
 
                 # Sort sources: authoritative first, then trusted, then general
