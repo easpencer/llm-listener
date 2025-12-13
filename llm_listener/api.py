@@ -125,6 +125,7 @@ class QueryResponse(BaseModel):
     research: Optional[Dict[str, Any]] = None
     news: Optional[Dict[str, Any]] = None
     patents: Optional[Dict[str, Any]] = None
+    reference: Optional[Dict[str, Any]] = None  # Wikipedia, MedlinePlus, textbooks, educational content
     media: Optional[Dict[str, Any]] = None  # Visual/video references for media queries
     conflict_analysis: Optional[ConflictAnalysisResponse] = None
 
@@ -621,6 +622,7 @@ async def query_llms(request: QueryRequest):
         research=evidence_results.get("literature") if evidence_results else None,
         news=evidence_results.get("news") if evidence_results else None,
         patents=evidence_results.get("patents") if evidence_results else None,
+        reference=evidence_results.get("reference") if evidence_results else None,
         media=evidence_results.get("media") if evidence_results else None,
         conflict_analysis=conflict_analysis_response,
     )

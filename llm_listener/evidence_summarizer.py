@@ -161,11 +161,52 @@ Write a concise prose summary (2-3 sentences) about the innovation landscape. No
 
         return await self._call_llm(prompt)
 
+    async def summarize_reference(self, reference: Dict[str, Any], query: str) -> str:
+        """Generate prose summary of reference/educational sources."""
+        links = reference.get("links", [])
+        knowledge_graph = reference.get("knowledge_graph")
+        by_quality = reference.get("by_quality_tier", {})
+
+        if not links and not knowledge_graph:
+            return "No reference sources found for this query."
+
+        # Build context from knowledge graph if available
+        kg_context = ""
+        if knowledge_graph and knowledge_graph.get("description"):
+            kg_context = f"Knowledge Graph: {knowledge_graph.get('title', '')}: {knowledge_graph.get('description', '')}\n\n"
+
+        # Prioritize authoritative sources
+        authoritative = by_quality.get("authoritative", [])
+        trusted = by_quality.get("trusted", [])
+        priority_sources = (authoritative + trusted)[:6] if (authoritative or trusted) else links[:6]
+
+        content_parts = []
+        for source in priority_sources:
+            source_name = source.get("source_name", "Unknown")
+            title = source.get("title", "")
+            snippet = source.get("snippet", "")[:200]
+            quality = source.get("quality_tier", "")
+            content_parts.append(f"[{source_name}, {quality}] {title}: {snippet}")
+
+        metadata = reference.get("metadata", {})
+        auth_count = metadata.get("authoritative_count", 0)
+
+        prompt = f"""Summarize what these reference sources explain about this topic in 2-3 sentences of prose. Focus on providing foundational understanding - what this thing is, how it works, or key background information.
+
+Query: {query}
+
+{kg_context}Reference Sources ({len(links)} found, {auth_count} authoritative):
+{chr(10).join(content_parts)}
+
+Write a concise prose summary (2-3 sentences) that explains the topic based on these reference sources. Focus on foundational understanding that would help someone unfamiliar with the topic."""
+
+        return await self._call_llm(prompt)
+
     async def summarize_all(self, evidence: Dict[str, Any], query: str) -> Dict[str, str]:
         """Generate prose summaries for all evidence types in parallel.
 
         Args:
-            evidence: Dictionary with guidelines, literature, news, patents
+            evidence: Dictionary with guidelines, literature, news, patents, reference
             query: The original search query
 
         Returns:
@@ -176,6 +217,7 @@ Write a concise prose summary (2-3 sentences) about the innovation landscape. No
             "literature": self.summarize_literature(evidence.get("literature", {}), query),
             "news": self.summarize_news(evidence.get("news", {}), query),
             "patents": self.summarize_patents(evidence.get("patents", {}), query),
+            "reference": self.summarize_reference(evidence.get("reference", {}), query),
         }
 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)

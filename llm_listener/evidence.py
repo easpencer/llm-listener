@@ -510,6 +510,24 @@ class EvidenceSearcher:
         media_searcher = MediaSearcher(self.api_key)
         return await media_searcher.search(query, max_images, max_videos)
 
+    async def search_reference(self, query: str, max_results: int = 15) -> Dict[str, Any]:
+        """Search for reference and educational content.
+
+        This finds foundational, explanatory content from sources like Wikipedia,
+        MedlinePlus, medical textbooks, and educational platforms. Answers
+        "What is this?" rather than "What should I do?" or "What does research say?"
+
+        Args:
+            query: The topic to search for
+            max_results: Maximum number of results
+
+        Returns:
+            Dictionary with reference sources and quality assessments
+        """
+        from .reference import ReferenceSearcher
+        reference_searcher = ReferenceSearcher(self.api_key)
+        return await reference_searcher.search(query, max_results)
+
     def _is_media_query(self, query: str) -> bool:
         """Check if the query is asking for visual/video information."""
         from .media import MediaSearcher
@@ -533,6 +551,7 @@ class EvidenceSearcher:
             "literature": self.search_scholarly_literature(query),
             "news": self.search_news(query),
             "patents": self.search_patents(query),
+            "reference": self.search_reference(query),  # Wikipedia, MedlinePlus, textbooks, etc.
         }
 
         # Add media search if query is visual/video in nature

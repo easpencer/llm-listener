@@ -3267,6 +3267,16 @@ function App() {
                         type="patents"
                       />
                     )}
+                    {evidence.reference && evidence.reference.count > 0 && (
+                      <EvidenceCardChorus
+                        title="Background & Context"
+                        subtitle="Wikipedia, MedlinePlus, textbooks & encyclopedias"
+                        icon="📚"
+                        color="#6366f1"
+                        data={evidence.reference}
+                        type="reference"
+                      />
+                    )}
                     {evidence.media && evidence.media.count > 0 && (
                       <MediaCardChorus
                         data={evidence.media}
@@ -4046,6 +4056,21 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
       }
       summary += '.'
       return summary
+    } else if (type === 'reference') {
+      // Reference/educational sources summary
+      const authCount = links.filter(l =>
+        l.quality_tier === 'authoritative'
+      ).length
+      const sourceTypes = [...new Set(links.map(l => l.source_name).filter(Boolean))].slice(0, 3)
+      let summary = `**${count} reference sources** provide background and context`
+      if (authCount > 0) {
+        summary += ` (${authCount} authoritative)`
+      }
+      if (sourceTypes.length > 0) {
+        summary += ` including ${sourceTypes.join(', ')}`
+      }
+      summary += '.'
+      return summary
     } else {
       // Literature (default)
       const totalCites = links.reduce((s, l) => s + (l.cited_by || 0), 0)
@@ -4196,6 +4221,16 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
                       {type === 'patents' && link.status_description && (
                         <span className={`patent-status ${link.status}`}>
                           {link.status_description}
+                        </span>
+                      )}
+                      {/* Reference source name and quality */}
+                      {type === 'reference' && link.source_name && (
+                        <span className="ref-source">{link.source_name}</span>
+                      )}
+                      {type === 'reference' && link.quality_tier && (
+                        <span className={`quality-badge ${link.quality_tier}`}>
+                          {link.quality_tier === 'authoritative' ? 'Authoritative' :
+                           link.quality_tier === 'trusted' ? 'Trusted' : 'General'}
                         </span>
                       )}
                     </div>
@@ -6773,9 +6808,62 @@ styleSheet.textContent = `
 
   .source-meta {
     display: flex;
-    gap: 0.75rem;
-    font-size: 0.8rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.75rem;
     color: #64748b;
+  }
+
+  .source-meta span {
+    white-space: nowrap;
+  }
+
+  .ref-source, .news-source, .patent-assignee {
+    color: #94a3b8;
+  }
+
+  .quality-badge {
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 500;
+  }
+
+  .quality-badge.authoritative {
+    background: rgba(99, 102, 241, 0.2);
+    color: #a5b4fc;
+  }
+
+  .quality-badge.trusted {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+  }
+
+  .quality-badge.general {
+    background: rgba(100, 116, 139, 0.2);
+    color: #94a3b8;
+  }
+
+  .cred-badge {
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 500;
+  }
+
+  .cred-badge.highly_credible {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+  }
+
+  .cred-badge.credible {
+    background: rgba(14, 165, 233, 0.2);
+    color: #38bdf8;
+  }
+
+  .cred-badge.general {
+    background: rgba(100, 116, 139, 0.2);
+    color: #94a3b8;
   }
 
   .evidence-link {
