@@ -595,7 +595,7 @@ class EvidenceSearcher:
             else:
                 results[key] = result
 
-        # Search for videos from credible medical sources (always, not just for "visual" queries)
+        # Search for videos from credible medical sources
         try:
             media_searcher = MediaSearcher(self.api_key)
             videos = await media_searcher.search_videos(query, max_results=6)
@@ -612,36 +612,81 @@ class EvidenceSearcher:
         except Exception:
             pass  # Don't fail if video search fails
 
-        # Aggregate all thumbnails from evidence sources into a media summary
-        all_thumbnails = []
-        for source_type in ["guidelines", "news", "reference", "patents", "literature"]:
-            source_data = results.get(source_type, {})
-            links = source_data.get("links", [])
-            for link in links:
-                if link.get("thumbnail"):
-                    all_thumbnails.append({
-                        "thumbnail": link["thumbnail"],
-                        "title": link.get("title", ""),
-                        "url": link.get("url", ""),
-                        "source_type": source_type,
-                        "source_name": link.get("source", link.get("source_name", "")),
-                    })
+        # Extract actual images from top source pages
+        # This fetches the real images that authors included, not just search thumbnails
+        extracted_images = []
+        try:
+            from .image_extractor import ImageExtractor
+            extractor = ImageExtractor(timeout=8.0, max_images_per_page=8)
 
-        # Also check knowledge graph for reference
+            # Collect top sources to extract images from (prioritize authoritative sources)
+            sources_to_extract = []
+
+            # Top guidelines (most authoritative)
+            guidelines_links = results.get("guidelines", {}).get("links", [])
+            sources_to_extract.extend(guidelines_links[:3])
+
+            # Top reference sources (Wikipedia, MedlinePlus, etc.)
+            reference_links = results.get("reference", {}).get("links", [])
+            sources_to_extract.extend(reference_links[:2])
+
+            # Top news (often have relevant images)
+            news_links = results.get("news", {}).get("links", [])
+            sources_to_extract.extend(news_links[:2])
+
+            if sources_to_extract:
+                extracted_images = await extractor.extract_from_sources(
+                    sources_to_extract,
+                    max_sources=6,
+                    max_total_images=15
+                )
+
+                # Add source_type to each extracted image
+                for img in extracted_images:
+                    source_url = img.get("source_url", "")
+                    # Determine source type from the original source
+                    img["source_type"] = "source"
+                    for gl in guidelines_links:
+                        if gl.get("url") == source_url:
+                            img["source_type"] = "guidelines"
+                            break
+                    for rl in reference_links:
+                        if rl.get("url") == source_url:
+                            img["source_type"] = "reference"
+                            break
+                    for nl in news_links:
+                        if nl.get("url") == source_url:
+                            img["source_type"] = "news"
+                            break
+
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Image extraction failed: {str(e)}")
+
+        # Also check knowledge graph for reference image
+        kg_image = None
         kg = results.get("reference", {}).get("knowledge_graph")
         if kg and kg.get("image"):
-            all_thumbnails.insert(0, {
+            kg_image = {
+                "url": kg["image"],
                 "thumbnail": kg["image"],
                 "title": kg.get("title", ""),
-                "url": kg.get("source_url", ""),
+                "source_url": kg.get("source_url", ""),
                 "source_type": "knowledge_graph",
                 "source_name": kg.get("source", "Wikipedia"),
-            })
+            }
 
-        if all_thumbnails:
+        # Build aggregated media
+        all_images = []
+        if kg_image:
+            all_images.append(kg_image)
+        all_images.extend(extracted_images)
+
+        if all_images or results.get("videos"):
             results["aggregated_media"] = {
-                "count": len(all_thumbnails),
-                "thumbnails": all_thumbnails,
+                "count": len(all_images),
+                "images": all_images,
                 "videos": results.get("videos", {}).get("links", []),
             }
 

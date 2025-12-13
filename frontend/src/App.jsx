@@ -3278,9 +3278,9 @@ function App() {
                       />
                     )}
                     {/* Aggregated Visual & Video Resources */}
-                    {evidence.aggregated_media && (evidence.aggregated_media.thumbnails?.length > 0 || evidence.aggregated_media.videos?.length > 0) && (
+                    {evidence.aggregated_media && (evidence.aggregated_media.images?.length > 0 || evidence.aggregated_media.videos?.length > 0) && (
                       <AggregatedMediaCard
-                        thumbnails={evidence.aggregated_media.thumbnails}
+                        images={evidence.aggregated_media.images}
                         videos={evidence.aggregated_media.videos}
                       />
                     )}
@@ -4280,25 +4280,25 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
   )
 }
 
-function AggregatedMediaCard({ thumbnails, videos }) {
+function AggregatedMediaCard({ images, videos }) {
   const [expanded, setExpanded] = useState(false)
 
-  const allThumbnails = thumbnails || []
+  const allImages = images || []
   const allVideos = videos || []
 
-  const hasThumbnails = allThumbnails.length > 0
+  const hasImages = allImages.length > 0
   const hasVideos = allVideos.length > 0
 
-  if (!hasThumbnails && !hasVideos) return null
+  if (!hasImages && !hasVideos) return null
 
   // Show 6 initially, all when expanded
-  const visibleThumbnails = expanded ? allThumbnails : allThumbnails.slice(0, 6)
-  const hasMoreThumbnails = allThumbnails.length > 6
+  const visibleImages = expanded ? allImages : allImages.slice(0, 6)
+  const hasMoreImages = allImages.length > 6
 
-  // Group thumbnails by source type for display
+  // Group images by source type for display
   const sourceTypeCounts = {}
-  allThumbnails.forEach(t => {
-    const type = t.source_type || 'other'
+  allImages.forEach(img => {
+    const type = img.source_type || 'other'
     sourceTypeCounts[type] = (sourceTypeCounts[type] || 0) + 1
   })
 
@@ -4312,11 +4312,11 @@ function AggregatedMediaCard({ thumbnails, videos }) {
           <div className="evidence-card-titles">
             <h3 style={{ color }}>Visual & Video Resources</h3>
             <span className="evidence-subtitle">
-              Images and videos from evidence sources
+              Images extracted from evidence sources
             </span>
           </div>
           <div className="evidence-count-badge" style={{ backgroundColor: `${color}20`, color }}>
-            {allThumbnails.length + allVideos.length} items
+            {allImages.length + allVideos.length} items
           </div>
         </div>
       </div>
@@ -4339,40 +4339,40 @@ function AggregatedMediaCard({ thumbnails, videos }) {
           </div>
         )}
 
-        {/* Thumbnails grid */}
-        {hasThumbnails && (
+        {/* Images grid */}
+        {hasImages && (
           <div className="aggregated-thumbnails">
             <div className="thumbnail-grid expanded-grid">
-              {visibleThumbnails.map((thumb, i) => (
+              {visibleImages.map((img, i) => (
                 <a
                   key={i}
-                  href={thumb.url}
+                  href={img.source_url || img.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`source-thumbnail-item ${thumb.source_type}`}
-                  title={thumb.title}
+                  className={`source-thumbnail-item ${img.source_type}`}
+                  title={img.title || img.alt}
                 >
                   <img
-                    src={thumb.thumbnail}
-                    alt={thumb.title}
+                    src={img.thumbnail || img.url}
+                    alt={img.alt || img.title}
                     loading="lazy"
                     onError={(e) => { e.target.parentElement.style.display = 'none' }}
                   />
                   <span className="thumbnail-source">
-                    {thumb.source_name || thumb.source_type}
+                    {img.source_name || img.source_type}
                   </span>
-                  <span className={`thumbnail-type-badge ${thumb.source_type}`}>
-                    {thumb.source_type === 'guidelines' ? 'Official' :
-                     thumb.source_type === 'news' ? 'News' :
-                     thumb.source_type === 'reference' ? 'Reference' :
-                     thumb.source_type === 'knowledge_graph' ? 'Wiki' :
-                     thumb.source_type === 'patents' ? 'Patent' :
-                     thumb.source_type === 'literature' ? 'Research' : ''}
+                  <span className={`thumbnail-type-badge ${img.source_type}`}>
+                    {img.source_type === 'guidelines' ? 'Official' :
+                     img.source_type === 'news' ? 'News' :
+                     img.source_type === 'reference' ? 'Reference' :
+                     img.source_type === 'knowledge_graph' ? 'Wiki' :
+                     img.source_type === 'patents' ? 'Patent' :
+                     img.source_type === 'literature' ? 'Research' : 'Source'}
                   </span>
                 </a>
               ))}
             </div>
-            {hasMoreThumbnails && (
+            {hasMoreImages && (
               <button
                 className="show-more-media-btn"
                 onClick={() => setExpanded(!expanded)}
@@ -4389,7 +4389,7 @@ function AggregatedMediaCard({ thumbnails, videos }) {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M6 9l6 6 6-6"/>
                     </svg>
-                    Show {allThumbnails.length - 6} more images
+                    Show {allImages.length - 6} more images
                   </>
                 )}
               </button>
