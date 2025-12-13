@@ -1258,6 +1258,15 @@ function App() {
     return localStorage.getItem('chorusViewMode') || 'detailed'
   })
 
+  // Detect if running in iframe and apply appropriate class
+  useEffect(() => {
+    const isInIframe = window.self !== window.top
+    if (isInIframe) {
+      document.documentElement.classList.add('in-iframe')
+      document.body.classList.add('in-iframe')
+    }
+  }, [])
+
   useEffect(() => {
     fetch('/api/config')
       .then(res => res.json())
@@ -4253,22 +4262,37 @@ styleSheet.textContent = `
   html {
     /* Ensure proper text sizing on mobile - prevents tiny text */
     -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
     text-size-adjust: 100%;
     /* Smooth scrolling */
     scroll-behavior: smooth;
+    /* Force font size inheritance */
+    font-size: 100%;
   }
 
   body {
-    /* Base font size for mobile readability */
-    font-size: 16px;
+    /* Base font size for mobile readability - use px for iframe consistency */
+    font-size: 16px !important;
     line-height: 1.5;
     /* Prevent horizontal scroll */
     overflow-x: hidden;
     /* For iframe compatibility */
     min-height: 100%;
     min-height: 100dvh;
+    min-height: -webkit-fill-available;
     margin: 0;
     padding: 0;
+    /* Ensure the body fills the iframe */
+    width: 100%;
+  }
+
+  /* Root element sizing for iframes */
+  #root {
+    min-height: 100%;
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
+    width: 100%;
   }
 
   /* Iframe detection and fixes */
@@ -4279,6 +4303,82 @@ styleSheet.textContent = `
       min-height: 100%;
       /* Prevent zoom issues */
       touch-action: manipulation;
+      /* Force readable font size on mobile */
+      font-size: 16px !important;
+    }
+
+    #root {
+      height: 100%;
+      min-height: 100%;
+    }
+  }
+
+  /* Extra insurance for very small screens / zoomed out iframes */
+  @media (max-width: 480px) {
+    html {
+      /* Prevent browser from shrinking text in narrow iframes */
+      -webkit-text-size-adjust: none;
+      -moz-text-size-adjust: none;
+      -ms-text-size-adjust: none;
+      text-size-adjust: none;
+    }
+  }
+
+  /* ===== IFRAME-SPECIFIC OVERRIDES ===== */
+  /* Applied via JavaScript when running inside an iframe */
+  html.in-iframe,
+  body.in-iframe {
+    /* Force consistent sizing in iframes */
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+    /* Ensure proper dimensions */
+    width: 100% !important;
+    min-height: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  body.in-iframe #root {
+    width: 100% !important;
+    min-height: 100% !important;
+  }
+
+  /* Mobile iframe overrides */
+  @media (max-width: 768px) {
+    html.in-iframe,
+    body.in-iframe {
+      /* Aggressive font sizing for mobile iframes */
+      font-size: 16px !important;
+    }
+
+    body.in-iframe .chorus-unified {
+      font-size: 16px !important;
+      width: 100% !important;
+    }
+
+    body.in-iframe .chorus-headline {
+      font-size: clamp(1.25rem, 5vw, 1.75rem) !important;
+    }
+
+    body.in-iframe .chorus-tagline {
+      font-size: clamp(0.8rem, 3vw, 1rem) !important;
+    }
+
+    body.in-iframe .chorus-search-input {
+      font-size: 16px !important;
+    }
+
+    body.in-iframe .chorus-content-wrapper {
+      padding: 1rem !important;
+      max-width: 100% !important;
+    }
+
+    body.in-iframe .sample-btn {
+      font-size: 0.75rem !important;
+      padding: 0.4rem 0.6rem !important;
+    }
+
+    body.in-iframe .provider-chip {
+      font-size: 0.7rem !important;
     }
   }
 
@@ -4804,20 +4904,37 @@ styleSheet.textContent = `
   .chorus-unified {
     min-height: 100%;
     min-height: 100dvh;
+    min-height: -webkit-fill-available;
     position: relative;
     display: flex;
     flex-direction: column;
     overflow-x: hidden;
+    /* Iframe compatibility */
+    width: 100%;
+    /* Ensure text is readable */
+    font-size: 1rem;
+    color: #e2e8f0;
   }
 
   /* Background - always present */
   .chorus-bg-container {
-    position: fixed;
+    /* Use absolute instead of fixed for better iframe support */
+    position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     z-index: 0;
+    /* Ensure it covers the full area */
+    min-height: 100%;
+    min-height: 100dvh;
+  }
+
+  /* Fix background in scrolling scenarios */
+  @supports (position: fixed) {
+    .chorus-bg-container {
+      position: fixed;
+    }
   }
 
   .chorus-bg-container .chorus-bg-image {
@@ -5296,6 +5413,92 @@ styleSheet.textContent = `
     .chorus-search-input {
       /* Prevent zoom on iOS when focusing input */
       font-size: 16px !important;
+    }
+  }
+
+  /* ===== IFRAME-SPECIFIC FIXES ===== */
+  /* These ensure proper display when embedded in external sites like GoDaddy */
+
+  /* Detect iframe context and apply fixes */
+  @media screen {
+    .chorus-unified {
+      /* Ensure minimum readable sizes */
+      --min-font-size: 14px;
+      --base-font-size: 16px;
+    }
+
+    /* All text elements should have minimum readable size */
+    .chorus-unified p,
+    .chorus-unified span,
+    .chorus-unified label,
+    .chorus-unified input,
+    .chorus-unified textarea,
+    .chorus-unified button {
+      font-size: max(var(--min-font-size), inherit);
+    }
+
+    .chorus-unified h1 {
+      font-size: max(1.5rem, 24px);
+    }
+
+    .chorus-unified h2 {
+      font-size: max(1.25rem, 20px);
+    }
+
+    .chorus-unified h3 {
+      font-size: max(1.1rem, 18px);
+    }
+  }
+
+  /* Mobile iframe specific - force larger touch targets and text */
+  @media (max-width: 600px) and (hover: none) and (pointer: coarse) {
+    /* This targets touch devices (mobile) */
+    .chorus-unified {
+      font-size: 16px !important;
+    }
+
+    .chorus-unified input,
+    .chorus-unified textarea,
+    .chorus-unified button {
+      /* Ensure 16px to prevent iOS zoom */
+      font-size: 16px !important;
+      /* Minimum touch target size */
+      min-height: 44px;
+    }
+
+    .chorus-headline {
+      font-size: 1.5rem !important;
+    }
+
+    .chorus-tagline {
+      font-size: 0.9rem !important;
+    }
+
+    .chorus-search-input {
+      font-size: 16px !important;
+      min-height: 48px;
+    }
+
+    .chorus-search-btn {
+      min-width: 44px;
+      min-height: 44px;
+    }
+
+    /* Ensure content doesn't overflow */
+    .chorus-content-wrapper {
+      padding: 1rem;
+      max-width: 100%;
+    }
+
+    .chorus-search-section {
+      max-width: 100%;
+    }
+
+    /* Sample questions - make tappable */
+    .sample-btn {
+      min-height: 36px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem !important;
     }
   }
 
