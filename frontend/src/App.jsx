@@ -2710,10 +2710,10 @@ function App() {
             <div className="chorus-logo-area">
               <ChorusImageLogo size={uiState === 'initial' ? 72 : 40} withText={true} />
             </div>
-            <h1 className="chorus-headline">Where AI Meets Evidence-Based Answers</h1>
+            <h1 className="chorus-headline">Where AI Meets Verified Knowledge</h1>
             <p className="chorus-tagline">
               Ask any question. Get answers synthesized from multiple AI models,
-              verified against official guidelines and peer-reviewed research.
+              cross-referenced with research, news, patents, and authoritative sources.
             </p>
           </header>
 
@@ -2988,9 +2988,9 @@ function App() {
                 <div className="chorus-loading-wave"></div>
               </div>
               <h3>Gathering Evidence</h3>
-              <p>Querying {providers.length} AI models and searching medical literature...</p>
+              <p>Querying {providers.length} AI models and searching authoritative sources...</p>
               <div className="chorus-loading-steps">
-                <span className="loading-step active">Searching Guidelines</span>
+                <span className="loading-step active">Searching Research & News</span>
                 <span className="loading-step active">Querying AI Models</span>
                 <span className="loading-step">Synthesizing Results</span>
               </div>
