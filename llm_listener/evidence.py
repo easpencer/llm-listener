@@ -555,27 +555,27 @@ class EvidenceSearcher:
         return MediaSearcher.is_media_query(query)
 
     async def search_all(self, query: str, include_summaries: bool = True) -> Dict[str, Any]:
-        """Search all evidence sources including news, patents, and images if visual query.
+        """Search all evidence sources including news, patents, reference, and videos.
 
         Args:
             query: The health question to search for
             include_summaries: Whether to generate LLM prose summaries (default True)
 
         Returns:
-            Dictionary with guidelines, literature, news, patents, and optionally images results
+            Dictionary with guidelines, literature, news, patents, reference, and media results
         """
         import asyncio
+        from .media import MediaSearcher
 
         # Run all standard searches in parallel
-        # Note: Images/thumbnails are now extracted from each source directly
-        # (news articles have thumbnails, guidelines may have diagrams, etc.)
-        # rather than doing a separate media-only search
+        # Thumbnails are extracted from each source directly
+        # Videos are searched separately from credible medical YouTube channels
         tasks = {
             "guidelines": self.search_government_guidelines(query),
             "literature": self.search_scholarly_literature(query),
             "news": self.search_news(query),
             "patents": self.search_patents(query),
-            "reference": self.search_reference(query),  # Wikipedia, MedlinePlus, textbooks, etc.
+            "reference": self.search_reference(query),
         }
 
         gathered = await asyncio.gather(
@@ -594,6 +594,56 @@ class EvidenceSearcher:
                 }
             else:
                 results[key] = result
+
+        # Search for videos from credible medical sources (always, not just for "visual" queries)
+        try:
+            media_searcher = MediaSearcher(self.api_key)
+            videos = await media_searcher.search_videos(query, max_results=6)
+
+            # Only include videos from credible sources
+            credible_videos = [v for v in videos if v.get("credibility_tier") in ("medical", "scientific", "educational")]
+
+            if credible_videos:
+                results["videos"] = {
+                    "count": len(credible_videos),
+                    "links": credible_videos,
+                    "digest": f"Found {len(credible_videos)} educational videos from credible sources",
+                }
+        except Exception:
+            pass  # Don't fail if video search fails
+
+        # Aggregate all thumbnails from evidence sources into a media summary
+        all_thumbnails = []
+        for source_type in ["guidelines", "news", "reference", "patents", "literature"]:
+            source_data = results.get(source_type, {})
+            links = source_data.get("links", [])
+            for link in links:
+                if link.get("thumbnail"):
+                    all_thumbnails.append({
+                        "thumbnail": link["thumbnail"],
+                        "title": link.get("title", ""),
+                        "url": link.get("url", ""),
+                        "source_type": source_type,
+                        "source_name": link.get("source", link.get("source_name", "")),
+                    })
+
+        # Also check knowledge graph for reference
+        kg = results.get("reference", {}).get("knowledge_graph")
+        if kg and kg.get("image"):
+            all_thumbnails.insert(0, {
+                "thumbnail": kg["image"],
+                "title": kg.get("title", ""),
+                "url": kg.get("source_url", ""),
+                "source_type": "knowledge_graph",
+                "source_name": kg.get("source", "Wikipedia"),
+            })
+
+        if all_thumbnails:
+            results["aggregated_media"] = {
+                "count": len(all_thumbnails),
+                "thumbnails": all_thumbnails,
+                "videos": results.get("videos", {}).get("links", []),
+            }
 
         # Generate LLM prose summaries if requested
         if include_summaries:

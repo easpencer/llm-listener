@@ -3277,9 +3277,11 @@ function App() {
                         type="reference"
                       />
                     )}
-                    {evidence.media && evidence.media.count > 0 && (
-                      <MediaCardChorus
-                        data={evidence.media}
+                    {/* Aggregated Visual & Video Resources */}
+                    {evidence.aggregated_media && (evidence.aggregated_media.thumbnails?.length > 0 || evidence.aggregated_media.videos?.length > 0) && (
+                      <AggregatedMediaCard
+                        thumbnails={evidence.aggregated_media.thumbnails}
+                        videos={evidence.aggregated_media.videos}
                       />
                     )}
                   </div>
@@ -4278,116 +4280,171 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
   )
 }
 
-function MediaCardChorus({ data }) {
-  const images = data.images || []
-  const videos = data.videos || []
-  const allMedia = data.links || []
-  const metadata = data.metadata || {}
+function AggregatedMediaCard({ thumbnails, videos }) {
+  const [expanded, setExpanded] = useState(false)
 
-  // Determine what we have
-  const hasImages = images.length > 0
-  const hasVideos = videos.length > 0
+  const allThumbnails = thumbnails || []
+  const allVideos = videos || []
 
-  // Color and icon based on content
-  const color = hasVideos ? '#ef4444' : '#ec4899'
-  const icon = hasVideos ? '🎬' : '🖼️'
-  const title = hasVideos ? 'Visual & Video References' : 'Visual References'
-  const subtitle = hasVideos
-    ? 'Images and videos from credible sources'
-    : 'Diagrams and images from credible sources'
+  const hasThumbnails = allThumbnails.length > 0
+  const hasVideos = allVideos.length > 0
 
-  // Count credible sources
-  const credibleCount = metadata.credible_source_count || 0
+  if (!hasThumbnails && !hasVideos) return null
+
+  // Show 6 initially, all when expanded
+  const visibleThumbnails = expanded ? allThumbnails : allThumbnails.slice(0, 6)
+  const hasMoreThumbnails = allThumbnails.length > 6
+
+  // Group thumbnails by source type for display
+  const sourceTypeCounts = {}
+  allThumbnails.forEach(t => {
+    const type = t.source_type || 'other'
+    sourceTypeCounts[type] = (sourceTypeCounts[type] || 0) + 1
+  })
+
+  const color = '#ec4899'
 
   return (
-    <div className="evidence-card-chorus glass-card media-card">
+    <div className="evidence-card-chorus glass-card aggregated-media-card">
       <div className="evidence-card-header-chorus" style={{ borderLeftColor: color }}>
         <div className="evidence-card-top">
-          <span className="evidence-icon-large">{icon}</span>
+          <span className="evidence-icon-large">🖼️</span>
           <div className="evidence-card-titles">
-            <h3 style={{ color }}>{title}</h3>
-            <span className="evidence-subtitle">{subtitle}</span>
+            <h3 style={{ color }}>Visual & Video Resources</h3>
+            <span className="evidence-subtitle">
+              Images and videos from evidence sources
+            </span>
           </div>
           <div className="evidence-count-badge" style={{ backgroundColor: `${color}20`, color }}>
-            {allMedia.length} items
+            {allThumbnails.length + allVideos.length} items
           </div>
         </div>
       </div>
 
       <div className="evidence-card-body">
-        {/* Source quality notice */}
-        {credibleCount > 0 && (
-          <div className="media-credibility-notice">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
-            {credibleCount} from medical/scientific sources
-          </div>
-        )}
-
-        {/* Images grid */}
-        {hasImages && (
-          <div className="media-grid">
-            {images.slice(0, 6).map((img, i) => (
-              <a
-                key={i}
-                href={img.source_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`media-item media-image ${img.credibility_tier}`}
-                title={img.title}
-              >
-                <img
-                  src={img.thumbnail}
-                  alt={img.title}
-                  loading="lazy"
-                />
-                <div className="media-overlay">
-                  <span className="media-source">{img.source}</span>
-                  {img.credibility_tier === 'medical' && (
-                    <span className="media-badge medical">Medical</span>
-                  )}
-                  {img.credibility_tier === 'scientific' && (
-                    <span className="media-badge scientific">Scientific</span>
-                  )}
-                </div>
-              </a>
+        {/* Source breakdown */}
+        {Object.keys(sourceTypeCounts).length > 0 && (
+          <div className="media-source-breakdown">
+            {Object.entries(sourceTypeCounts).map(([type, count]) => (
+              <span key={type} className={`media-source-tag ${type}`}>
+                {type === 'guidelines' && '📋'}
+                {type === 'news' && '📰'}
+                {type === 'reference' && '📚'}
+                {type === 'knowledge_graph' && '🔍'}
+                {type === 'patents' && '💡'}
+                {type === 'literature' && '🔬'}
+                {' '}{count} from {type === 'knowledge_graph' ? 'Wikipedia' : type}
+              </span>
             ))}
           </div>
         )}
 
-        {/* Videos list */}
-        {hasVideos && (
-          <div className="media-videos">
-            <h4>Videos</h4>
-            {videos.slice(0, 3).map((video, i) => (
-              <a
-                key={i}
-                href={video.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`video-item ${video.credibility_tier}`}
+        {/* Thumbnails grid */}
+        {hasThumbnails && (
+          <div className="aggregated-thumbnails">
+            <div className="thumbnail-grid expanded-grid">
+              {visibleThumbnails.map((thumb, i) => (
+                <a
+                  key={i}
+                  href={thumb.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`source-thumbnail-item ${thumb.source_type}`}
+                  title={thumb.title}
+                >
+                  <img
+                    src={thumb.thumbnail}
+                    alt={thumb.title}
+                    loading="lazy"
+                    onError={(e) => { e.target.parentElement.style.display = 'none' }}
+                  />
+                  <span className="thumbnail-source">
+                    {thumb.source_name || thumb.source_type}
+                  </span>
+                  <span className={`thumbnail-type-badge ${thumb.source_type}`}>
+                    {thumb.source_type === 'guidelines' ? 'Official' :
+                     thumb.source_type === 'news' ? 'News' :
+                     thumb.source_type === 'reference' ? 'Reference' :
+                     thumb.source_type === 'knowledge_graph' ? 'Wiki' :
+                     thumb.source_type === 'patents' ? 'Patent' :
+                     thumb.source_type === 'literature' ? 'Research' : ''}
+                  </span>
+                </a>
+              ))}
+            </div>
+            {hasMoreThumbnails && (
+              <button
+                className="show-more-media-btn"
+                onClick={() => setExpanded(!expanded)}
               >
-                {video.thumbnail && (
-                  <div className="video-thumb">
-                    <img src={video.thumbnail} alt={video.title} loading="lazy" />
-                    {video.duration && (
-                      <span className="video-duration">{video.duration}</span>
-                    )}
-                  </div>
+                {expanded ? (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M18 15l-6-6-6 6"/>
+                    </svg>
+                    Show less
+                  </>
+                ) : (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M6 9l6 6 6-6"/>
+                    </svg>
+                    Show {allThumbnails.length - 6} more images
+                  </>
                 )}
-                <div className="video-info">
-                  <span className="video-title">{video.title}</span>
-                  <span className="video-channel">{video.source}</span>
-                </div>
-              </a>
-            ))}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Videos section */}
+        {hasVideos && (
+          <div className="aggregated-videos">
+            <h4>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              Educational Videos ({allVideos.length})
+            </h4>
+            <div className="video-list">
+              {allVideos.slice(0, 4).map((video, i) => (
+                <a
+                  key={i}
+                  href={video.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`video-item ${video.credibility_tier || ''}`}
+                >
+                  {video.thumbnail && (
+                    <div className="video-thumb">
+                      <img src={video.thumbnail} alt={video.title} loading="lazy" />
+                      {video.duration && (
+                        <span className="video-duration">{video.duration}</span>
+                      )}
+                      <span className="video-play-icon">▶</span>
+                    </div>
+                  )}
+                  <div className="video-info">
+                    <span className="video-title">{video.title}</span>
+                    <span className="video-channel">
+                      {video.source}
+                      {video.credibility_tier === 'medical' && (
+                        <span className="video-cred-badge medical">Medical</span>
+                      )}
+                      {video.credibility_tier === 'educational' && (
+                        <span className="video-cred-badge educational">Educational</span>
+                      )}
+                    </span>
+                  </div>
+                </a>
+              ))}
+            </div>
           </div>
         )}
 
         {/* Disclaimer */}
         <div className="media-disclaimer">
-          Visual references are for educational purposes. Always consult healthcare providers for medical diagnosis.
+          Visual references are from evidence sources. Always consult healthcare providers for medical decisions.
         </div>
       </div>
     </div>

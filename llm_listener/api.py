@@ -373,7 +373,8 @@ class EvidenceResponse(BaseModel):
     news: Optional[Dict[str, Any]] = None
     patents: Optional[Dict[str, Any]] = None
     reference: Optional[Dict[str, Any]] = None
-    media: Optional[Dict[str, Any]] = None
+    videos: Optional[Dict[str, Any]] = None
+    aggregated_media: Optional[Dict[str, Any]] = None
 
 
 @asynccontextmanager
@@ -827,7 +828,8 @@ async def search_evidence(request: EvidenceRequest):
         news=results.get("news"),
         patents=results.get("patents"),
         reference=results.get("reference"),
-        media=results.get("media"),
+        videos=results.get("videos"),
+        aggregated_media=results.get("aggregated_media"),
     )
 
 
