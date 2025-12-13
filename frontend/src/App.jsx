@@ -3249,8 +3249,8 @@ function App() {
                     )}
                     {evidence.news && evidence.news.count > 0 && (
                       <EvidenceCardChorus
-                        title="Health News"
-                        subtitle="Recent credible health news and reporting"
+                        title="Health & Science News"
+                        subtitle="Recent credible reporting from trusted sources"
                         icon="📰"
                         color="#8b5cf6"
                         data={evidence.news}
@@ -3265,6 +3265,11 @@ function App() {
                         color="#f59e0b"
                         data={evidence.patents}
                         type="patents"
+                      />
+                    )}
+                    {evidence.media && evidence.media.count > 0 && (
+                      <MediaCardChorus
+                        data={evidence.media}
                       />
                     )}
                   </div>
@@ -3980,9 +3985,10 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
   const sourceTypes = data.source_types || {}
   const topCited = data.top_cited || []
   const links = data.links || []
+  const llmSummary = data.llm_summary || null  // LLM-generated prose summary from backend
 
-  // Generate a rich summary describing what these sources cover
-  const generateSummary = () => {
+  // Generate a fallback summary if LLM summary not available
+  const generateFallbackSummary = () => {
     if (links.length === 0) return null
 
     const orgMap = {}
@@ -4018,11 +4024,7 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
       if (orgs.length > 0) {
         summary += ` from ${orgs.slice(0, 4).join(', ')}`
       }
-      summary += '.\n\n'
-      summary += '**Key resources address:**\n'
-      topics.slice(0, 3).forEach(t => {
-        summary += `- ${t}\n`
-      })
+      summary += '.'
       return summary
     } else if (type === 'news') {
       // News summary with credibility info
@@ -4033,11 +4035,7 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
       if (credibleCount > 0) {
         summary += ` (${credibleCount} from credible medical sources)`
       }
-      summary += '.\n\n'
-      summary += '**Recent coverage includes:**\n'
-      topics.slice(0, 3).forEach(t => {
-        summary += `- ${t}\n`
-      })
+      summary += '.'
       return summary
     } else if (type === 'patents') {
       // Patents summary
@@ -4046,11 +4044,7 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
       if (recentCount > 0) {
         summary += ` (${recentCount} recently granted)`
       }
-      summary += '.\n\n'
-      summary += '**Recent inventions include:**\n'
-      topics.slice(0, 3).forEach(t => {
-        summary += `- ${t}\n`
-      })
+      summary += '.'
       return summary
     } else {
       // Literature (default)
@@ -4059,16 +4053,13 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
       if (totalCites > 0) {
         summary += ` with ${totalCites} combined citations`
       }
-      summary += '.\n\n'
-      summary += '**Research covers:**\n'
-      topics.slice(0, 3).forEach(t => {
-        summary += `- ${t}\n`
-      })
+      summary += '.'
       return summary
     }
   }
 
-  const summary = generateSummary()
+  // Prefer LLM summary if available, otherwise use fallback
+  const summary = llmSummary || generateFallbackSummary()
 
   return (
     <div className="evidence-card-chorus glass-card">
@@ -4214,6 +4205,122 @@ function EvidenceCardChorus({ title, subtitle, icon, color, data, type }) {
             </div>
           </div>
         )}
+      </div>
+    </div>
+  )
+}
+
+function MediaCardChorus({ data }) {
+  const images = data.images || []
+  const videos = data.videos || []
+  const allMedia = data.links || []
+  const metadata = data.metadata || {}
+
+  // Determine what we have
+  const hasImages = images.length > 0
+  const hasVideos = videos.length > 0
+
+  // Color and icon based on content
+  const color = hasVideos ? '#ef4444' : '#ec4899'
+  const icon = hasVideos ? '🎬' : '🖼️'
+  const title = hasVideos ? 'Visual & Video References' : 'Visual References'
+  const subtitle = hasVideos
+    ? 'Images and videos from credible sources'
+    : 'Diagrams and images from credible sources'
+
+  // Count credible sources
+  const credibleCount = metadata.credible_source_count || 0
+
+  return (
+    <div className="evidence-card-chorus glass-card media-card">
+      <div className="evidence-card-header-chorus" style={{ borderLeftColor: color }}>
+        <div className="evidence-card-top">
+          <span className="evidence-icon-large">{icon}</span>
+          <div className="evidence-card-titles">
+            <h3 style={{ color }}>{title}</h3>
+            <span className="evidence-subtitle">{subtitle}</span>
+          </div>
+          <div className="evidence-count-badge" style={{ backgroundColor: `${color}20`, color }}>
+            {allMedia.length} items
+          </div>
+        </div>
+      </div>
+
+      <div className="evidence-card-body">
+        {/* Source quality notice */}
+        {credibleCount > 0 && (
+          <div className="media-credibility-notice">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            {credibleCount} from medical/scientific sources
+          </div>
+        )}
+
+        {/* Images grid */}
+        {hasImages && (
+          <div className="media-grid">
+            {images.slice(0, 6).map((img, i) => (
+              <a
+                key={i}
+                href={img.source_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`media-item media-image ${img.credibility_tier}`}
+                title={img.title}
+              >
+                <img
+                  src={img.thumbnail}
+                  alt={img.title}
+                  loading="lazy"
+                />
+                <div className="media-overlay">
+                  <span className="media-source">{img.source}</span>
+                  {img.credibility_tier === 'medical' && (
+                    <span className="media-badge medical">Medical</span>
+                  )}
+                  {img.credibility_tier === 'scientific' && (
+                    <span className="media-badge scientific">Scientific</span>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+
+        {/* Videos list */}
+        {hasVideos && (
+          <div className="media-videos">
+            <h4>Videos</h4>
+            {videos.slice(0, 3).map((video, i) => (
+              <a
+                key={i}
+                href={video.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`video-item ${video.credibility_tier}`}
+              >
+                {video.thumbnail && (
+                  <div className="video-thumb">
+                    <img src={video.thumbnail} alt={video.title} loading="lazy" />
+                    {video.duration && (
+                      <span className="video-duration">{video.duration}</span>
+                    )}
+                  </div>
+                )}
+                <div className="video-info">
+                  <span className="video-title">{video.title}</span>
+                  <span className="video-channel">{video.source}</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+
+        {/* Disclaimer */}
+        <div className="media-disclaimer">
+          Visual references are for educational purposes. Always consult healthcare providers for medical diagnosis.
+        </div>
       </div>
     </div>
   )
@@ -7028,6 +7135,183 @@ styleSheet.textContent = `
     background: rgba(34, 197, 94, 0.1);
     padding: 0.2rem 0.5rem;
     border-radius: 4px;
+  }
+
+  /* Media Card Styles */
+  .media-card {
+    /* Inherits evidence-card-chorus styles */
+  }
+
+  .media-credibility-notice {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 0.875rem;
+    background: rgba(34, 197, 94, 0.1);
+    border-radius: 8px;
+    font-size: 0.8rem;
+    color: #4ade80;
+    margin-bottom: 1rem;
+  }
+
+  .media-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  @media (max-width: 600px) {
+    .media-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .media-item {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    aspect-ratio: 4/3;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.2s ease;
+    display: block;
+  }
+
+  .media-item:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.02);
+  }
+
+  .media-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .media-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0.5rem;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.25rem;
+  }
+
+  .media-source {
+    font-size: 0.65rem;
+    color: #94a3b8;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+  }
+
+  .media-badge {
+    font-size: 0.6rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+
+  .media-badge.medical {
+    background: rgba(20, 184, 166, 0.3);
+    color: #2dd4bf;
+  }
+
+  .media-badge.scientific {
+    background: rgba(14, 165, 233, 0.3);
+    color: #38bdf8;
+  }
+
+  .media-videos {
+    margin-bottom: 1rem;
+  }
+
+  .media-videos h4 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin: 0 0 0.75rem;
+  }
+
+  .video-item {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.625rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    text-decoration: none;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
+  }
+
+  .video-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .video-thumb {
+    position: relative;
+    width: 100px;
+    min-width: 100px;
+    aspect-ratio: 16/9;
+    border-radius: 6px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  .video-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .video-duration {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    padding: 0.125rem 0.375rem;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 4px;
+    font-size: 0.65rem;
+    color: #fff;
+  }
+
+  .video-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    overflow: hidden;
+  }
+
+  .video-title {
+    font-size: 0.8rem;
+    color: #e2e8f0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .video-channel {
+    font-size: 0.7rem;
+    color: #64748b;
+  }
+
+  .media-disclaimer {
+    font-size: 0.7rem;
+    color: #64748b;
+    padding: 0.625rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 6px;
+    text-align: center;
   }
 
   /* AI Section */

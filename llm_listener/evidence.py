@@ -495,24 +495,50 @@ class EvidenceSearcher:
         patent_searcher = MedicalPatentSearcher(self.api_key)
         return await patent_searcher.search(query, max_results)
 
-    async def search_all(self, query: str) -> Dict[str, Any]:
-        """Search all evidence sources including news and patents.
+    async def search_media(self, query: str, max_images: int = 8, max_videos: int = 4) -> Dict[str, Any]:
+        """Search for visual/video references when query is media-related.
+
+        Args:
+            query: The media query to search for
+            max_images: Maximum number of images
+            max_videos: Maximum number of videos
+
+        Returns:
+            Dictionary with images, videos, and credibility data
+        """
+        from .media import MediaSearcher
+        media_searcher = MediaSearcher(self.api_key)
+        return await media_searcher.search(query, max_images, max_videos)
+
+    def _is_media_query(self, query: str) -> bool:
+        """Check if the query is asking for visual/video information."""
+        from .media import MediaSearcher
+        return MediaSearcher.is_media_query(query)
+
+    async def search_all(self, query: str, include_summaries: bool = True) -> Dict[str, Any]:
+        """Search all evidence sources including news, patents, and images if visual query.
 
         Args:
             query: The health question to search for
+            include_summaries: Whether to generate LLM prose summaries (default True)
 
         Returns:
-            Dictionary with guidelines, literature, news, and patents results
+            Dictionary with guidelines, literature, news, patents, and optionally images results
         """
         import asyncio
 
-        # Run all searches in parallel
+        # Run all standard searches in parallel
         tasks = {
             "guidelines": self.search_government_guidelines(query),
             "literature": self.search_scholarly_literature(query),
             "news": self.search_news(query),
             "patents": self.search_patents(query),
         }
+
+        # Add media search if query is visual/video in nature
+        is_media = self._is_media_query(query)
+        if is_media:
+            tasks["media"] = self.search_media(query)
 
         gathered = await asyncio.gather(
             *tasks.values(), return_exceptions=True
@@ -530,5 +556,24 @@ class EvidenceSearcher:
                 }
             else:
                 results[key] = result
+
+        # Generate LLM prose summaries if requested
+        if include_summaries:
+            try:
+                settings = Settings.from_env()
+                if settings.anthropic_api_key:
+                    from .evidence_summarizer import EvidenceSummarizer
+                    summarizer = EvidenceSummarizer(settings.anthropic_api_key)
+                    summaries = await summarizer.summarize_all(results, query)
+
+                    # Add summaries to each result
+                    for key in results:
+                        if key in summaries:
+                            results[key]["llm_summary"] = summaries[key]
+            except Exception as e:
+                # Log but don't fail if summarization fails
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Evidence summarization failed: {str(e)}")
 
         return results

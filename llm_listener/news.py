@@ -17,6 +17,7 @@ class NewsArticle:
     credibility_tier: str
     credibility_reason: str
     topic_category: str  # clinical, wellness, nutrition, research, policy
+    thumbnail: str = ""  # Article image/thumbnail if available
 
 
 class HealthNewsSearcher:
@@ -141,6 +142,9 @@ class HealthNewsSearcher:
                     # Categorize the topic
                     topic_cat = self._categorize_topic(title, snippet)
 
+                    # Extract thumbnail if available
+                    thumbnail = result.get("thumbnail", "")
+
                     articles.append(NewsArticle(
                         title=title,
                         url=url,
@@ -151,6 +155,7 @@ class HealthNewsSearcher:
                         credibility_tier=cred["tier"],
                         credibility_reason=cred["reason"],
                         topic_category=topic_cat,
+                        thumbnail=thumbnail,
                     ))
 
             # Sort by credibility score (descending), then by date
