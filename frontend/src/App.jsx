@@ -2675,38 +2675,50 @@ function App() {
   const references = collectReferences()
   const mediaItems = extractMedia()
 
-  // Chorus renders a completely different UI
+  // Chorus renders a unified single-page UI with CSS-driven state transitions
+  // States: initial (centered), typing (slides up), searching (loading), results (showing)
   if (isChorus) {
-    // Show landing page until user submits a search (not just when they start typing)
-    // This prevents jarring UI transition while user types their question
     const hasResults = synthesis || responses.length > 0
     const isSearching = loading || clarifying
-    const showLanding = !isSearching && !hasResults
+    const isTyping = question.trim().length > 0 && !isSearching && !hasResults
 
-    if (showLanding) {
-      return (
-        <div className="chorus-landing">
-          {/* Background image */}
-          <div className="chorus-landing-bg">
-            <img src="/images/login-bg.jpg" alt="" className="landing-bg-image" />
-            <div className="landing-bg-overlay"></div>
-          </div>
+    // Compute the UI state class
+    let uiState = 'initial'
+    if (hasResults) uiState = 'results'
+    else if (isSearching) uiState = 'searching'
+    else if (isTyping) uiState = 'typing'
 
-          {/* Landing content */}
-          <div className="chorus-landing-content">
-            <div className="landing-logo-section">
-              <ChorusImageLogo size={80} withText={true} />
+    return (
+      <div
+        className={`chorus-unified chorus-${uiState}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        {/* Background image - always present */}
+        <div className="chorus-bg-container">
+          <img src="/images/login-bg.jpg" alt="" className="chorus-bg-image" />
+          <div className="chorus-bg-overlay"></div>
+        </div>
+
+        {/* Main content wrapper - transforms based on state */}
+        <div className="chorus-content-wrapper">
+          {/* Hero section - shrinks and moves up as state changes */}
+          <header className="chorus-hero">
+            <div className="chorus-logo-area">
+              <ChorusImageLogo size={uiState === 'initial' ? 72 : 40} withText={true} />
             </div>
-
-            <h1 className="landing-headline">Where AI Meets Evidence-Based Answers</h1>
-            <p className="landing-subheadline">
-              Ask any health question. Get answers synthesized from multiple AI models,
+            <h1 className="chorus-headline">Where AI Meets Evidence-Based Answers</h1>
+            <p className="chorus-tagline">
+              Ask any question. Get answers synthesized from multiple AI models,
               verified against official guidelines and peer-reviewed research.
             </p>
+          </header>
 
-            {/* Search box on landing */}
-            <div className="landing-search-wrapper">
-              <div className="landing-search-box">
+          {/* Search section - always visible, stays in place */}
+          <section className="chorus-search-section">
+            <form onSubmit={handleSubmit} className="chorus-search-form">
+              <div className={`chorus-search-box ${isDragging ? 'dragging' : ''}`}>
                 <textarea
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
@@ -2717,211 +2729,25 @@ function App() {
                     }
                   }}
                   placeholder="Ask any question, or drop in a file..."
-                  className="landing-search-input"
-                  rows={2}
-                />
-                <button
-                  onClick={handleSubmit}
-                  disabled={!question.trim()}
-                  className="landing-search-btn"
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="11" cy="11" r="8"/>
-                    <path d="m21 21-4.35-4.35"/>
-                  </svg>
-                  Search
-                </button>
-              </div>
-            </div>
-
-            {/* Trust indicators */}
-            <div className="landing-trust-indicators">
-              <div className="trust-item">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
-                <span>Evidence-Based</span>
-              </div>
-              <div className="trust-item">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <polyline points="12 6 12 12 16 14"/>
-                </svg>
-                <span>Real-Time Sources</span>
-              </div>
-              <div className="trust-item">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-                <span>Multi-AI Synthesis</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Speed Dial FAB - always visible */}
-          <div className={`speed-dial-container ${speedDialOpen ? 'open' : ''}`}>
-            {/* Speed Dial Actions */}
-            <div className={`speed-dial-actions ${speedDialOpen ? 'visible' : ''}`}>
-              {/* Upload Document Action */}
-              <button
-                className="speed-dial-action"
-                onClick={() => {
-                  fileInputRef.current?.click()
-                  setSpeedDialOpen(false)
-                }}
-                title="Upload Document"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                  <line x1="12" y1="18" x2="12" y2="12"/>
-                  <line x1="9" y1="15" x2="12" y2="12"/>
-                  <line x1="15" y1="15" x2="12" y2="12"/>
-                </svg>
-                <span className="speed-dial-label">Upload</span>
-              </button>
-
-              {/* Clear Context (when there are attached files) */}
-              {attachedFiles.length > 0 && (
-                <button
-                  className="speed-dial-action danger"
-                  onClick={() => {
-                    setAttachedFiles([])
-                    setHealthContext(null)
-                    setSpeedDialOpen(false)
-                  }}
-                  title="Clear All Files"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="3 6 5 6 21 6"/>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                  </svg>
-                  <span className="speed-dial-label">Clear Files</span>
-                </button>
-              )}
-            </div>
-
-            {/* Main Speed Dial Button */}
-            <button
-              className={`speed-dial-fab ${speedDialOpen ? 'active' : ''}`}
-              onClick={() => setSpeedDialOpen(!speedDialOpen)}
-              aria-label="Open actions menu"
-            >
-              {speedDialOpen ? (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"/>
-                  <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              ) : (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  {/* Sparkles/magic wand icon */}
-                  <path d="M12 3v1m0 16v1m-9-9h1m16 0h1m-2.636-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m11.314 11.314l.707.707"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-              )}
-            </button>
-          </div>
-
-          {/* Hidden file input for Speed Dial */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept=".pdf,.docx,.txt,.xml,.json,.md"
-            onChange={(e) => handleFileUpload(Array.from(e.target.files))}
-            style={{ display: 'none' }}
-          />
-        </div>
-      )
-    }
-
-    return (
-      <div className="chorus-app">
-        {/* Background image - same as landing for visual continuity */}
-        <div className="chorus-app-bg">
-          <img src="/images/login-bg.jpg" alt="" className="chorus-bg-image" />
-          <div className="chorus-bg-overlay"></div>
-        </div>
-
-        {/* Header - compact version */}
-        <header className="chorus-header">
-          <div className="chorus-brand">
-            <ChorusImageLogo size={40} withText={true} />
-          </div>
-          {/* New search button - allows starting fresh */}
-          <button
-            className="chorus-new-search-btn"
-            onClick={() => {
-              setQuestion('')
-              setSynthesis(null)
-              setResponses([])
-              setEvidence(null)
-              setError(null)
-            }}
-            title="New Search"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="16"/>
-              <line x1="8" y1="12" x2="16" y2="12"/>
-            </svg>
-            New Search
-          </button>
-        </header>
-
-        {/* Main content */}
-        <main className="chorus-main">
-          {/* Search Section */}
-          <section className="chorus-search-section glass-card">
-            <form onSubmit={handleSubmit} className="chorus-form">
-              <label className="chorus-label">
-                Ask a question
-              </label>
-              <div
-                className={`chorus-input-wrapper ${isDragging ? 'dragging' : ''}`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-              >
-                <textarea
-                  value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
-                  placeholder="Ask anything or drop a file here..."
-                  className="chorus-textarea"
+                  className="chorus-search-input"
                   rows={2}
                 />
                 <button
                   type="submit"
-                  disabled={loading || !question.trim()}
-                  className="chorus-submit-btn"
+                  disabled={loading || clarifying || !question.trim()}
+                  className="chorus-search-btn"
                 >
-                  {loading ? (
+                  {(loading || clarifying) ? (
                     <span className="chorus-btn-loading">
                       <span className="chorus-spinner"></span>
-                      Analyzing...
                     </span>
                   ) : (
-                    <>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="11" cy="11" r="8"/>
-                        <path d="m21 21-4.35-4.35"/>
-                      </svg>
-                      Search Evidence
-                    </>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="11" cy="11" r="8"/>
+                      <path d="m21 21-4.35-4.35"/>
+                    </svg>
                   )}
                 </button>
-                {/* Hidden file input */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept=".pdf,.docx,.txt,.xml,.json,.md"
-                  onChange={(e) => handleFileUpload(Array.from(e.target.files))}
-                  style={{ display: 'none' }}
-                />
               </div>
 
               {/* Attached files chips */}
@@ -2955,31 +2781,62 @@ function App() {
                   ))}
                 </div>
               )}
-
-              <div className="chorus-providers">
-                <span className="chorus-providers-label">Synthesizing from:</span>
-                {providers.map(p => (
-                  <span key={p} className="chorus-provider-chip" style={{
-                    borderColor: PROVIDER_COLORS[p.charAt(0).toUpperCase() + p.slice(1)] || '#64748b'
-                  }}>
-                    {p}
-                  </span>
-                ))}
-                <span className="chorus-provider-chip chorus-provider-evidence">+ Evidence Sources</span>
-              </div>
             </form>
 
-            <div className="chorus-examples">
-              <span className="chorus-examples-label">Try a question:</span>
-              <div className="chorus-examples-list">
+            {/* Sample questions - fade out when not initial */}
+            <div className="chorus-sample-questions">
+              <span className="sample-label">Try asking:</span>
+              <div className="sample-list">
                 {exampleQuestions.map((q, i) => (
-                  <button key={i} onClick={() => setQuestion(q)} className="chorus-example-btn">
+                  <button key={i} onClick={() => setQuestion(q)} className="sample-btn">
                     {q}
                   </button>
                 ))}
               </div>
             </div>
+
+            {/* Trust indicators - fade out when not initial */}
+            <div className="chorus-trust-row">
+              <div className="trust-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                <span>Evidence-Based</span>
+              </div>
+              <div className="trust-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span>Real-Time</span>
+              </div>
+              <div className="trust-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span>Multi-AI</span>
+              </div>
+            </div>
+
+            {/* Provider chips - visible when typing/searching/results */}
+            <div className="chorus-providers-row">
+              <span className="providers-label">Synthesizing from:</span>
+              {providers.map(p => (
+                <span key={p} className="provider-chip" style={{
+                  borderColor: PROVIDER_COLORS[p.charAt(0).toUpperCase() + p.slice(1)] || '#64748b'
+                }}>
+                  {p}
+                </span>
+              ))}
+              <span className="provider-chip evidence-chip">+ Evidence</span>
+            </div>
           </section>
+
+          {/* Results area - slides in from below */}
+          <main className="chorus-results-area">
 
           {error && (
             <div className="chorus-error glass-card animate-fade-in">
@@ -3527,7 +3384,8 @@ function App() {
 
             </div>
           )}
-        </main>
+          </main>
+        </div>
 
         {/* Speed Dial FAB */}
         <div className={`speed-dial-container ${speedDialOpen ? 'open' : ''}`}>
@@ -3661,11 +3519,42 @@ function App() {
         {/* Footer */}
         <footer className="chorus-footer">
           <div className="chorus-footer-content">
-            <p>Chorus synthesizes evidence from multiple AI models and authoritative medical sources.</p>
-            <p className="chorus-disclaimer">Always consult with a healthcare professional for medical decisions.</p>
+            <p>Chorus synthesizes evidence from multiple AI models and authoritative sources.</p>
+            <p className="chorus-disclaimer">Always consult with a qualified professional for important decisions.</p>
           </div>
+          {hasResults && (
+            <button
+              className="chorus-new-search-btn"
+              onClick={() => {
+                setQuestion('')
+                setSynthesis(null)
+                setResponses([])
+                setEvidence(null)
+                setError(null)
+                setClarification(null)
+                setClarifyConvo([])
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="16"/>
+                <line x1="8" y1="12" x2="16" y2="12"/>
+              </svg>
+              New Search
+            </button>
+          )}
           <ViewResultsLink />
         </footer>
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept=".pdf,.docx,.txt,.xml,.json,.md"
+          onChange={(e) => handleFileUpload(Array.from(e.target.files))}
+          style={{ display: 'none' }}
+        />
       </div>
     )
   }
@@ -4874,7 +4763,449 @@ styleSheet.textContent = `
 
   /* ===== CHORUS STYLES ===== */
 
-  /* ===== CHORUS LANDING PAGE ===== */
+  /* ===== CHORUS UNIFIED LAYOUT ===== */
+  /* Single-page layout with CSS-driven state transitions */
+
+  .chorus-unified {
+    min-height: 100%;
+    min-height: 100dvh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* Background - always present */
+  .chorus-bg-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+  }
+
+  .chorus-bg-container .chorus-bg-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .chorus-bg-container .chorus-bg-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(12, 18, 34, 0.85) 0%,
+      rgba(26, 26, 46, 0.80) 50%,
+      rgba(15, 23, 42, 0.85) 100%
+    );
+    transition: background 0.5s ease;
+  }
+
+  /* Darken overlay when showing results */
+  .chorus-results .chorus-bg-container .chorus-bg-overlay,
+  .chorus-searching .chorus-bg-container .chorus-bg-overlay {
+    background: linear-gradient(
+      135deg,
+      rgba(12, 18, 34, 0.94) 0%,
+      rgba(26, 26, 46, 0.92) 50%,
+      rgba(15, 23, 42, 0.94) 100%
+    );
+  }
+
+  /* Content wrapper - transforms based on state */
+  .chorus-content-wrapper {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2rem;
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* When typing/searching/results - move content up */
+  .chorus-typing .chorus-content-wrapper,
+  .chorus-searching .chorus-content-wrapper,
+  .chorus-results .chorus-content-wrapper {
+    justify-content: flex-start;
+    padding-top: 1.5rem;
+  }
+
+  /* Hero section - shrinks and fades based on state */
+  .chorus-hero {
+    text-align: center;
+    margin-bottom: 2rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .chorus-logo-area {
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .chorus-headline {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin: 0 0 0.75rem 0;
+    line-height: 1.2;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+    transition: all 0.4s ease;
+  }
+
+  .chorus-tagline {
+    font-size: 1rem;
+    color: #94a3b8;
+    margin: 0;
+    line-height: 1.5;
+    max-width: 500px;
+    margin: 0 auto;
+    transition: all 0.4s ease;
+  }
+
+  /* When typing/searching/results - shrink hero */
+  .chorus-typing .chorus-hero,
+  .chorus-searching .chorus-hero,
+  .chorus-results .chorus-hero {
+    margin-bottom: 1rem;
+  }
+
+  .chorus-typing .chorus-headline,
+  .chorus-searching .chorus-headline,
+  .chorus-results .chorus-headline {
+    font-size: 0;
+    margin: 0;
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+  }
+
+  .chorus-typing .chorus-tagline,
+  .chorus-searching .chorus-tagline,
+  .chorus-results .chorus-tagline {
+    font-size: 0;
+    margin: 0;
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+  }
+
+  /* Search section - always visible */
+  .chorus-search-section {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto 1.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .chorus-search-form {
+    width: 100%;
+  }
+
+  .chorus-search-box {
+    display: flex;
+    gap: 0.75rem;
+    background: rgba(30, 41, 59, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 16px;
+    padding: 0.75rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+  }
+
+  .chorus-search-box:focus-within {
+    border-color: rgba(6, 182, 212, 0.5);
+    box-shadow: 0 8px 32px rgba(6, 182, 212, 0.15);
+  }
+
+  .chorus-search-box.dragging {
+    border-color: rgba(6, 182, 212, 0.6);
+    background: rgba(6, 182, 212, 0.1);
+  }
+
+  .chorus-search-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 0.75rem 1rem;
+    font-size: 1.05rem;
+    color: #f1f5f9;
+    resize: none;
+    font-family: inherit;
+    line-height: 1.5;
+  }
+
+  .chorus-search-input::placeholder {
+    color: #64748b;
+  }
+
+  .chorus-search-input:focus {
+    outline: none;
+  }
+
+  .chorus-search-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .chorus-search-btn:hover:not(:disabled) {
+    transform: scale(1.05);
+    box-shadow: 0 4px 16px rgba(6, 182, 212, 0.4);
+  }
+
+  .chorus-search-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Sample questions - fade out when not initial */
+  .chorus-sample-questions {
+    margin-top: 1.25rem;
+    text-align: center;
+    transition: all 0.4s ease;
+  }
+
+  .chorus-typing .chorus-sample-questions,
+  .chorus-searching .chorus-sample-questions,
+  .chorus-results .chorus-sample-questions {
+    opacity: 0;
+    height: 0;
+    margin: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .sample-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-bottom: 0.75rem;
+  }
+
+  .sample-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .sample-btn {
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .sample-btn:hover {
+    background: rgba(6, 182, 212, 0.15);
+    border-color: rgba(6, 182, 212, 0.3);
+    color: #06b6d4;
+  }
+
+  /* Trust row - fade out when not initial */
+  .chorus-trust-row {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+    transition: all 0.4s ease;
+  }
+
+  .chorus-typing .chorus-trust-row,
+  .chorus-searching .chorus-trust-row,
+  .chorus-results .chorus-trust-row {
+    opacity: 0;
+    height: 0;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  .chorus-trust-row .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #94a3b8;
+    font-size: 0.85rem;
+  }
+
+  .chorus-trust-row .trust-item svg {
+    color: #06b6d4;
+    opacity: 0.8;
+  }
+
+  /* Providers row - visible when typing/searching/results */
+  .chorus-providers-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+    transition: all 0.4s ease;
+  }
+
+  .chorus-typing .chorus-providers-row,
+  .chorus-searching .chorus-providers-row,
+  .chorus-results .chorus-providers-row {
+    opacity: 1;
+    height: auto;
+    margin-top: 1rem;
+  }
+
+  .providers-label {
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+
+  .provider-chip {
+    padding: 0.25rem 0.625rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    font-size: 0.7rem;
+    color: #94a3b8;
+    border-left-width: 2px;
+  }
+
+  .evidence-chip {
+    background: rgba(6, 182, 212, 0.1);
+    border-color: rgba(6, 182, 212, 0.3);
+    color: #06b6d4;
+  }
+
+  /* Results area */
+  .chorus-results-area {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  }
+
+  .chorus-searching .chorus-results-area,
+  .chorus-results .chorus-results-area {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  /* Attached files */
+  .chorus-attached-files {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding: 0 0.25rem;
+  }
+
+  /* New search button in footer */
+  .chorus-new-search-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    background: rgba(6, 182, 212, 0.15);
+    border: 1px solid rgba(6, 182, 212, 0.3);
+    border-radius: 8px;
+    color: #06b6d4;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 0.75rem;
+  }
+
+  .chorus-new-search-btn:hover {
+    background: rgba(6, 182, 212, 0.25);
+    border-color: rgba(6, 182, 212, 0.5);
+  }
+
+  /* Mobile responsive */
+  @media (max-width: 640px) {
+    .chorus-content-wrapper {
+      padding: 1.5rem 1rem;
+    }
+
+    .chorus-typing .chorus-content-wrapper,
+    .chorus-searching .chorus-content-wrapper,
+    .chorus-results .chorus-content-wrapper {
+      padding-top: 1rem;
+    }
+
+    .chorus-headline {
+      font-size: 1.75rem;
+    }
+
+    .chorus-tagline {
+      font-size: 0.9rem;
+    }
+
+    .chorus-search-box {
+      padding: 0.5rem;
+    }
+
+    .chorus-search-input {
+      font-size: 1rem;
+      padding: 0.5rem 0.75rem;
+    }
+
+    .chorus-search-btn {
+      width: 44px;
+      height: 44px;
+    }
+
+    .sample-list {
+      gap: 0.375rem;
+    }
+
+    .sample-btn {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.8rem;
+    }
+
+    .chorus-trust-row {
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .chorus-trust-row .trust-item {
+      font-size: 0.8rem;
+    }
+  }
+
+  /* ===== LEGACY: CHORUS LANDING PAGE (for backwards compat) ===== */
   .chorus-landing {
     min-height: 100%;
     min-height: 100dvh;
