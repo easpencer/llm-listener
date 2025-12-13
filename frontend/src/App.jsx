@@ -5172,7 +5172,11 @@ styleSheet.textContent = `
     font-size: 0.85rem;
     cursor: pointer;
     transition: all 0.2s ease;
-    white-space: nowrap;
+    /* Allow text wrapping on mobile */
+    white-space: normal;
+    text-align: center;
+    max-width: 100%;
+    word-wrap: break-word;
   }
 
   .sample-btn:hover {
@@ -5340,11 +5344,17 @@ styleSheet.textContent = `
 
     .sample-list {
       gap: 0.375rem;
+      /* Stack vertically on mobile for better readability */
+      flex-direction: column;
+      align-items: center;
     }
 
     .sample-btn {
-      padding: 0.375rem 0.75rem;
+      padding: 0.5rem 0.75rem;
       font-size: 0.8rem;
+      /* Allow full width on mobile */
+      max-width: 90%;
+      line-height: 1.3;
     }
 
     .chorus-trust-row {
