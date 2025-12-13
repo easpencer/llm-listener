@@ -4249,6 +4249,39 @@ const styleSheet = document.createElement('style')
 styleSheet.textContent = `
   * { box-sizing: border-box; }
 
+  /* ===== GLOBAL MOBILE & IFRAME FIXES ===== */
+  html {
+    /* Ensure proper text sizing on mobile - prevents tiny text */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* Smooth scrolling */
+    scroll-behavior: smooth;
+  }
+
+  body {
+    /* Base font size for mobile readability */
+    font-size: 16px;
+    line-height: 1.5;
+    /* Prevent horizontal scroll */
+    overflow-x: hidden;
+    /* For iframe compatibility */
+    min-height: 100%;
+    min-height: 100dvh;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Iframe detection and fixes */
+  @media (max-width: 768px) {
+    html, body {
+      /* Ensure full height in iframes */
+      height: 100%;
+      min-height: 100%;
+      /* Prevent zoom issues */
+      touch-action: manipulation;
+    }
+  }
+
   /* ===== PRISM STYLES ===== */
   .prism-app {
     min-height: 100%;
@@ -5204,6 +5237,65 @@ styleSheet.textContent = `
 
     .chorus-trust-row .trust-item {
       font-size: 0.8rem;
+    }
+  }
+
+  /* Extra small screens and portrait mobile */
+  @media (max-width: 400px) {
+    .chorus-content-wrapper {
+      padding: 1rem 0.75rem;
+    }
+
+    .chorus-headline {
+      font-size: 1.5rem;
+    }
+
+    .chorus-tagline {
+      font-size: 0.85rem;
+    }
+
+    .chorus-search-input {
+      font-size: 16px; /* Prevent iOS zoom on focus */
+    }
+
+    .sample-btn {
+      font-size: 0.75rem;
+      padding: 0.3rem 0.6rem;
+    }
+
+    .chorus-trust-row {
+      gap: 0.75rem;
+    }
+
+    .chorus-trust-row .trust-item {
+      font-size: 0.75rem;
+    }
+
+    .provider-chip {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+    }
+  }
+
+  /* Portrait mobile - ensure good text sizing */
+  @media (max-width: 480px) and (orientation: portrait) {
+    .chorus-unified {
+      font-size: 16px;
+    }
+
+    .chorus-headline {
+      font-size: 1.5rem;
+      line-height: 1.3;
+    }
+
+    .chorus-tagline {
+      font-size: 0.875rem;
+      line-height: 1.4;
+    }
+
+    .chorus-search-input {
+      /* Prevent zoom on iOS when focusing input */
+      font-size: 16px !important;
     }
   }
 
@@ -7201,6 +7293,19 @@ styleSheet.textContent = `
     flex-direction: column;
     align-items: flex-end;
     gap: 0.75rem;
+    /* Iframe compatibility - ensure visibility */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
+  }
+
+  /* Mobile iframe fix - use sticky positioning as fallback */
+  @supports (-webkit-touch-callout: none) {
+    /* iOS Safari specific */
+    .speed-dial-container {
+      position: fixed;
+      position: -webkit-sticky;
+    }
   }
 
   .speed-dial-actions {
@@ -7414,20 +7519,44 @@ styleSheet.textContent = `
     .speed-dial-container {
       bottom: 1rem;
       right: 1rem;
+      /* Ensure visibility in mobile iframes */
+      position: fixed !important;
+      z-index: 9999 !important;
     }
 
     .follow-up-panel {
-      width: calc(100% - 2rem); /* Changed from 100vw for iframe compatibility */
+      width: calc(100vw - 2rem); /* Full width minus margins */
       max-width: 340px;
+      /* Position from right edge */
+      position: relative;
+      right: 0;
     }
 
     .speed-dial-fab {
       width: 52px;
       height: 52px;
+      /* Ensure tap target is visible */
+      min-width: 52px;
+      min-height: 52px;
     }
 
     .speed-dial-action {
       padding: 0.625rem 0.875rem;
+    }
+  }
+
+  /* Portrait mobile - extra adjustments */
+  @media (max-width: 480px) and (orientation: portrait) {
+    .speed-dial-container {
+      bottom: 1.5rem;
+      right: 1rem;
+    }
+
+    .speed-dial-fab {
+      width: 56px;
+      height: 56px;
+      /* Add shadow for better visibility */
+      box-shadow: 0 4px 20px rgba(6, 182, 212, 0.5);
     }
   }
 
