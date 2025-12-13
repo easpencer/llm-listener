@@ -372,6 +372,8 @@ class EvidenceResponse(BaseModel):
     literature: Dict[str, Any]
     news: Optional[Dict[str, Any]] = None
     patents: Optional[Dict[str, Any]] = None
+    reference: Optional[Dict[str, Any]] = None
+    media: Optional[Dict[str, Any]] = None
 
 
 @asynccontextmanager
@@ -824,6 +826,8 @@ async def search_evidence(request: EvidenceRequest):
         literature=results["literature"],
         news=results.get("news"),
         patents=results.get("patents"),
+        reference=results.get("reference"),
+        media=results.get("media"),
     )
 
 
