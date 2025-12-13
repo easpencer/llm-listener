@@ -2672,8 +2672,10 @@ function App() {
 
   // Chorus renders a completely different UI
   if (isChorus) {
-    // Show landing page when no query has been made yet
-    const showLanding = !question && !loading && responses.length === 0
+    // Show landing page until user submits a search (not just when they start typing)
+    // This prevents jarring UI transition while user types their question
+    const hasResults = synthesis || responses.length > 0
+    const showLanding = !loading && !hasResults
 
     if (showLanding) {
       return (
@@ -2832,43 +2834,36 @@ function App() {
 
     return (
       <div className="chorus-app">
-        {/* Animated background */}
-        <div className="chorus-bg">
-          <div className="chorus-orb chorus-orb-1"></div>
-          <div className="chorus-orb chorus-orb-2"></div>
-          <div className="chorus-orb chorus-orb-3"></div>
+        {/* Background image - same as landing for visual continuity */}
+        <div className="chorus-app-bg">
+          <img src="/images/login-bg.jpg" alt="" className="chorus-bg-image" />
+          <div className="chorus-bg-overlay"></div>
         </div>
 
-        {/* Header */}
+        {/* Header - compact version */}
         <header className="chorus-header">
           <div className="chorus-brand">
-            <ChorusImageLogo size={56} withText={true} />
-            <p className="chorus-tagline">Where AI Meets Evidence-Based Answers</p>
+            <ChorusImageLogo size={40} withText={true} />
           </div>
-          <div className="chorus-trust-badges">
-            <span className="trust-badge">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              </svg>
-              Evidence-Based
-            </span>
-            <span className="trust-badge">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
-              </svg>
-              Real-Time
-            </span>
-            <span className="trust-badge">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-              </svg>
-              Multi-Source
-            </span>
-          </div>
+          {/* New search button - allows starting fresh */}
+          <button
+            className="chorus-new-search-btn"
+            onClick={() => {
+              setQuestion('')
+              setSynthesis(null)
+              setResponses([])
+              setEvidence(null)
+              setError(null)
+            }}
+            title="New Search"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="16"/>
+              <line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
+            New Search
+          </button>
         </header>
 
         {/* Main content */}
@@ -5076,9 +5071,40 @@ styleSheet.textContent = `
     overflow-x: hidden;
   }
 
-  /* Animated Background */
+  /* Background image for main app (same as landing for visual continuity) */
+  .chorus-app-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+  }
+
+  .chorus-app-bg .chorus-bg-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .chorus-app-bg .chorus-bg-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(12, 18, 34, 0.92) 0%,
+      rgba(26, 26, 46, 0.88) 50%,
+      rgba(15, 23, 42, 0.92) 100%
+    );
+  }
+
+  /* Animated Background - fallback/alternative */
   .chorus-bg {
-    position: absolute; /* Changed from fixed for iframe compatibility */
+    position: absolute;
     top: 0;
     left: 0;
     right: 0;
@@ -5181,18 +5207,24 @@ styleSheet.textContent = `
     50% { transform: translateX(3px); }
   }
 
-  /* Chorus Header */
+  /* Chorus Header - compact results view */
   .chorus-header {
-    padding: 2rem 2rem 1.5rem;
-    text-align: center;
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
   }
 
   .chorus-brand {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    margin-bottom: 1.25rem;
+    gap: 0.75rem;
   }
 
   .chorus-brand-text {
@@ -5215,6 +5247,27 @@ styleSheet.textContent = `
     color: #94a3b8;
     margin: 0.25rem 0 0;
     font-weight: 400;
+  }
+
+  /* New search button in header */
+  .chorus-new-search-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(6, 182, 212, 0.15);
+    border: 1px solid rgba(6, 182, 212, 0.3);
+    border-radius: 8px;
+    color: #06b6d4;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .chorus-new-search-btn:hover {
+    background: rgba(6, 182, 212, 0.25);
+    border-color: rgba(6, 182, 212, 0.5);
   }
 
   .chorus-trust-badges {
@@ -5243,9 +5296,11 @@ styleSheet.textContent = `
 
   /* Chorus Main */
   .chorus-main {
+    position: relative;
+    z-index: 1;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 1.5rem 2rem;
+    padding: 1.5rem 1.5rem 2rem;
   }
 
   /* Chorus Search Section */
