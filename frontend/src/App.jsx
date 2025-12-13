@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { StudyFAB, StudyModal } from './StudyMode'
 import { ViewResultsLink } from './ResultsDashboard'
+import { ConflictPanel } from './components/ConflictPanel'
 
 const PROVIDER_COLORS = {
   'OpenAI': '#10a37f',
@@ -1234,6 +1235,7 @@ function App() {
   const [showDetailedSummary, setShowDetailedSummary] = useState(false) // Brief (false) vs Detailed (true) summary toggle
   const [healthContext, setHealthContext] = useState(null) // De-identified health context from uploaded records
   const [attachedFiles, setAttachedFiles] = useState([]) // Uploaded file contexts [{file_id, filename, preview}]
+  const [conflictAnalysis, setConflictAnalysis] = useState(null) // Conflict analysis from multi-source queries
   const [isDragging, setIsDragging] = useState(false) // Drag state for textarea
   const [speedDialOpen, setSpeedDialOpen] = useState(false) // Speed dial FAB state
   const [uploadingFile, setUploadingFile] = useState(false) // File upload loading state
@@ -1530,6 +1532,7 @@ function App() {
     setResponses([])
     setSynthesis(null)
     setEvidence(null)
+    setConflictAnalysis(null)
     setError(null)
     setShowAllAI(false)
     setConversationHistory([])
@@ -1565,6 +1568,7 @@ function App() {
       const queryData = await queryRes.json()
       setResponses(queryData.responses)
       setSynthesis(queryData.synthesis)
+      setConflictAnalysis(queryData.conflict_analysis || null)
       setConversationHistory([{ question: searchQuestion, synthesis: queryData.synthesis }])
 
       if (evidenceRes && evidenceRes.ok) {
@@ -1612,6 +1616,7 @@ function App() {
       const queryData = await queryRes.json()
       setResponses(queryData.responses)
       setSynthesis(queryData.synthesis)
+      setConflictAnalysis(queryData.conflict_analysis || null)
 
       // Add to conversation history
       setConversationHistory(prev => [...prev, { question: followUp, synthesis: queryData.synthesis }])
@@ -3240,6 +3245,9 @@ function App() {
                       ))}
                       {patientSummary.confidence && (
                         <EvidenceProfilePanel confidence={patientSummary.confidence} />
+                      )}
+                      {conflictAnalysis && (
+                        <ConflictPanel analysis={conflictAnalysis} showAuditLog={false} />
                       )}
                     </div>
                   </div>
